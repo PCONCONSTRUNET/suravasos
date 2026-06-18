@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { LayoutDashboard, Package, Users, ShoppingCart, Wallet, Bell, Search } from "lucide-react";
 
 export const Route = createFileRoute("/app/mobile")({
-  head: () => ({ meta: [{ title: "App Mobile — SURA ERP" }] }),
+  head: () => ({ meta: [{ title: "App Mobile — VIVAVERDE ERP" }] }),
   component: Mobile,
 });
 
@@ -25,7 +25,7 @@ function Phone({ title, children }: { title: string; children: React.ReactNode }
 function Mobile() {
   return (
     <>
-      <PageHeader title="Aplicativo Mobile" subtitle="SURA Vendedor — disponível para iOS e Android" />
+      <PageHeader title="Aplicativo Mobile" subtitle="VIVAVERDE Vendedor — disponível para iOS e Android" />
 
       <div className="flex flex-wrap justify-center gap-8 py-6">
         {/* Dashboard */}

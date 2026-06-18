@@ -6,10 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Printer, Send, Save } from "lucide-react";
-import { SuraLogo } from "@/components/sura-logo";
+import { VivaverdeLogo } from "@/components/vivaverde-logo";
 
 export const Route = createFileRoute("/app/dav")({
-  head: () => ({ meta: [{ title: "DAV — SURA ERP" }] }),
+  head: () => ({ meta: [{ title: "DAV — VIVAVERDE ERP" }] }),
   component: DAV,
 });
 
@@ -33,7 +33,7 @@ function DAV() {
 
       <Card className="shadow-card p-8 max-w-5xl mx-auto">
         <div className="flex items-start justify-between border-b pb-6">
-          <SuraLogo />
+          <VivaverdeLogo />
           <div className="text-right text-sm">
             <p className="font-bold text-lg">DAV Nº 10428</p>
             <p className="text-muted-foreground">Emissão: 18/06/2026</p>
