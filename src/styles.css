@@ -137,7 +137,8 @@
     color: var(--color-foreground);
     -webkit-font-smoothing: antialiased;
   }
-  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.01em; }
+  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.015em; font-weight: 400; }
+  .font-mono, code, pre, kbd { font-family: var(--font-mono); }
 }
 
 @layer utilities {
