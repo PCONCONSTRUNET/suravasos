@@ -26,7 +26,7 @@ function Login() {
       <div className="relative z-10 w-full max-w-[420px] px-6">
         {/* Logo centered above card */}
         <div className="flex flex-col items-center mb-8">
-          <img src={logoImg} alt="VIVAVERDE" className="h-20 w-auto object-contain" />
+          <img src={logoImg} alt="VIVAVERDE" className="h-32 w-auto object-contain" />
         </div>
 
         {/* Card */}
