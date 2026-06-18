@@ -14,79 +14,101 @@ export const Route = createFileRoute("/")({
 function Login() {
   const nav = useNavigate();
   return (
-    <div className="min-h-screen grid lg:grid-cols-2">
-      {/* Form */}
-      <div className="flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-20">
-        <div className="mx-auto w-full max-w-md">
-          <SuraLogo />
-          <div className="mt-10">
-            <h1 className="font-display text-3xl font-bold tracking-tight">Acesso ao sistema</h1>
-            <p className="mt-2 text-muted-foreground">Sistema interno de gestão — uso restrito a colaboradores autorizados.</p>
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-white">
+      {/* Green decorative shapes */}
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-[#22C55E]/8 -translate-y-1/2 translate-x-1/4 blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full bg-[#166534]/6 translate-y-1/3 -translate-x-1/4 blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-[#22C55E]/4 blur-3xl" />
+
+      {/* Thin green accent line at top */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#166534] via-[#22C55E] to-[#166534]" />
+
+      {/* Login card */}
+      <div className="relative z-10 w-full max-w-[420px] px-6">
+        {/* Logo centered above card */}
+        <div className="flex flex-col items-center mb-8">
+          <svg viewBox="0 0 48 48" className="h-14 w-14" fill="none">
+            <path d="M18 22 C 16 14, 22 10, 22 18 Z" fill="#22C55E" />
+            <path d="M24 21 C 23 12, 30 10, 28 19 Z" fill="#22C55E" />
+            <path d="M30 23 C 31 15, 36 14, 34 22 Z" fill="#22C55E" />
+            <path d="M14 28 L34 28 L31 42 L17 42 Z" fill="#92400E" />
+            <path d="M6 34 Q 20 28, 32 33 T 46 32" stroke="#22C55E" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+          </svg>
+          <div className="mt-3 text-center">
+            <h1 className="font-display text-2xl font-extrabold tracking-tight text-[#166534]">
+              SURA<span className="ml-1 text-[#22C55E]">ERP</span>
+            </h1>
+            <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-[#166534]/50 mt-0.5">
+              vasos & jardim
+            </p>
           </div>
+        </div>
+
+        {/* Card */}
+        <div className="bg-white rounded-2xl border border-[#166534]/10 shadow-[0_8px_40px_-12px_rgba(22,101,52,0.15)] p-8">
+          <h2 className="text-center font-display text-lg font-semibold text-[#1a1a1a]">
+            Acesso ao sistema
+          </h2>
+          <p className="text-center text-sm text-[#64748b] mt-1">
+            Uso restrito a colaboradores autorizados
+          </p>
 
           <form
             onSubmit={(e) => { e.preventDefault(); nav({ to: "/app/dashboard" }); }}
-            className="mt-8 space-y-5"
+            className="mt-6 space-y-4"
           >
             <div className="space-y-1.5">
-              <Label htmlFor="user">Matrícula ou E-mail corporativo</Label>
-              <Input id="user" placeholder="usuario@suravasos.com.br" defaultValue="marcos@suravasos.com.br" />
+              <Label htmlFor="user" className="text-sm font-medium text-[#374151]">
+                Matrícula ou E-mail
+              </Label>
+              <Input
+                id="user"
+                placeholder="usuario@suravasos.com.br"
+                defaultValue="marcos@suravasos.com.br"
+                className="h-11 border-[#e5e7eb] focus:border-[#22C55E] focus:ring-[#22C55E]/20"
+              />
             </div>
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <Label htmlFor="pass">Senha</Label>
-                <a href="#" className="text-xs font-medium text-primary hover:underline">Recuperar senha (TI)</a>
+                <Label htmlFor="pass" className="text-sm font-medium text-[#374151]">Senha</Label>
+                <a href="#" className="text-xs font-medium text-[#22C55E] hover:text-[#166534] hover:underline transition-colors">
+                  Esqueceu?
+                </a>
               </div>
-              <Input id="pass" type="password" placeholder="••••••••" defaultValue="••••••••" />
+              <Input
+                id="pass"
+                type="password"
+                placeholder="••••••••"
+                defaultValue="••••••••"
+                className="h-11 border-[#e5e7eb] focus:border-[#22C55E] focus:ring-[#22C55E]/20"
+              />
             </div>
-            <label className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Checkbox /> Lembrar este computador
+
+            <label className="flex items-center gap-2 text-sm text-[#64748b]">
+              <Checkbox className="border-[#d1d5db] data-[state=checked]:bg-[#22C55E] data-[state=checked]:border-[#22C55E]" />
+              Lembrar este computador
             </label>
-            <Button type="submit" size="lg" className="w-full bg-gradient-brand shadow-elevated text-primary-foreground hover:opacity-95">
+
+            <Button
+              type="submit"
+              size="lg"
+              className="w-full h-11 bg-[#166534] hover:bg-[#14532d] text-white font-semibold shadow-lg shadow-[#166534]/25 transition-all"
+            >
               Entrar
             </Button>
-            <p className="text-center text-xs text-muted-foreground">
-              Problemas para acessar? Contate o departamento de TI — ramal 220.
-            </p>
           </form>
 
-          <p className="mt-12 text-xs text-muted-foreground text-center">
-            SURA Vasos Indústria e Comércio Ltda · Sistema Interno v2.4
-          </p>
-        </div>
-      </div>
-
-      {/* Showcase */}
-      <div className="relative hidden lg:flex flex-col justify-between overflow-hidden bg-gradient-sidebar p-12 text-sidebar-foreground">
-        <div className="absolute inset-0 opacity-20" style={{
-          backgroundImage: "radial-gradient(circle at 20% 20%, #22C55E 0, transparent 40%), radial-gradient(circle at 80% 70%, #92400E 0, transparent 45%)"
-        }} />
-        <div className="relative">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest backdrop-blur">
-            <Leaf className="h-3.5 w-3.5" /> SURA Vasos · Matriz Bauru
+          <div className="mt-6 pt-5 border-t border-[#f3f4f6]">
+            <p className="text-center text-xs text-[#9ca3af]">
+              Problemas para acessar? Contate o departamento de TI — ramal 220
+            </p>
           </div>
-          <h2 className="mt-8 font-display text-4xl font-bold leading-tight text-balance">
-            Sistema interno de gestão da distribuidora.
-          </h2>
-          <p className="mt-4 max-w-md text-sidebar-foreground/70">
-            Plataforma de uso exclusivo dos setores comercial, fiscal, financeiro, expedição e logística da SURA.
-          </p>
         </div>
 
-        <div className="relative grid grid-cols-2 gap-4">
-          {[
-            { icon: TrendingUp, label: "Comercial", sub: "Pedidos & PDV" },
-            { icon: Truck, label: "Logística", sub: "Rotas & expedição" },
-            { icon: Shield, label: "Fiscal", sub: "NF-e · NFC-e · MDF-e" },
-            { icon: Leaf, label: "Estoque", sub: "Galpão Bauru/SP" },
-          ].map((s) => (
-            <div key={s.label} className="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur">
-              <s.icon className="h-5 w-5 text-success" />
-              <p className="mt-3 font-display text-lg font-bold">{s.label}</p>
-              <p className="text-xs text-sidebar-foreground/60">{s.sub}</p>
-            </div>
-          ))}
-        </div>
+        {/* Footer */}
+        <p className="mt-6 text-center text-[10px] text-[#9ca3af] tracking-wide">
+          SURA Vasos Indústria e Comércio Ltda · Sistema Interno v2.4
+        </p>
       </div>
     </div>
   );
