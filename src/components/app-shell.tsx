@@ -1,0 +1,195 @@
+import { useState, type ReactNode } from "react";
+import { Link, useRouterState } from "@tanstack/react-router";
+import {
+  LayoutDashboard, Package, Boxes, Users, Truck, ShoppingCart, ShoppingBag,
+  FileText, Calculator, Wallet, Map, Receipt, BarChart3, Globe, Smartphone,
+  UserCircle, Settings, Bell, Search, Menu, X, ChevronDown, Moon, Sun, LogOut,
+} from "lucide-react";
+import { SuraLogo } from "./sura-logo";
+import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
+  DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+const NAV = [
+  { group: "Principal", items: [
+    { to: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  ]},
+  { group: "Operação", items: [
+    { to: "/app/estoque", label: "Estoque", icon: Boxes },
+    { to: "/app/produtos", label: "Produtos", icon: Package },
+    { to: "/app/clientes", label: "Clientes", icon: Users },
+    { to: "/app/fornecedores", label: "Fornecedores", icon: Truck },
+  ]},
+  { group: "Comercial", items: [
+    { to: "/app/compras", label: "Compras", icon: ShoppingBag },
+    { to: "/app/vendas", label: "Vendas", icon: ShoppingCart },
+    { to: "/app/dav", label: "DAV", icon: FileText },
+    { to: "/app/pdv", label: "PDV", icon: Calculator },
+  ]},
+  { group: "Gestão", items: [
+    { to: "/app/financeiro", label: "Financeiro", icon: Wallet },
+    { to: "/app/logistica", label: "Logística", icon: Map },
+    { to: "/app/fiscal", label: "Fiscal", icon: Receipt },
+    { to: "/app/relatorios", label: "Relatórios", icon: BarChart3 },
+  ]},
+  { group: "Canais", items: [
+    { to: "/app/catalogo", label: "Catálogo Digital", icon: Globe },
+    { to: "/app/mobile", label: "App Mobile", icon: Smartphone },
+    { to: "/app/portal", label: "Portal do Cliente", icon: UserCircle },
+    { to: "/app/configuracoes", label: "Configurações", icon: Settings },
+  ]},
+];
+
+export function AppShell({ children }: { children: ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const [dark, setDark] = useState(false);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  const toggleDark = () => {
+    setDark(!dark);
+    document.documentElement.classList.toggle("dark");
+  };
+
+  return (
+    <div className="flex min-h-screen bg-background">
+      {/* Sidebar desktop */}
+      <aside className="hidden md:flex w-64 shrink-0 flex-col bg-gradient-sidebar text-sidebar-foreground border-r border-sidebar-border">
+        <div className="p-5 border-b border-sidebar-border">
+          <SuraLogo variant="light" />
+        </div>
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
+          {NAV.map((g) => (
+            <div key={g.group}>
+              <div className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/50">
+                {g.group}
+              </div>
+              <ul className="space-y-0.5">
+                {g.items.map((it) => {
+                  const active = pathname === it.to;
+                  return (
+                    <li key={it.to}>
+                      <Link
+                        to={it.to}
+                        className={cn(
+                          "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                          active
+                            ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
+                            : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                        )}
+                      >
+                        <it.icon className="h-4 w-4 shrink-0" />
+                        <span className="truncate">{it.label}</span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </nav>
+        <div className="p-4 border-t border-sidebar-border">
+          <div className="flex items-center gap-3 rounded-lg bg-sidebar-accent/40 p-2.5">
+            <div className="h-9 w-9 shrink-0 rounded-full bg-gradient-brand grid place-items-center text-sm font-bold text-primary-foreground">
+              MS
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold truncate">Marcos Silva</p>
+              <p className="text-xs text-sidebar-foreground/60 truncate">Administrador</p>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      {/* Mobile drawer */}
+      {open && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} />
+          <aside className="absolute left-0 top-0 h-full w-72 bg-gradient-sidebar text-sidebar-foreground p-4 overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <SuraLogo variant="light" />
+              <Button size="icon" variant="ghost" className="text-sidebar-foreground" onClick={() => setOpen(false)}>
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            {NAV.map((g) => (
+              <div key={g.group} className="mb-4">
+                <div className="px-2 mb-1 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/50">{g.group}</div>
+                {g.items.map((it) => (
+                  <Link
+                    key={it.to}
+                    to={it.to}
+                    onClick={() => setOpen(false)}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm",
+                      pathname === it.to ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"
+                    )}
+                  >
+                    <it.icon className="h-4 w-4" /> {it.label}
+                  </Link>
+                ))}
+              </div>
+            ))}
+          </aside>
+        </div>
+      )}
+
+      {/* Main */}
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-card/80 px-4 backdrop-blur-md md:px-6">
+          <Button size="icon" variant="ghost" className="md:hidden" onClick={() => setOpen(true)}>
+            <Menu className="h-5 w-5" />
+          </Button>
+          <div className="relative hidden md:block flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input placeholder="Buscar produtos, clientes, pedidos…" className="pl-9 bg-secondary/50 border-transparent focus-visible:bg-card" />
+          </div>
+          <div className="flex-1 md:hidden" />
+          <Button variant="ghost" size="icon" onClick={toggleDark}>
+            {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </Button>
+          <Button variant="ghost" size="icon" className="relative">
+            <Bell className="h-4 w-4" />
+            <Badge className="absolute -right-0.5 -top-0.5 h-4 w-4 p-0 grid place-items-center text-[10px] bg-destructive text-destructive-foreground">3</Badge>
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-2 rounded-full pl-1 pr-3 py-1 hover:bg-secondary">
+                <div className="h-8 w-8 rounded-full bg-gradient-brand grid place-items-center text-xs font-bold text-primary-foreground">MS</div>
+                <span className="hidden sm:inline text-sm font-medium">Marcos</span>
+                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem><UserCircle className="mr-2 h-4 w-4" />Perfil</DropdownMenuItem>
+              <DropdownMenuItem><Settings className="mr-2 h-4 w-4" />Configurações</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link to="/"><LogOut className="mr-2 h-4 w-4" />Sair</Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </header>
+        <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>
+      </div>
+    </div>
+  );
+}
+
+export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: string; actions?: ReactNode }) {
+  return (
+    <div className="mb-6 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:items-center sm:justify-between">
+      <div className="min-w-0">
+        <h1 className="truncate font-display text-2xl font-bold sm:text-3xl">{title}</h1>
+        {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
+      </div>
+      {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+    </div>
+  );
+}
