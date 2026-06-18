@@ -60,7 +60,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Sidebar desktop */}
       <aside className="hidden md:flex w-64 shrink-0 flex-col bg-gradient-sidebar text-sidebar-foreground border-r border-sidebar-border">
         <div className="p-5 border-b border-sidebar-border">
-          <VivaverdeLogo variant="light" />
+          <VivaverdeLogo size="small" />
         </div>
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
           {NAV.map((g) => (
@@ -111,7 +111,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} />
           <aside className="absolute left-0 top-0 h-full w-72 bg-gradient-sidebar text-sidebar-foreground p-4 overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <VivaverdeLogo variant="light" />
+              <VivaverdeLogo size="small" />
               <Button size="icon" variant="ghost" className="text-sidebar-foreground" onClick={() => setOpen(false)}>
                 <X className="h-5 w-5" />
               </Button>
