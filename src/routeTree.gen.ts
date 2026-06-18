@@ -9,38 +9,276 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AppVendasRouteImport } from './routes/app.vendas'
+import { Route as AppRelatoriosRouteImport } from './routes/app.relatorios'
+import { Route as AppProdutosRouteImport } from './routes/app.produtos'
+import { Route as AppPortalRouteImport } from './routes/app.portal'
+import { Route as AppPdvRouteImport } from './routes/app.pdv'
+import { Route as AppMobileRouteImport } from './routes/app.mobile'
+import { Route as AppLogisticaRouteImport } from './routes/app.logistica'
+import { Route as AppFornecedoresRouteImport } from './routes/app.fornecedores'
+import { Route as AppFiscalRouteImport } from './routes/app.fiscal'
+import { Route as AppFinanceiroRouteImport } from './routes/app.financeiro'
+import { Route as AppEstoqueRouteImport } from './routes/app.estoque'
+import { Route as AppDavRouteImport } from './routes/app.dav'
+import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
+import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes'
+import { Route as AppComprasRouteImport } from './routes/app.compras'
+import { Route as AppClientesRouteImport } from './routes/app.clientes'
+import { Route as AppCatalogoRouteImport } from './routes/app.catalogo'
 
+const AppRoute = AppRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppIndexRoute = AppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppVendasRoute = AppVendasRouteImport.update({
+  id: '/vendas',
+  path: '/vendas',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRelatoriosRoute = AppRelatoriosRouteImport.update({
+  id: '/relatorios',
+  path: '/relatorios',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProdutosRoute = AppProdutosRouteImport.update({
+  id: '/produtos',
+  path: '/produtos',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPortalRoute = AppPortalRouteImport.update({
+  id: '/portal',
+  path: '/portal',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPdvRoute = AppPdvRouteImport.update({
+  id: '/pdv',
+  path: '/pdv',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMobileRoute = AppMobileRouteImport.update({
+  id: '/mobile',
+  path: '/mobile',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppLogisticaRoute = AppLogisticaRouteImport.update({
+  id: '/logistica',
+  path: '/logistica',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFornecedoresRoute = AppFornecedoresRouteImport.update({
+  id: '/fornecedores',
+  path: '/fornecedores',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFiscalRoute = AppFiscalRouteImport.update({
+  id: '/fiscal',
+  path: '/fiscal',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFinanceiroRoute = AppFinanceiroRouteImport.update({
+  id: '/financeiro',
+  path: '/financeiro',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEstoqueRoute = AppEstoqueRouteImport.update({
+  id: '/estoque',
+  path: '/estoque',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDavRoute = AppDavRouteImport.update({
+  id: '/dav',
+  path: '/dav',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDashboardRoute = AppDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppConfiguracoesRoute = AppConfiguracoesRouteImport.update({
+  id: '/configuracoes',
+  path: '/configuracoes',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppComprasRoute = AppComprasRouteImport.update({
+  id: '/compras',
+  path: '/compras',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppClientesRoute = AppClientesRouteImport.update({
+  id: '/clientes',
+  path: '/clientes',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCatalogoRoute = AppCatalogoRouteImport.update({
+  id: '/catalogo',
+  path: '/catalogo',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/app': typeof AppRouteWithChildren
+  '/app/catalogo': typeof AppCatalogoRoute
+  '/app/clientes': typeof AppClientesRoute
+  '/app/compras': typeof AppComprasRoute
+  '/app/configuracoes': typeof AppConfiguracoesRoute
+  '/app/dashboard': typeof AppDashboardRoute
+  '/app/dav': typeof AppDavRoute
+  '/app/estoque': typeof AppEstoqueRoute
+  '/app/financeiro': typeof AppFinanceiroRoute
+  '/app/fiscal': typeof AppFiscalRoute
+  '/app/fornecedores': typeof AppFornecedoresRoute
+  '/app/logistica': typeof AppLogisticaRoute
+  '/app/mobile': typeof AppMobileRoute
+  '/app/pdv': typeof AppPdvRoute
+  '/app/portal': typeof AppPortalRoute
+  '/app/produtos': typeof AppProdutosRoute
+  '/app/relatorios': typeof AppRelatoriosRoute
+  '/app/vendas': typeof AppVendasRoute
+  '/app/': typeof AppIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/app/catalogo': typeof AppCatalogoRoute
+  '/app/clientes': typeof AppClientesRoute
+  '/app/compras': typeof AppComprasRoute
+  '/app/configuracoes': typeof AppConfiguracoesRoute
+  '/app/dashboard': typeof AppDashboardRoute
+  '/app/dav': typeof AppDavRoute
+  '/app/estoque': typeof AppEstoqueRoute
+  '/app/financeiro': typeof AppFinanceiroRoute
+  '/app/fiscal': typeof AppFiscalRoute
+  '/app/fornecedores': typeof AppFornecedoresRoute
+  '/app/logistica': typeof AppLogisticaRoute
+  '/app/mobile': typeof AppMobileRoute
+  '/app/pdv': typeof AppPdvRoute
+  '/app/portal': typeof AppPortalRoute
+  '/app/produtos': typeof AppProdutosRoute
+  '/app/relatorios': typeof AppRelatoriosRoute
+  '/app/vendas': typeof AppVendasRoute
+  '/app': typeof AppIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/app': typeof AppRouteWithChildren
+  '/app/catalogo': typeof AppCatalogoRoute
+  '/app/clientes': typeof AppClientesRoute
+  '/app/compras': typeof AppComprasRoute
+  '/app/configuracoes': typeof AppConfiguracoesRoute
+  '/app/dashboard': typeof AppDashboardRoute
+  '/app/dav': typeof AppDavRoute
+  '/app/estoque': typeof AppEstoqueRoute
+  '/app/financeiro': typeof AppFinanceiroRoute
+  '/app/fiscal': typeof AppFiscalRoute
+  '/app/fornecedores': typeof AppFornecedoresRoute
+  '/app/logistica': typeof AppLogisticaRoute
+  '/app/mobile': typeof AppMobileRoute
+  '/app/pdv': typeof AppPdvRoute
+  '/app/portal': typeof AppPortalRoute
+  '/app/produtos': typeof AppProdutosRoute
+  '/app/relatorios': typeof AppRelatoriosRoute
+  '/app/vendas': typeof AppVendasRoute
+  '/app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/app'
+    | '/app/catalogo'
+    | '/app/clientes'
+    | '/app/compras'
+    | '/app/configuracoes'
+    | '/app/dashboard'
+    | '/app/dav'
+    | '/app/estoque'
+    | '/app/financeiro'
+    | '/app/fiscal'
+    | '/app/fornecedores'
+    | '/app/logistica'
+    | '/app/mobile'
+    | '/app/pdv'
+    | '/app/portal'
+    | '/app/produtos'
+    | '/app/relatorios'
+    | '/app/vendas'
+    | '/app/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/app/catalogo'
+    | '/app/clientes'
+    | '/app/compras'
+    | '/app/configuracoes'
+    | '/app/dashboard'
+    | '/app/dav'
+    | '/app/estoque'
+    | '/app/financeiro'
+    | '/app/fiscal'
+    | '/app/fornecedores'
+    | '/app/logistica'
+    | '/app/mobile'
+    | '/app/pdv'
+    | '/app/portal'
+    | '/app/produtos'
+    | '/app/relatorios'
+    | '/app/vendas'
+    | '/app'
+  id:
+    | '__root__'
+    | '/'
+    | '/app'
+    | '/app/catalogo'
+    | '/app/clientes'
+    | '/app/compras'
+    | '/app/configuracoes'
+    | '/app/dashboard'
+    | '/app/dav'
+    | '/app/estoque'
+    | '/app/financeiro'
+    | '/app/fiscal'
+    | '/app/fornecedores'
+    | '/app/logistica'
+    | '/app/mobile'
+    | '/app/pdv'
+    | '/app/portal'
+    | '/app/produtos'
+    | '/app/relatorios'
+    | '/app/vendas'
+    | '/app/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +286,183 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/': {
+      id: '/app/'
+      path: '/'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/vendas': {
+      id: '/app/vendas'
+      path: '/vendas'
+      fullPath: '/app/vendas'
+      preLoaderRoute: typeof AppVendasRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/relatorios': {
+      id: '/app/relatorios'
+      path: '/relatorios'
+      fullPath: '/app/relatorios'
+      preLoaderRoute: typeof AppRelatoriosRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/produtos': {
+      id: '/app/produtos'
+      path: '/produtos'
+      fullPath: '/app/produtos'
+      preLoaderRoute: typeof AppProdutosRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/portal': {
+      id: '/app/portal'
+      path: '/portal'
+      fullPath: '/app/portal'
+      preLoaderRoute: typeof AppPortalRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/pdv': {
+      id: '/app/pdv'
+      path: '/pdv'
+      fullPath: '/app/pdv'
+      preLoaderRoute: typeof AppPdvRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/mobile': {
+      id: '/app/mobile'
+      path: '/mobile'
+      fullPath: '/app/mobile'
+      preLoaderRoute: typeof AppMobileRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/logistica': {
+      id: '/app/logistica'
+      path: '/logistica'
+      fullPath: '/app/logistica'
+      preLoaderRoute: typeof AppLogisticaRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/fornecedores': {
+      id: '/app/fornecedores'
+      path: '/fornecedores'
+      fullPath: '/app/fornecedores'
+      preLoaderRoute: typeof AppFornecedoresRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/fiscal': {
+      id: '/app/fiscal'
+      path: '/fiscal'
+      fullPath: '/app/fiscal'
+      preLoaderRoute: typeof AppFiscalRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/financeiro': {
+      id: '/app/financeiro'
+      path: '/financeiro'
+      fullPath: '/app/financeiro'
+      preLoaderRoute: typeof AppFinanceiroRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/estoque': {
+      id: '/app/estoque'
+      path: '/estoque'
+      fullPath: '/app/estoque'
+      preLoaderRoute: typeof AppEstoqueRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/dav': {
+      id: '/app/dav'
+      path: '/dav'
+      fullPath: '/app/dav'
+      preLoaderRoute: typeof AppDavRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/dashboard': {
+      id: '/app/dashboard'
+      path: '/dashboard'
+      fullPath: '/app/dashboard'
+      preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/configuracoes': {
+      id: '/app/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/app/configuracoes'
+      preLoaderRoute: typeof AppConfiguracoesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/compras': {
+      id: '/app/compras'
+      path: '/compras'
+      fullPath: '/app/compras'
+      preLoaderRoute: typeof AppComprasRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/clientes': {
+      id: '/app/clientes'
+      path: '/clientes'
+      fullPath: '/app/clientes'
+      preLoaderRoute: typeof AppClientesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/catalogo': {
+      id: '/app/catalogo'
+      path: '/catalogo'
+      fullPath: '/app/catalogo'
+      preLoaderRoute: typeof AppCatalogoRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
+interface AppRouteChildren {
+  AppCatalogoRoute: typeof AppCatalogoRoute
+  AppClientesRoute: typeof AppClientesRoute
+  AppComprasRoute: typeof AppComprasRoute
+  AppConfiguracoesRoute: typeof AppConfiguracoesRoute
+  AppDashboardRoute: typeof AppDashboardRoute
+  AppDavRoute: typeof AppDavRoute
+  AppEstoqueRoute: typeof AppEstoqueRoute
+  AppFinanceiroRoute: typeof AppFinanceiroRoute
+  AppFiscalRoute: typeof AppFiscalRoute
+  AppFornecedoresRoute: typeof AppFornecedoresRoute
+  AppLogisticaRoute: typeof AppLogisticaRoute
+  AppMobileRoute: typeof AppMobileRoute
+  AppPdvRoute: typeof AppPdvRoute
+  AppPortalRoute: typeof AppPortalRoute
+  AppProdutosRoute: typeof AppProdutosRoute
+  AppRelatoriosRoute: typeof AppRelatoriosRoute
+  AppVendasRoute: typeof AppVendasRoute
+  AppIndexRoute: typeof AppIndexRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppCatalogoRoute: AppCatalogoRoute,
+  AppClientesRoute: AppClientesRoute,
+  AppComprasRoute: AppComprasRoute,
+  AppConfiguracoesRoute: AppConfiguracoesRoute,
+  AppDashboardRoute: AppDashboardRoute,
+  AppDavRoute: AppDavRoute,
+  AppEstoqueRoute: AppEstoqueRoute,
+  AppFinanceiroRoute: AppFinanceiroRoute,
+  AppFiscalRoute: AppFiscalRoute,
+  AppFornecedoresRoute: AppFornecedoresRoute,
+  AppLogisticaRoute: AppLogisticaRoute,
+  AppMobileRoute: AppMobileRoute,
+  AppPdvRoute: AppPdvRoute,
+  AppPortalRoute: AppPortalRoute,
+  AppProdutosRoute: AppProdutosRoute,
+  AppRelatoriosRoute: AppRelatoriosRoute,
+  AppVendasRoute: AppVendasRoute,
+  AppIndexRoute: AppIndexRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

@@ -1,29 +1,94 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { SuraLogo } from "@/components/sura-logo";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Leaf, Shield, TrendingUp, Truck } from "lucide-react";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Your App" },
-      { name: "description", content: "Replace this with a one-sentence description of your app." },
-      { property: "og:title", content: "Your App" },
-      { property: "og:description", content: "Replace this with a one-sentence description of your app." },
-    ],
-  }),
-  component: Index,
+  head: () => ({ meta: [{ title: "Entrar — SURA ERP" }] }),
+  component: Login,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+function Login() {
+  const nav = useNavigate();
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="min-h-screen grid lg:grid-cols-2">
+      {/* Form */}
+      <div className="flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-20">
+        <div className="mx-auto w-full max-w-md">
+          <SuraLogo />
+          <div className="mt-10">
+            <h1 className="font-display text-3xl font-bold tracking-tight">Bem-vindo de volta</h1>
+            <p className="mt-2 text-muted-foreground">Acesse sua conta para gerenciar sua distribuidora.</p>
+          </div>
+
+          <form
+            onSubmit={(e) => { e.preventDefault(); nav({ to: "/app/dashboard" }); }}
+            className="mt-8 space-y-5"
+          >
+            <div className="space-y-1.5">
+              <Label htmlFor="user">Usuário ou E-mail</Label>
+              <Input id="user" placeholder="seu@email.com" defaultValue="marcos@suravasos.com.br" />
+            </div>
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="pass">Senha</Label>
+                <a href="#" className="text-xs font-medium text-primary hover:underline">Esqueci minha senha</a>
+              </div>
+              <Input id="pass" type="password" placeholder="••••••••" defaultValue="••••••••" />
+            </div>
+            <label className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Checkbox defaultChecked /> Manter conectado por 30 dias
+            </label>
+            <Button type="submit" size="lg" className="w-full bg-gradient-brand shadow-elevated text-primary-foreground hover:opacity-95">
+              Entrar no SURA ERP
+            </Button>
+            <p className="text-center text-sm text-muted-foreground">
+              Novo por aqui?{" "}
+              <Link to="/" className="font-medium text-primary hover:underline">Solicitar demonstração</Link>
+            </p>
+          </form>
+
+          <p className="mt-12 text-xs text-muted-foreground text-center">
+            © 2026 SURA Vasos — Todos os direitos reservados
+          </p>
+        </div>
+      </div>
+
+      {/* Showcase */}
+      <div className="relative hidden lg:flex flex-col justify-between overflow-hidden bg-gradient-sidebar p-12 text-sidebar-foreground">
+        <div className="absolute inset-0 opacity-20" style={{
+          backgroundImage: "radial-gradient(circle at 20% 20%, #22C55E 0, transparent 40%), radial-gradient(circle at 80% 70%, #92400E 0, transparent 45%)"
+        }} />
+        <div className="relative">
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest backdrop-blur">
+            <Leaf className="h-3.5 w-3.5" /> Gestão Inteligente
+          </div>
+          <h2 className="mt-8 font-display text-4xl font-bold leading-tight text-balance">
+            Controle total da sua distribuidora de vasos em um só lugar.
+          </h2>
+          <p className="mt-4 max-w-md text-sidebar-foreground/70">
+            Estoque, vendas, financeiro, logística e fiscal integrados. Decisões mais rápidas, operação mais lucrativa.
+          </p>
+        </div>
+
+        <div className="relative grid grid-cols-2 gap-4">
+          {[
+            { icon: TrendingUp, label: "+38% vendas", sub: "média dos clientes" },
+            { icon: Truck, label: "2.4k entregas", sub: "rastreadas/mês" },
+            { icon: Shield, label: "100% fiscal", sub: "NF-e, NFC-e, MDF-e" },
+            { icon: Leaf, label: "180+ SKUs", sub: "catalogados" },
+          ].map((s) => (
+            <div key={s.label} className="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+              <s.icon className="h-5 w-5 text-success" />
+              <p className="mt-3 font-display text-lg font-bold">{s.label}</p>
+              <p className="text-xs text-sidebar-foreground/60">{s.sub}</p>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
