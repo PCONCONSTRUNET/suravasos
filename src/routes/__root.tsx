@@ -77,10 +77,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "SURA ERP — Gestão para Distribuidoras de Vasos" },
-      { name: "description", content: "Sistema ERP SaaS completo para distribuidoras de vasos, floreiras e jardinagem." },
+      { title: "SURA ERP — Sistema Interno" },
+      { name: "description", content: "Sistema ERP interno da SURA Vasos para gestão de estoque, vendas, financeiro e logística." },
       { property: "og:title", content: "SURA ERP" },
-      { property: "og:description", content: "Controle total de estoque, vendas, financeiro e logística." },
+      { property: "og:description", content: "Sistema interno de gestão da SURA Vasos." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
