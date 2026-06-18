@@ -75,10 +75,10 @@ function Login() {
 
         <div className="relative grid grid-cols-2 gap-4">
           {[
-            { icon: TrendingUp, label: "+38% vendas", sub: "média dos clientes" },
-            { icon: Truck, label: "2.4k entregas", sub: "rastreadas/mês" },
-            { icon: Shield, label: "100% fiscal", sub: "NF-e, NFC-e, MDF-e" },
-            { icon: Leaf, label: "180+ SKUs", sub: "catalogados" },
+            { icon: TrendingUp, label: "Comercial", sub: "Pedidos & PDV" },
+            { icon: Truck, label: "Logística", sub: "Rotas & expedição" },
+            { icon: Shield, label: "Fiscal", sub: "NF-e · NFC-e · MDF-e" },
+            { icon: Leaf, label: "Estoque", sub: "Galpão Bauru/SP" },
           ].map((s) => (
             <div key={s.label} className="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur">
               <s.icon className="h-5 w-5 text-success" />
