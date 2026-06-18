@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Download, Truck, FileText, CheckCircle2 } from "lucide-react";
 
 export const Route = createFileRoute("/app/portal")({
-  head: () => ({ meta: [{ title: "Portal do Cliente — SURA ERP" }] }),
+  head: () => ({ meta: [{ title: "Portal do Cliente — VIVAVERDE ERP" }] }),
   component: Portal,
 });
 

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Search, Trash2, CreditCard, Banknote, QrCode, Receipt } from "lucide-react";
 
 export const Route = createFileRoute("/app/pdv")({
-  head: () => ({ meta: [{ title: "PDV — SURA ERP" }] }),
+  head: () => ({ meta: [{ title: "PDV — VIVAVERDE ERP" }] }),
   component: PDV,
 });
 

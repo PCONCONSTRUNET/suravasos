@@ -6,7 +6,7 @@ import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Too
 import { BarChart3, FileSpreadsheet, FileText, Download, Users, Package, DollarSign } from "lucide-react";
 
 export const Route = createFileRoute("/app/relatorios")({
-  head: () => ({ meta: [{ title: "Relatórios — SURA ERP" }] }),
+  head: () => ({ meta: [{ title: "Relatórios — VIVAVERDE ERP" }] }),
   component: Relatorios,
 });
 

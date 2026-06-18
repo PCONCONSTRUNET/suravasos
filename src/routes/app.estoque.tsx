@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { ArrowDownLeft, ArrowUpRight, ClipboardList, Settings2, Package, AlertTriangle } from "lucide-react";
 
 export const Route = createFileRoute("/app/estoque")({
-  head: () => ({ meta: [{ title: "Estoque — SURA ERP" }] }),
+  head: () => ({ meta: [{ title: "Estoque — VIVAVERDE ERP" }] }),
   component: Estoque,
 });
 

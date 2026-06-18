@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Share2, Search, Heart, ShoppingCart } from "lucide-react";
 
 export const Route = createFileRoute("/app/catalogo")({
-  head: () => ({ meta: [{ title: "Catálogo Digital — SURA ERP" }] }),
+  head: () => ({ meta: [{ title: "Catálogo Digital — VIVAVERDE ERP" }] }),
   component: Catalogo,
 });
 
