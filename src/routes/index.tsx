@@ -20,8 +20,8 @@ function Login() {
         <div className="mx-auto w-full max-w-md">
           <SuraLogo />
           <div className="mt-10">
-            <h1 className="font-display text-3xl font-bold tracking-tight">Bem-vindo de volta</h1>
-            <p className="mt-2 text-muted-foreground">Acesse sua conta para gerenciar sua distribuidora.</p>
+            <h1 className="font-display text-3xl font-bold tracking-tight">Acesso ao sistema</h1>
+            <p className="mt-2 text-muted-foreground">Sistema interno de gestão — uso restrito a colaboradores autorizados.</p>
           </div>
 
           <form
@@ -29,30 +29,29 @@ function Login() {
             className="mt-8 space-y-5"
           >
             <div className="space-y-1.5">
-              <Label htmlFor="user">Usuário ou E-mail</Label>
-              <Input id="user" placeholder="seu@email.com" defaultValue="marcos@suravasos.com.br" />
+              <Label htmlFor="user">Matrícula ou E-mail corporativo</Label>
+              <Input id="user" placeholder="usuario@suravasos.com.br" defaultValue="marcos@suravasos.com.br" />
             </div>
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <Label htmlFor="pass">Senha</Label>
-                <a href="#" className="text-xs font-medium text-primary hover:underline">Esqueci minha senha</a>
+                <a href="#" className="text-xs font-medium text-primary hover:underline">Recuperar senha (TI)</a>
               </div>
               <Input id="pass" type="password" placeholder="••••••••" defaultValue="••••••••" />
             </div>
             <label className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Checkbox defaultChecked /> Manter conectado por 30 dias
+              <Checkbox /> Lembrar este computador
             </label>
             <Button type="submit" size="lg" className="w-full bg-gradient-brand shadow-elevated text-primary-foreground hover:opacity-95">
-              Entrar no SURA ERP
+              Entrar
             </Button>
-            <p className="text-center text-sm text-muted-foreground">
-              Novo por aqui?{" "}
-              <Link to="/" className="font-medium text-primary hover:underline">Solicitar demonstração</Link>
+            <p className="text-center text-xs text-muted-foreground">
+              Problemas para acessar? Contate o departamento de TI — ramal 220.
             </p>
           </form>
 
           <p className="mt-12 text-xs text-muted-foreground text-center">
-            © 2026 SURA Vasos — Todos os direitos reservados
+            SURA Vasos Indústria e Comércio Ltda · Sistema Interno v2.4
           </p>
         </div>
       </div>
@@ -64,13 +63,13 @@ function Login() {
         }} />
         <div className="relative">
           <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest backdrop-blur">
-            <Leaf className="h-3.5 w-3.5" /> Gestão Inteligente
+            <Leaf className="h-3.5 w-3.5" /> SURA Vasos · Matriz Bauru
           </div>
           <h2 className="mt-8 font-display text-4xl font-bold leading-tight text-balance">
-            Controle total da sua distribuidora de vasos em um só lugar.
+            Sistema interno de gestão da distribuidora.
           </h2>
           <p className="mt-4 max-w-md text-sidebar-foreground/70">
-            Estoque, vendas, financeiro, logística e fiscal integrados. Decisões mais rápidas, operação mais lucrativa.
+            Plataforma de uso exclusivo dos setores comercial, fiscal, financeiro, expedição e logística da SURA.
           </p>
         </div>
 
