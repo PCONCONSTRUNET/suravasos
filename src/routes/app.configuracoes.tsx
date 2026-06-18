@@ -10,15 +10,15 @@ import { Badge } from "@/components/ui/badge";
 import { Database, Shield, Users, User, Settings as Cog } from "lucide-react";
 
 export const Route = createFileRoute("/app/configuracoes")({
-  head: () => ({ meta: [{ title: "Configurações — SURA ERP" }] }),
+  head: () => ({ meta: [{ title: "Configurações — VIVAVERDE ERP" }] }),
   component: Configuracoes,
 });
 
 const users = [
-  { n: "Marcos Silva", e: "marcos@suravasos.com.br", r: "Administrador", c: "bg-primary/10 text-primary" },
-  { n: "Camila Torres", e: "camila@suravasos.com.br", r: "Financeiro", c: "bg-info/15 text-info" },
-  { n: "Diego Oliveira", e: "diego@suravasos.com.br", r: "Vendedor", c: "bg-success/15 text-success" },
-  { n: "Patrícia Souza", e: "patricia@suravasos.com.br", r: "Estoquista", c: "bg-terra/10 text-terra" },
+  { n: "Marcos Silva", e: "marcos@vivaverde.com.br", r: "Administrador", c: "bg-primary/10 text-primary" },
+  { n: "Camila Torres", e: "camila@vivaverde.com.br", r: "Financeiro", c: "bg-info/15 text-info" },
+  { n: "Diego Oliveira", e: "diego@vivaverde.com.br", r: "Vendedor", c: "bg-success/15 text-success" },
+  { n: "Patrícia Souza", e: "patricia@vivaverde.com.br", r: "Estoquista", c: "bg-terra/10 text-terra" },
 ];
 
 function Configuracoes() {
@@ -39,13 +39,13 @@ function Configuracoes() {
           <Card className="shadow-card">
             <CardHeader><CardTitle>Dados da empresa</CardTitle></CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
-              <div><Label>Razão social</Label><Input className="mt-1.5" defaultValue="SURA Vasos Indústria e Comércio Ltda" /></div>
+              <div><Label>Razão social</Label><Input className="mt-1.5" defaultValue="VIVAVERDE Distribuidora de Vasos e Acessórios Ltda" /></div>
               <div><Label>CNPJ</Label><Input className="mt-1.5" defaultValue="12.345.678/0001-99" /></div>
               <div><Label>Inscrição estadual</Label><Input className="mt-1.5" defaultValue="123.456.789.012" /></div>
               <div><Label>Regime tributário</Label><Input className="mt-1.5" defaultValue="Simples Nacional" /></div>
               <div className="md:col-span-2"><Label>Endereço</Label><Input className="mt-1.5" defaultValue="Rod. Marechal Rondon, KM 342 — Bauru/SP" /></div>
               <div><Label>Telefone</Label><Input className="mt-1.5" defaultValue="(14) 3344-5566" /></div>
-              <div><Label>E-mail</Label><Input className="mt-1.5" defaultValue="contato@suravasos.com.br" /></div>
+              <div><Label>E-mail</Label><Input className="mt-1.5" defaultValue="contato@vivaverde.com.br" /></div>
               <div className="md:col-span-2 flex justify-end">
                 <Button className="bg-gradient-brand text-primary-foreground">Salvar alterações</Button>
               </div>

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Truck, MapPin, Clock, CheckCircle2 } from "lucide-react";
 
 export const Route = createFileRoute("/app/logistica")({
-  head: () => ({ meta: [{ title: "Logística — SURA ERP" }] }),
+  head: () => ({ meta: [{ title: "Logística — VIVAVERDE ERP" }] }),
   component: Logistica,
 });
 

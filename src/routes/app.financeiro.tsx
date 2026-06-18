@@ -7,7 +7,7 @@ import { Wallet, TrendingUp, TrendingDown, PiggyBank } from "lucide-react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 export const Route = createFileRoute("/app/financeiro")({
-  head: () => ({ meta: [{ title: "Financeiro — SURA ERP" }] }),
+  head: () => ({ meta: [{ title: "Financeiro — VIVAVERDE ERP" }] }),
   component: Financeiro,
 });
 

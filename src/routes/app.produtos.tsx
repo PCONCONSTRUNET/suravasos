@@ -10,7 +10,7 @@ import {
 import { Filter, Plus, Search, Pencil, Trash2, Package } from "lucide-react";
 
 export const Route = createFileRoute("/app/produtos")({
-  head: () => ({ meta: [{ title: "Produtos — SURA ERP" }] }),
+  head: () => ({ meta: [{ title: "Produtos — VIVAVERDE ERP" }] }),
   component: Produtos,
 });
 

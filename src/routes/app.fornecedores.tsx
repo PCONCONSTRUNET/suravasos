@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, Pencil, History } from "lucide-react";
 
 export const Route = createFileRoute("/app/fornecedores")({
-  head: () => ({ meta: [{ title: "Fornecedores — SURA ERP" }] }),
+  head: () => ({ meta: [{ title: "Fornecedores — VIVAVERDE ERP" }] }),
   component: Fornecedores,
 });
 
