@@ -3,7 +3,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import {
   LayoutDashboard, Package, Boxes, Users, Truck, ShoppingCart, ShoppingBag,
   FileText, Calculator, Wallet, Map, Receipt, BarChart3, Globe, Smartphone,
-  UserCircle, Settings, Bell, Search, Menu, X, ChevronDown, Moon, Sun, LogOut,
+  UserCircle, Settings, Bell, Search, Menu, X, ChevronDown, Moon, Sun, LogOut, PlusCircle,
 } from "lucide-react";
 import { VivaverdeLogo } from "./vivaverde-logo";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,7 @@ import {
 const NAV = [
   { group: "Principal", items: [
     { to: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { to: "/app/registro", label: "Registro Rápido", icon: PlusCircle },
   ]},
   { group: "Operação", items: [
     { to: "/app/estoque", label: "Estoque", icon: Boxes },
@@ -39,8 +40,6 @@ const NAV = [
   ]},
   { group: "Canais", items: [
     { to: "/app/catalogo", label: "Catálogo Digital", icon: Globe },
-    { to: "/app/mobile", label: "App Mobile", icon: Smartphone },
-    { to: "/app/portal", label: "Portal do Cliente", icon: UserCircle },
     { to: "/app/configuracoes", label: "Configurações", icon: Settings },
   ]},
 ];
@@ -58,7 +57,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar desktop */}
-      <aside className="hidden md:flex w-64 shrink-0 flex-col bg-gradient-sidebar text-sidebar-foreground border-r border-sidebar-border">
+      <aside className="sticky top-0 h-screen hidden md:flex print:hidden w-64 shrink-0 flex-col bg-gradient-sidebar text-sidebar-foreground border-r border-sidebar-border">
         <div className="p-5 border-b border-sidebar-border">
           <VivaverdeLogo size="small" />
         </div>
@@ -95,10 +94,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="p-4 border-t border-sidebar-border">
           <div className="flex items-center gap-3 rounded-lg bg-sidebar-accent/40 p-2.5">
             <div className="h-9 w-9 shrink-0 rounded-full bg-gradient-brand grid place-items-center text-sm font-bold text-primary-foreground">
-              MS
+              DA
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold truncate">Marcos Silva</p>
+              <p className="text-sm font-semibold truncate">Douglas Almeida</p>
               <p className="text-xs text-sidebar-foreground/60 truncate">Administrador</p>
             </div>
           </div>
@@ -140,7 +139,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* Main */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-card/80 px-4 backdrop-blur-md md:px-6">
+        <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-card/80 px-4 backdrop-blur-md md:px-6 print:hidden">
           <Button size="icon" variant="ghost" className="md:hidden" onClick={() => setOpen(true)}>
             <Menu className="h-5 w-5" />
           </Button>
@@ -152,15 +151,51 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Button variant="ghost" size="icon" onClick={toggleDark}>
             {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-4 w-4" />
-            <Badge className="absolute -right-0.5 -top-0.5 h-4 w-4 p-0 grid place-items-center text-[10px] bg-destructive text-destructive-foreground">3</Badge>
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="h-4 w-4" />
+                <Badge className="absolute -right-0.5 -top-0.5 h-4 w-4 p-0 grid place-items-center text-[10px] bg-destructive text-destructive-foreground">3</Badge>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-80 p-0">
+              <div className="flex items-center justify-between px-4 py-3 border-b">
+                <span className="font-semibold text-sm">Notificações</span>
+                <Badge variant="secondary" className="text-xs">3 novas</Badge>
+              </div>
+              <div className="max-h-[300px] overflow-y-auto">
+                <div className="px-4 py-3 border-b bg-muted/20 hover:bg-muted/50 cursor-pointer transition-colors">
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="text-sm font-medium">Novo pedido #1042</span>
+                    <span className="text-[10px] text-muted-foreground">Agora</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Cliente: Flora Nativa. Valor: R$ 1.450,00</p>
+                </div>
+                <div className="px-4 py-3 border-b bg-muted/20 hover:bg-muted/50 cursor-pointer transition-colors">
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="text-sm font-medium">Estoque Baixo</span>
+                    <span className="text-[10px] text-muted-foreground">Há 2h</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Vaso Romano (Terracota) com apenas 2 unidades restantes.</p>
+                </div>
+                <div className="px-4 py-3 bg-muted/20 hover:bg-muted/50 cursor-pointer transition-colors">
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="text-sm font-medium">Pagamento Aprovado</span>
+                    <span className="text-[10px] text-muted-foreground">Há 5h</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Fatura #890 quitada por Garden Center ABC.</p>
+                </div>
+              </div>
+              <div className="p-2 border-t text-center">
+                <Button variant="ghost" className="w-full text-xs text-brand hover:text-brand/80 h-8">Ver todas as notificações</Button>
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-2 rounded-full pl-1 pr-3 py-1 hover:bg-secondary">
-                <div className="h-8 w-8 rounded-full bg-gradient-brand grid place-items-center text-xs font-bold text-primary-foreground">MS</div>
-                <span className="hidden sm:inline text-sm font-medium">Marcos</span>
+                <div className="h-8 w-8 rounded-full bg-gradient-brand grid place-items-center text-xs font-bold text-primary-foreground">DA</div>
+                <span className="hidden sm:inline text-sm font-medium">Douglas</span>
                 <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
               </button>
             </DropdownMenuTrigger>
@@ -176,7 +211,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
-        <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>
+        <main className="flex-1 p-4 md:p-6 lg:p-8 print:p-0">{children}</main>
       </div>
     </div>
   );
@@ -184,7 +219,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
 export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: string; actions?: ReactNode }) {
   return (
-    <div className="mb-6 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:items-center sm:justify-between">
+    <div className="mb-6 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:items-center sm:justify-between print:hidden">
       <div className="min-w-0">
         <h1 className="truncate font-display text-2xl font-bold sm:text-3xl">{title}</h1>
         {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}

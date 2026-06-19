@@ -1,0 +1,16 @@
+{
+  "name": "VIVAVERDE ERP",
+  "short_name": "VIVAVERDE",
+  "start_url": "/app/dashboard",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#166534",
+  "icons": [
+    {
+      "src": "/vivaverdelogo.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

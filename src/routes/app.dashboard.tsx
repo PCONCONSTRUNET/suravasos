@@ -1,4 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 import { PageHeader } from "@/components/app-shell";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,38 +19,7 @@ export const Route = createFileRoute("/app/dashboard")({
   component: Dashboard,
 });
 
-const sales = [
-  { m: "Jan", v: 142000, c: 98000 }, { m: "Fev", v: 168000, c: 112000 },
-  { m: "Mar", v: 154000, c: 105000 }, { m: "Abr", v: 198000, c: 134000 },
-  { m: "Mai", v: 224000, c: 148000 }, { m: "Jun", v: 256000, c: 162000 },
-  { m: "Jul", v: 248000, c: 158000 }, { m: "Ago", v: 289000, c: 178000 },
-  { m: "Set", v: 312000, c: 192000 }, { m: "Out", v: 298000, c: 184000 },
-  { m: "Nov", v: 342000, c: 208000 }, { m: "Dez", v: 386000, c: 232000 },
-];
-
-const topProducts = [
-  { name: "Vaso PL 17", v: 1840 },
-  { name: "Vaso Adriana 25", v: 1432 },
-  { name: "Floreira FT 40", v: 1124 },
-  { name: "Cuia C17", v: 986 },
-  { name: "Prato 24", v: 812 },
-];
-
-const mix = [
-  { name: "Vasos", value: 48, color: "#166534" },
-  { name: "Floreiras", value: 22, color: "#22C55E" },
-  { name: "Cuias", value: 14, color: "#92400E" },
-  { name: "Pratos", value: 10, color: "#2563EB" },
-  { name: "Acessórios", value: 6, color: "#94a3b8" },
-];
-
-const recent = [
-  { n: "#10428", c: "Jardim Verde Ltda", v: "R$ 4.820,00", s: "Pago" },
-  { n: "#10427", c: "Floricultura Rosa", v: "R$ 1.234,50", s: "Em separação" },
-  { n: "#10426", c: "Garden Center BH", v: "R$ 8.940,00", s: "Faturado" },
-  { n: "#10425", c: "Sítio das Flores", v: "R$ 642,90", s: "Aguardando" },
-  { n: "#10424", c: "Vivero Paulista", v: "R$ 12.380,00", s: "Pago" },
-];
+// Gráficos serão dinamizados posteriormente. Por enquanto mostram arrays vazios após limpeza.
 
 function KPI({ icon: Icon, label, value, delta, up = true, tone = "primary" }: any) {
   const tones: Record<string, string> = {
@@ -82,11 +53,54 @@ function KPI({ icon: Icon, label, value, delta, up = true, tone = "primary" }: a
 }
 
 function Dashboard() {
+  const [stats, setStats] = useState({
+    faturamento: 0,
+    pedidosHoje: 0,
+    produtosEstoque: 0,
+    clientesAtivos: 0,
+    entregasPendentes: 0,
+    recent: [] as any[],
+  });
+
+  useEffect(() => {
+    async function loadData() {
+      const { data: vendasData } = await supabase.from('vendas').select('*').eq('tipo', 'VENDA');
+      const { count: produtosCount } = await supabase.from('produtos').select('*', { count: 'exact', head: true }).eq('status', 'Ativo');
+      const { count: clientesCount } = await supabase.from('clientes').select('*', { count: 'exact', head: true });
+      const { data: vendasRecentes } = await supabase.from('vendas')
+        .select('*, clientes(nome)')
+        .eq('tipo', 'VENDA')
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      let fat = 0;
+      let pedHoje = 0;
+      let entPend = 0;
+      const hoje = new Date().toISOString().split('T')[0];
+
+      vendasData?.forEach(v => {
+        fat += Number(v.total || 0);
+        if (v.created_at?.startsWith(hoje)) pedHoje++;
+        if (v.status === 'PENDENTE' || v.status === 'EM_ROTA') entPend++;
+      });
+
+      setStats({
+        faturamento: fat,
+        pedidosHoje: pedHoje,
+        produtosEstoque: produtosCount || 0,
+        clientesAtivos: clientesCount || 0,
+        entregasPendentes: entPend,
+        recent: vendasRecentes || []
+      });
+    }
+    loadData();
+  }, []);
+
   return (
     <>
       <PageHeader
         title="Visão Geral"
-        subtitle="Quarta-feira, 18 de junho de 2026 — bom dia, Marcos 👋"
+        subtitle={`${new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date())} — bom dia, Douglas 👋`}
         actions={
           <>
             <Button variant="outline">Exportar</Button>
@@ -98,12 +112,12 @@ function Dashboard() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
-        <KPI icon={DollarSign} label="Faturamento mensal" value="R$ 386.420" delta="+12,4%" tone="primary" />
-        <KPI icon={ShoppingCart} label="Pedidos do dia" value="42" delta="+8 hoje" tone="info" />
-        <KPI icon={Package} label="Produtos em estoque" value="18.342" delta="+312" tone="success" />
-        <KPI icon={AlertTriangle} label="Produtos críticos" value="7" delta="+2" up={false} tone="warning" />
-        <KPI icon={Users} label="Clientes ativos" value="1.284" delta="+34" tone="terra" />
-        <KPI icon={Truck} label="Entregas pendentes" value="23" delta="-4" up={false} tone="destructive" />
+        <KPI icon={DollarSign} label="Faturamento" value={`R$ ${stats.faturamento.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} delta="" tone="primary" />
+        <KPI icon={ShoppingCart} label="Pedidos do dia" value={stats.pedidosHoje.toString()} delta="" tone="info" />
+        <KPI icon={Package} label="Produtos ativos" value={stats.produtosEstoque.toString()} delta="" tone="success" />
+        <KPI icon={AlertTriangle} label="Produtos críticos" value="0" delta="" tone="warning" />
+        <KPI icon={Users} label="Clientes ativos" value={stats.clientesAtivos.toString()} delta="" tone="terra" />
+        <KPI icon={Truck} label="Entregas pendentes" value={stats.entregasPendentes.toString()} delta="" up={false} tone="destructive" />
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
@@ -120,7 +134,7 @@ function Dashboard() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={280}>
-              <AreaChart data={sales}>
+              <AreaChart data={[]}>
                 <defs>
                   <linearGradient id="gv" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#166534" stopOpacity={0.4} />
@@ -150,22 +164,13 @@ function Dashboard() {
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
-                <Pie data={mix} dataKey="value" innerRadius={55} outerRadius={85} paddingAngle={2}>
-                  {mix.map((e) => <Cell key={e.name} fill={e.color} />)}
+                <Pie data={[]} dataKey="value" innerRadius={55} outerRadius={85} paddingAngle={2}>
                 </Pie>
                 <Tooltip />
               </PieChart>
             </ResponsiveContainer>
-            <ul className="mt-2 space-y-1.5 text-sm">
-              {mix.map((m) => (
-                <li key={m.name} className="flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-sm" style={{ background: m.color }} />
-                    {m.name}
-                  </span>
-                  <span className="font-semibold">{m.value}%</span>
-                </li>
-              ))}
+            <ul className="mt-2 space-y-1.5 text-sm text-center text-muted-foreground">
+              <li>Sem dados suficientes.</li>
             </ul>
           </CardContent>
         </Card>
@@ -182,15 +187,17 @@ function Dashboard() {
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y">
-              {recent.map((r) => (
-                <div key={r.n} className="flex items-center justify-between px-6 py-3">
+              {stats.recent.length === 0 ? (
+                <div className="p-6 text-center text-sm text-muted-foreground">Nenhum pedido recente.</div>
+              ) : stats.recent.map((r: any) => (
+                <div key={r.id} className="flex items-center justify-between px-6 py-3">
                   <div className="min-w-0">
-                    <p className="font-semibold text-sm">{r.n}</p>
-                    <p className="text-xs text-muted-foreground truncate">{r.c}</p>
+                    <p className="font-semibold text-sm">#{r.id?.toString().slice(0, 5)}</p>
+                    <p className="text-xs text-muted-foreground truncate">{r.clientes?.nome || "Consumidor Final"}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-semibold">{r.v}</p>
-                    <Badge variant="secondary" className="mt-0.5 text-[10px]">{r.s}</Badge>
+                    <p className="text-sm font-semibold">R$ {Number(r.total || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                    <Badge variant="secondary" className="mt-0.5 text-[10px]">{r.status}</Badge>
                   </div>
                 </div>
               ))}
@@ -205,7 +212,7 @@ function Dashboard() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={230}>
-              <BarChart data={topProducts} layout="vertical" margin={{ left: 10 }}>
+              <BarChart data={[]} layout="vertical" margin={{ left: 10 }}>
                 <CartesianGrid horizontal={false} stroke="#e2e8f0" />
                 <XAxis type="number" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
                 <YAxis dataKey="name" type="category" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} width={110} />
@@ -219,9 +226,9 @@ function Dashboard() {
 
       <div className="mt-6 grid gap-6 md:grid-cols-3">
         {[
-          { title: "Margem líquida", value: "32,4%", icon: TrendingUp, tone: "text-success" },
-          { title: "Ticket médio", value: "R$ 642,80", icon: DollarSign, tone: "text-primary" },
-          { title: "OTIF (entregas no prazo)", value: "94,2%", icon: Truck, tone: "text-info" },
+          { title: "Margem líquida", value: "0,0%", icon: TrendingUp, tone: "text-success" },
+          { title: "Ticket médio", value: "R$ 0,00", icon: DollarSign, tone: "text-primary" },
+          { title: "OTIF (entregas no prazo)", value: "0,0%", icon: Truck, tone: "text-info" },
         ].map((s) => (
           <Card key={s.title} className="shadow-card">
             <CardContent className="flex items-center justify-between p-6">

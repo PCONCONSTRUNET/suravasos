@@ -9,27 +9,39 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as CatalogoRouteImport } from './routes/catalogo'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as DeclaracaoIdRouteImport } from './routes/declaracao.$id'
 import { Route as AppVendasRouteImport } from './routes/app.vendas'
+import { Route as AppVendaNovaRouteImport } from './routes/app.venda-nova'
 import { Route as AppRelatoriosRouteImport } from './routes/app.relatorios'
+import { Route as AppRegistroRouteImport } from './routes/app.registro'
 import { Route as AppProdutosRouteImport } from './routes/app.produtos'
-import { Route as AppPortalRouteImport } from './routes/app.portal'
+import { Route as AppProdutoNovoRouteImport } from './routes/app.produto-novo'
 import { Route as AppPdvRouteImport } from './routes/app.pdv'
-import { Route as AppMobileRouteImport } from './routes/app.mobile'
 import { Route as AppLogisticaRouteImport } from './routes/app.logistica'
 import { Route as AppFornecedoresRouteImport } from './routes/app.fornecedores'
+import { Route as AppFornecedorNovoRouteImport } from './routes/app.fornecedor-novo'
 import { Route as AppFiscalRouteImport } from './routes/app.fiscal'
 import { Route as AppFinanceiroRouteImport } from './routes/app.financeiro'
 import { Route as AppEstoqueRouteImport } from './routes/app.estoque'
+import { Route as AppDavNovoRouteImport } from './routes/app.dav-novo'
 import { Route as AppDavRouteImport } from './routes/app.dav'
 import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
 import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes'
 import { Route as AppComprasRouteImport } from './routes/app.compras'
+import { Route as AppCompraNovaRouteImport } from './routes/app.compra-nova'
 import { Route as AppClientesRouteImport } from './routes/app.clientes'
+import { Route as AppClienteNovoRouteImport } from './routes/app.cliente-novo'
 import { Route as AppCatalogoRouteImport } from './routes/app.catalogo'
 
+const CatalogoRoute = CatalogoRouteImport.update({
+  id: '/catalogo',
+  path: '/catalogo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppRoute = AppRouteImport.update({
   id: '/app',
   path: '/app',
@@ -45,9 +57,19 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
+const DeclaracaoIdRoute = DeclaracaoIdRouteImport.update({
+  id: '/declaracao/$id',
+  path: '/declaracao/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppVendasRoute = AppVendasRouteImport.update({
   id: '/vendas',
   path: '/vendas',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppVendaNovaRoute = AppVendaNovaRouteImport.update({
+  id: '/venda-nova',
+  path: '/venda-nova',
   getParentRoute: () => AppRoute,
 } as any)
 const AppRelatoriosRoute = AppRelatoriosRouteImport.update({
@@ -55,24 +77,24 @@ const AppRelatoriosRoute = AppRelatoriosRouteImport.update({
   path: '/relatorios',
   getParentRoute: () => AppRoute,
 } as any)
+const AppRegistroRoute = AppRegistroRouteImport.update({
+  id: '/registro',
+  path: '/registro',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppProdutosRoute = AppProdutosRouteImport.update({
   id: '/produtos',
   path: '/produtos',
   getParentRoute: () => AppRoute,
 } as any)
-const AppPortalRoute = AppPortalRouteImport.update({
-  id: '/portal',
-  path: '/portal',
+const AppProdutoNovoRoute = AppProdutoNovoRouteImport.update({
+  id: '/produto-novo',
+  path: '/produto-novo',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPdvRoute = AppPdvRouteImport.update({
   id: '/pdv',
   path: '/pdv',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppMobileRoute = AppMobileRouteImport.update({
-  id: '/mobile',
-  path: '/mobile',
   getParentRoute: () => AppRoute,
 } as any)
 const AppLogisticaRoute = AppLogisticaRouteImport.update({
@@ -83,6 +105,11 @@ const AppLogisticaRoute = AppLogisticaRouteImport.update({
 const AppFornecedoresRoute = AppFornecedoresRouteImport.update({
   id: '/fornecedores',
   path: '/fornecedores',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFornecedorNovoRoute = AppFornecedorNovoRouteImport.update({
+  id: '/fornecedor-novo',
+  path: '/fornecedor-novo',
   getParentRoute: () => AppRoute,
 } as any)
 const AppFiscalRoute = AppFiscalRouteImport.update({
@@ -98,6 +125,11 @@ const AppFinanceiroRoute = AppFinanceiroRouteImport.update({
 const AppEstoqueRoute = AppEstoqueRouteImport.update({
   id: '/estoque',
   path: '/estoque',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDavNovoRoute = AppDavNovoRouteImport.update({
+  id: '/dav-novo',
+  path: '/dav-novo',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDavRoute = AppDavRouteImport.update({
@@ -120,9 +152,19 @@ const AppComprasRoute = AppComprasRouteImport.update({
   path: '/compras',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCompraNovaRoute = AppCompraNovaRouteImport.update({
+  id: '/compra-nova',
+  path: '/compra-nova',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppClientesRoute = AppClientesRouteImport.update({
   id: '/clientes',
   path: '/clientes',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppClienteNovoRoute = AppClienteNovoRouteImport.update({
+  id: '/cliente-novo',
+  path: '/cliente-novo',
   getParentRoute: () => AppRoute,
 } as any)
 const AppCatalogoRoute = AppCatalogoRouteImport.update({
@@ -134,67 +176,88 @@ const AppCatalogoRoute = AppCatalogoRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
+  '/catalogo': typeof CatalogoRoute
   '/app/catalogo': typeof AppCatalogoRoute
+  '/app/cliente-novo': typeof AppClienteNovoRoute
   '/app/clientes': typeof AppClientesRoute
+  '/app/compra-nova': typeof AppCompraNovaRoute
   '/app/compras': typeof AppComprasRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/dashboard': typeof AppDashboardRoute
   '/app/dav': typeof AppDavRoute
+  '/app/dav-novo': typeof AppDavNovoRoute
   '/app/estoque': typeof AppEstoqueRoute
   '/app/financeiro': typeof AppFinanceiroRoute
   '/app/fiscal': typeof AppFiscalRoute
+  '/app/fornecedor-novo': typeof AppFornecedorNovoRoute
   '/app/fornecedores': typeof AppFornecedoresRoute
   '/app/logistica': typeof AppLogisticaRoute
-  '/app/mobile': typeof AppMobileRoute
   '/app/pdv': typeof AppPdvRoute
-  '/app/portal': typeof AppPortalRoute
+  '/app/produto-novo': typeof AppProdutoNovoRoute
   '/app/produtos': typeof AppProdutosRoute
+  '/app/registro': typeof AppRegistroRoute
   '/app/relatorios': typeof AppRelatoriosRoute
+  '/app/venda-nova': typeof AppVendaNovaRoute
   '/app/vendas': typeof AppVendasRoute
+  '/declaracao/$id': typeof DeclaracaoIdRoute
   '/app/': typeof AppIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/catalogo': typeof CatalogoRoute
   '/app/catalogo': typeof AppCatalogoRoute
+  '/app/cliente-novo': typeof AppClienteNovoRoute
   '/app/clientes': typeof AppClientesRoute
+  '/app/compra-nova': typeof AppCompraNovaRoute
   '/app/compras': typeof AppComprasRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/dashboard': typeof AppDashboardRoute
   '/app/dav': typeof AppDavRoute
+  '/app/dav-novo': typeof AppDavNovoRoute
   '/app/estoque': typeof AppEstoqueRoute
   '/app/financeiro': typeof AppFinanceiroRoute
   '/app/fiscal': typeof AppFiscalRoute
+  '/app/fornecedor-novo': typeof AppFornecedorNovoRoute
   '/app/fornecedores': typeof AppFornecedoresRoute
   '/app/logistica': typeof AppLogisticaRoute
-  '/app/mobile': typeof AppMobileRoute
   '/app/pdv': typeof AppPdvRoute
-  '/app/portal': typeof AppPortalRoute
+  '/app/produto-novo': typeof AppProdutoNovoRoute
   '/app/produtos': typeof AppProdutosRoute
+  '/app/registro': typeof AppRegistroRoute
   '/app/relatorios': typeof AppRelatoriosRoute
+  '/app/venda-nova': typeof AppVendaNovaRoute
   '/app/vendas': typeof AppVendasRoute
+  '/declaracao/$id': typeof DeclaracaoIdRoute
   '/app': typeof AppIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
+  '/catalogo': typeof CatalogoRoute
   '/app/catalogo': typeof AppCatalogoRoute
+  '/app/cliente-novo': typeof AppClienteNovoRoute
   '/app/clientes': typeof AppClientesRoute
+  '/app/compra-nova': typeof AppCompraNovaRoute
   '/app/compras': typeof AppComprasRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/dashboard': typeof AppDashboardRoute
   '/app/dav': typeof AppDavRoute
+  '/app/dav-novo': typeof AppDavNovoRoute
   '/app/estoque': typeof AppEstoqueRoute
   '/app/financeiro': typeof AppFinanceiroRoute
   '/app/fiscal': typeof AppFiscalRoute
+  '/app/fornecedor-novo': typeof AppFornecedorNovoRoute
   '/app/fornecedores': typeof AppFornecedoresRoute
   '/app/logistica': typeof AppLogisticaRoute
-  '/app/mobile': typeof AppMobileRoute
   '/app/pdv': typeof AppPdvRoute
-  '/app/portal': typeof AppPortalRoute
+  '/app/produto-novo': typeof AppProdutoNovoRoute
   '/app/produtos': typeof AppProdutosRoute
+  '/app/registro': typeof AppRegistroRoute
   '/app/relatorios': typeof AppRelatoriosRoute
+  '/app/venda-nova': typeof AppVendaNovaRoute
   '/app/vendas': typeof AppVendasRoute
+  '/declaracao/$id': typeof DeclaracaoIdRoute
   '/app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
@@ -202,76 +265,106 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/app'
+    | '/catalogo'
     | '/app/catalogo'
+    | '/app/cliente-novo'
     | '/app/clientes'
+    | '/app/compra-nova'
     | '/app/compras'
     | '/app/configuracoes'
     | '/app/dashboard'
     | '/app/dav'
+    | '/app/dav-novo'
     | '/app/estoque'
     | '/app/financeiro'
     | '/app/fiscal'
+    | '/app/fornecedor-novo'
     | '/app/fornecedores'
     | '/app/logistica'
-    | '/app/mobile'
     | '/app/pdv'
-    | '/app/portal'
+    | '/app/produto-novo'
     | '/app/produtos'
+    | '/app/registro'
     | '/app/relatorios'
+    | '/app/venda-nova'
     | '/app/vendas'
+    | '/declaracao/$id'
     | '/app/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/catalogo'
     | '/app/catalogo'
+    | '/app/cliente-novo'
     | '/app/clientes'
+    | '/app/compra-nova'
     | '/app/compras'
     | '/app/configuracoes'
     | '/app/dashboard'
     | '/app/dav'
+    | '/app/dav-novo'
     | '/app/estoque'
     | '/app/financeiro'
     | '/app/fiscal'
+    | '/app/fornecedor-novo'
     | '/app/fornecedores'
     | '/app/logistica'
-    | '/app/mobile'
     | '/app/pdv'
-    | '/app/portal'
+    | '/app/produto-novo'
     | '/app/produtos'
+    | '/app/registro'
     | '/app/relatorios'
+    | '/app/venda-nova'
     | '/app/vendas'
+    | '/declaracao/$id'
     | '/app'
   id:
     | '__root__'
     | '/'
     | '/app'
+    | '/catalogo'
     | '/app/catalogo'
+    | '/app/cliente-novo'
     | '/app/clientes'
+    | '/app/compra-nova'
     | '/app/compras'
     | '/app/configuracoes'
     | '/app/dashboard'
     | '/app/dav'
+    | '/app/dav-novo'
     | '/app/estoque'
     | '/app/financeiro'
     | '/app/fiscal'
+    | '/app/fornecedor-novo'
     | '/app/fornecedores'
     | '/app/logistica'
-    | '/app/mobile'
     | '/app/pdv'
-    | '/app/portal'
+    | '/app/produto-novo'
     | '/app/produtos'
+    | '/app/registro'
     | '/app/relatorios'
+    | '/app/venda-nova'
     | '/app/vendas'
+    | '/declaracao/$id'
     | '/app/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
+  CatalogoRoute: typeof CatalogoRoute
+  DeclaracaoIdRoute: typeof DeclaracaoIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/catalogo': {
+      id: '/catalogo'
+      path: '/catalogo'
+      fullPath: '/catalogo'
+      preLoaderRoute: typeof CatalogoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app': {
       id: '/app'
       path: '/app'
@@ -293,11 +386,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/declaracao/$id': {
+      id: '/declaracao/$id'
+      path: '/declaracao/$id'
+      fullPath: '/declaracao/$id'
+      preLoaderRoute: typeof DeclaracaoIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/vendas': {
       id: '/app/vendas'
       path: '/vendas'
       fullPath: '/app/vendas'
       preLoaderRoute: typeof AppVendasRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/venda-nova': {
+      id: '/app/venda-nova'
+      path: '/venda-nova'
+      fullPath: '/app/venda-nova'
+      preLoaderRoute: typeof AppVendaNovaRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/relatorios': {
@@ -307,6 +414,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRelatoriosRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/registro': {
+      id: '/app/registro'
+      path: '/registro'
+      fullPath: '/app/registro'
+      preLoaderRoute: typeof AppRegistroRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/produtos': {
       id: '/app/produtos'
       path: '/produtos'
@@ -314,11 +428,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProdutosRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/portal': {
-      id: '/app/portal'
-      path: '/portal'
-      fullPath: '/app/portal'
-      preLoaderRoute: typeof AppPortalRouteImport
+    '/app/produto-novo': {
+      id: '/app/produto-novo'
+      path: '/produto-novo'
+      fullPath: '/app/produto-novo'
+      preLoaderRoute: typeof AppProdutoNovoRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/pdv': {
@@ -326,13 +440,6 @@ declare module '@tanstack/react-router' {
       path: '/pdv'
       fullPath: '/app/pdv'
       preLoaderRoute: typeof AppPdvRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/mobile': {
-      id: '/app/mobile'
-      path: '/mobile'
-      fullPath: '/app/mobile'
-      preLoaderRoute: typeof AppMobileRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/logistica': {
@@ -347,6 +454,13 @@ declare module '@tanstack/react-router' {
       path: '/fornecedores'
       fullPath: '/app/fornecedores'
       preLoaderRoute: typeof AppFornecedoresRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/fornecedor-novo': {
+      id: '/app/fornecedor-novo'
+      path: '/fornecedor-novo'
+      fullPath: '/app/fornecedor-novo'
+      preLoaderRoute: typeof AppFornecedorNovoRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/fiscal': {
@@ -368,6 +482,13 @@ declare module '@tanstack/react-router' {
       path: '/estoque'
       fullPath: '/app/estoque'
       preLoaderRoute: typeof AppEstoqueRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/dav-novo': {
+      id: '/app/dav-novo'
+      path: '/dav-novo'
+      fullPath: '/app/dav-novo'
+      preLoaderRoute: typeof AppDavNovoRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/dav': {
@@ -398,11 +519,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppComprasRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/compra-nova': {
+      id: '/app/compra-nova'
+      path: '/compra-nova'
+      fullPath: '/app/compra-nova'
+      preLoaderRoute: typeof AppCompraNovaRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/clientes': {
       id: '/app/clientes'
       path: '/clientes'
       fullPath: '/app/clientes'
       preLoaderRoute: typeof AppClientesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/cliente-novo': {
+      id: '/app/cliente-novo'
+      path: '/cliente-novo'
+      fullPath: '/app/cliente-novo'
+      preLoaderRoute: typeof AppClienteNovoRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/catalogo': {
@@ -417,42 +552,52 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppCatalogoRoute: typeof AppCatalogoRoute
+  AppClienteNovoRoute: typeof AppClienteNovoRoute
   AppClientesRoute: typeof AppClientesRoute
+  AppCompraNovaRoute: typeof AppCompraNovaRoute
   AppComprasRoute: typeof AppComprasRoute
   AppConfiguracoesRoute: typeof AppConfiguracoesRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDavRoute: typeof AppDavRoute
+  AppDavNovoRoute: typeof AppDavNovoRoute
   AppEstoqueRoute: typeof AppEstoqueRoute
   AppFinanceiroRoute: typeof AppFinanceiroRoute
   AppFiscalRoute: typeof AppFiscalRoute
+  AppFornecedorNovoRoute: typeof AppFornecedorNovoRoute
   AppFornecedoresRoute: typeof AppFornecedoresRoute
   AppLogisticaRoute: typeof AppLogisticaRoute
-  AppMobileRoute: typeof AppMobileRoute
   AppPdvRoute: typeof AppPdvRoute
-  AppPortalRoute: typeof AppPortalRoute
+  AppProdutoNovoRoute: typeof AppProdutoNovoRoute
   AppProdutosRoute: typeof AppProdutosRoute
+  AppRegistroRoute: typeof AppRegistroRoute
   AppRelatoriosRoute: typeof AppRelatoriosRoute
+  AppVendaNovaRoute: typeof AppVendaNovaRoute
   AppVendasRoute: typeof AppVendasRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppCatalogoRoute: AppCatalogoRoute,
+  AppClienteNovoRoute: AppClienteNovoRoute,
   AppClientesRoute: AppClientesRoute,
+  AppCompraNovaRoute: AppCompraNovaRoute,
   AppComprasRoute: AppComprasRoute,
   AppConfiguracoesRoute: AppConfiguracoesRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDavRoute: AppDavRoute,
+  AppDavNovoRoute: AppDavNovoRoute,
   AppEstoqueRoute: AppEstoqueRoute,
   AppFinanceiroRoute: AppFinanceiroRoute,
   AppFiscalRoute: AppFiscalRoute,
+  AppFornecedorNovoRoute: AppFornecedorNovoRoute,
   AppFornecedoresRoute: AppFornecedoresRoute,
   AppLogisticaRoute: AppLogisticaRoute,
-  AppMobileRoute: AppMobileRoute,
   AppPdvRoute: AppPdvRoute,
-  AppPortalRoute: AppPortalRoute,
+  AppProdutoNovoRoute: AppProdutoNovoRoute,
   AppProdutosRoute: AppProdutosRoute,
+  AppRegistroRoute: AppRegistroRoute,
   AppRelatoriosRoute: AppRelatoriosRoute,
+  AppVendaNovaRoute: AppVendaNovaRoute,
   AppVendasRoute: AppVendasRoute,
   AppIndexRoute: AppIndexRoute,
 }
@@ -462,7 +607,19 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
+  CatalogoRoute: CatalogoRoute,
+  DeclaracaoIdRoute: DeclaracaoIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
