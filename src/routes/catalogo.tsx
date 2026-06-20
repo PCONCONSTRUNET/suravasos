@@ -3,11 +3,14 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search } from "lucide-react";
+import { Search, Check, ChevronsUpDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { VivaverdeLogo } from "@/components/vivaverde-logo";
 import { ColorDock } from "@/components/color-dock";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/catalogo")({
   head: () => ({ meta: [{ title: "Catálogo — VivaVerde" }] }),
@@ -30,6 +33,7 @@ function PublicCatalogo() {
   const [loading, setLoading] = useState(true);
   const [busca, setBusca] = useState("");
   const [categoriaAtiva, setCategoriaAtiva] = useState<string>("Todas");
+  const [openCategoria, setOpenCategoria] = useState(false);
 
   useEffect(() => {
     const fetchProdutos = async () => {
@@ -80,8 +84,7 @@ function PublicCatalogo() {
     mensagem += `\nQual o procedimento para compra?`;
     
     const text = encodeURIComponent(mensagem);
-    // Idealmente você colocaria aqui o número oficial do WhatsApp da empresa
-    window.open(`https://wa.me/?text=${text}`, '_blank');
+    window.open(`https://wa.me/5519997331112?text=${text}`, '_blank');
   };
 
   return (
@@ -107,26 +110,35 @@ function PublicCatalogo() {
         </div>
 
         {categorias.length > 0 && (
-          <div className="flex flex-wrap justify-center gap-2 mb-10">
-            <Button 
-              variant={categoriaAtiva === "Todas" ? "default" : "outline"} 
-              onClick={() => setCategoriaAtiva("Todas")}
-              size="sm"
-              className={`rounded-full ${categoriaAtiva === "Todas" ? "bg-gradient-brand text-primary-foreground border-0 shadow-sm" : "bg-white text-slate-600 hover:text-slate-900"}`}
-            >
-              Todas as Categorias
-            </Button>
-            {categorias.map(c => (
-              <Button 
-                key={c}
-                variant={categoriaAtiva === c ? "default" : "outline"} 
-                onClick={() => setCategoriaAtiva(c)}
-                size="sm"
-                className={`rounded-full ${categoriaAtiva === c ? "bg-gradient-brand text-primary-foreground border-0 shadow-sm" : "bg-white text-slate-600 hover:text-slate-900"}`}
-              >
-                {c}
-              </Button>
-            ))}
+          <div className="flex justify-center mb-10 px-4">
+            <Popover open={openCategoria} onOpenChange={setOpenCategoria}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" role="combobox" className="w-full max-w-sm justify-between rounded-full bg-white shadow-sm h-12 text-base font-medium">
+                  {categoriaAtiva === "Todas" ? "Todas as Categorias" : categoriaAtiva}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] max-w-[350px] p-0 rounded-xl" align="center">
+                <Command>
+                  <CommandInput placeholder="Buscar categoria..." />
+                  <CommandList>
+                    <CommandEmpty>Nenhuma categoria encontrada.</CommandEmpty>
+                    <CommandGroup>
+                      <CommandItem value="Todas as Categorias" onSelect={() => { setCategoriaAtiva("Todas"); setOpenCategoria(false); }}>
+                        <Check className={cn("mr-2 h-4 w-4", categoriaAtiva === "Todas" ? "opacity-100" : "opacity-0")} />
+                        Todas as Categorias
+                      </CommandItem>
+                      {categorias.map(c => (
+                        <CommandItem key={c} value={c} onSelect={() => { setCategoriaAtiva(c); setOpenCategoria(false); }}>
+                          <Check className={cn("mr-2 h-4 w-4", categoriaAtiva === c ? "opacity-100" : "opacity-0")} />
+                          {c}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
         )}
 
