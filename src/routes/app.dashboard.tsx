@@ -64,12 +64,12 @@ function Dashboard() {
 
   useEffect(() => {
     async function loadData() {
-      const { data: vendasData } = await supabase.from('vendas').select('*').eq('tipo', 'VENDA');
+      const { data: vendasData } = await supabase.from('vendas').select('*').in('tipo', ['VENDA', 'PDV', 'Afiliado']);
       const { count: produtosCount } = await supabase.from('produtos').select('*', { count: 'exact', head: true }).eq('status', 'Ativo');
       const { count: clientesCount } = await supabase.from('clientes').select('*', { count: 'exact', head: true });
       const { data: vendasRecentes } = await supabase.from('vendas')
         .select('*, clientes(nome)')
-        .eq('tipo', 'VENDA')
+        .in('tipo', ['VENDA', 'PDV', 'Afiliado'])
         .order('created_at', { ascending: false })
         .limit(5);
 
@@ -79,9 +79,11 @@ function Dashboard() {
       const hoje = new Date().toISOString().split('T')[0];
 
       vendasData?.forEach(v => {
-        fat += Number(v.total || 0);
+        if (v.status !== 'Cancelada' && v.status !== 'Rejeitada' && v.status_aprovacao !== 'Rejeitada') {
+          fat += Number(v.valor_total || v.total || 0);
+        }
         if (v.created_at?.startsWith(hoje)) pedHoje++;
-        if (v.status === 'PENDENTE' || v.status === 'EM_ROTA') entPend++;
+        if (v.status === 'PENDENTE' || v.status === 'Pendente' || v.status === 'EM_ROTA') entPend++;
       });
 
       setStats({
