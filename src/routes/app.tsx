@@ -12,6 +12,17 @@ export const Route = createFileRoute("/app")({
         to: "/",
       });
     }
+
+    // Lista de e-mails permitidos como Administrador (Dono) — lida da variável de ambiente
+    const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || '';
+    const ADMIN_EMAILS = adminEmail.split(',').map((e: string) => e.trim().toLowerCase()).filter(Boolean);
+
+    // Se o e-mail do usuário não for o do dono, bloqueia o acesso e joga para a área de parceiros
+    if (!session.user.email || !ADMIN_EMAILS.includes(session.user.email.toLowerCase())) {
+      throw redirect({
+        to: "/parceiro/dashboard",
+      });
+    }
   },
   component: () => (
     <AppShell>

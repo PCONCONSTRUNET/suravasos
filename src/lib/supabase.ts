@@ -11,3 +11,14 @@ export const supabase = createClient(
   supabaseUrl || "https://placeholder-url.supabase.co",
   supabaseAnonKey || "placeholder-key"
 );
+
+// Cliente isolado para os Parceiros (evita conflito de login na mesma máquina)
+export const supabaseParceiro = createClient(
+  supabaseUrl || "https://placeholder-url.supabase.co",
+  supabaseAnonKey || "placeholder-key",
+  {
+    auth: {
+      storageKey: 'sb-parceiro-auth-token',
+    }
+  }
+);

@@ -35,8 +35,9 @@ export const Route = createFileRoute("/")({
 function Login() {
   const nav = useNavigate();
   const [authError, setAuthError] = useState<string | null>(null);
+  const [resetSent, setResetSent] = useState(false);
 
-  const { register, handleSubmit, formState: { errors, isSubmitting }, trigger, getValues } = useForm<AuthFormData>({
+  const { register, handleSubmit, formState: { errors, isSubmitting }, getValues } = useForm<AuthFormData>({
     resolver: zodResolver(authSchema),
     defaultValues: { email: "", password: "" },
   });
@@ -55,7 +56,18 @@ function Login() {
     }
   };
 
-
+  const handleForgotPassword = async () => {
+    const email = getValues("email");
+    if (!email) {
+      setAuthError("Digite seu e-mail acima antes de clicar em Esqueceu.");
+      return;
+    }
+    await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/`,
+    });
+    setResetSent(true);
+    setAuthError(null);
+  };
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-neutral-900">
       {/* Background Image */}
@@ -109,12 +121,16 @@ function Login() {
               {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-sm font-medium text-[#374151]">Senha</Label>
-                <a href="#" className="text-xs font-medium text-[#4a7c2a] hover:text-[#2d5a1e] hover:underline transition-colors">
-                  Esqueceu?
-                </a>
-              </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-sm font-medium text-[#374151]">Senha</Label>
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    className="text-xs font-medium text-[#4a7c2a] hover:text-[#2d5a1e] hover:underline transition-colors"
+                  >
+                    {resetSent ? "✅ Link enviado!" : "Esqueceu?"}
+                  </button>
+                </div>
               <Input
                 id="password"
                 type="password"

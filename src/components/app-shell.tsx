@@ -1,9 +1,10 @@
-import { useState, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
+import { supabase } from "@/lib/supabase";
 import {
   LayoutDashboard, Package, Boxes, Users, Truck, ShoppingCart, ShoppingBag,
   FileText, Calculator, Wallet, Map, Receipt, BarChart3, Globe, Smartphone,
-  UserCircle, Settings, Bell, Search, Menu, X, ChevronDown, Moon, Sun, LogOut, PlusCircle,
+  UserCircle, Settings, Bell, Search, Menu, X, ChevronDown, Moon, Sun, LogOut, PlusCircle, CheckCheck
 } from "lucide-react";
 import { VivaverdeLogo } from "./vivaverde-logo";
 import { cn } from "@/lib/utils";
@@ -31,6 +32,7 @@ const NAV = [
     { to: "/app/vendas", label: "Vendas", icon: ShoppingCart },
     { to: "/app/dav", label: "DAV", icon: FileText },
     { to: "/app/pdv", label: "PDV", icon: Calculator },
+    { to: "/app/vendedores", label: "Vendedores", icon: Users },
   ]},
   { group: "Gestão", items: [
     { to: "/app/financeiro", label: "Financeiro", icon: Wallet },
@@ -48,6 +50,39 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [dark, setDark] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  const [notifications, setNotifications] = useState<any[]>([]);
+
+  const fetchNotifications = async () => {
+    try {
+      const { data } = await supabase.from('notificacoes').select('*').order('created_at', { ascending: false }).limit(20);
+      if (data) setNotifications(data);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+    const channel = supabase.channel('schema-db-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notificacoes' }, () => {
+        fetchNotifications();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel) };
+  }, []);
+
+  const markAllAsRead = async () => {
+    await supabase.from('notificacoes').update({ lida: true }).eq('lida', false);
+    fetchNotifications();
+  };
+
+  const markAsRead = async (id: string) => {
+    await supabase.from('notificacoes').update({ lida: true }).eq('id', id);
+    fetchNotifications();
+  };
+
+  const unreadCount = notifications.filter(n => !n.lida).length;
 
   const toggleDark = () => {
     setDark(!dark);
@@ -155,39 +190,44 @@ export function AppShell({ children }: { children: ReactNode }) {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-4 w-4" />
-                <Badge className="absolute -right-0.5 -top-0.5 h-4 w-4 p-0 grid place-items-center text-[10px] bg-destructive text-destructive-foreground">3</Badge>
+                {unreadCount > 0 && (
+                  <Badge className="absolute -right-0.5 -top-0.5 h-4 w-4 p-0 grid place-items-center text-[10px] bg-destructive text-destructive-foreground">
+                    {unreadCount}
+                  </Badge>
+                )}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-80 p-0">
               <div className="flex items-center justify-between px-4 py-3 border-b">
                 <span className="font-semibold text-sm">Notificações</span>
-                <Badge variant="secondary" className="text-xs">3 novas</Badge>
+                <div className="flex items-center gap-2">
+                  {unreadCount > 0 && <Badge variant="secondary" className="text-xs bg-brand/10 text-brand border-0">{unreadCount} novas</Badge>}
+                  {unreadCount > 0 && (
+                    <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-brand" onClick={markAllAsRead} title="Marcar todas como lida">
+                      <CheckCheck className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
               <div className="max-h-[300px] overflow-y-auto">
-                <div className="px-4 py-3 border-b bg-muted/20 hover:bg-muted/50 cursor-pointer transition-colors">
-                  <div className="flex justify-between items-start mb-1">
-                    <span className="text-sm font-medium">Novo pedido #1042</span>
-                    <span className="text-[10px] text-muted-foreground">Agora</span>
+                {notifications.length === 0 ? (
+                  <div className="p-4 text-center text-sm text-muted-foreground">Nenhuma notificação.</div>
+                ) : notifications.map(n => (
+                  <div key={n.id} onClick={() => !n.lida && markAsRead(n.id)} className={cn("px-4 py-3 border-b cursor-pointer transition-colors", n.lida ? "bg-background hover:bg-muted/50" : "bg-brand/5 hover:bg-brand/10")}>
+                    <div className="flex justify-between items-start mb-1">
+                      <span className={cn("text-sm", n.lida ? "font-medium text-muted-foreground" : "font-bold text-foreground")}>{n.titulo}</span>
+                      <span className="text-[10px] text-muted-foreground whitespace-nowrap ml-2">
+                        {new Date(n.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{n.mensagem}</p>
                   </div>
-                  <p className="text-xs text-muted-foreground">Cliente: Flora Nativa. Valor: R$ 1.450,00</p>
-                </div>
-                <div className="px-4 py-3 border-b bg-muted/20 hover:bg-muted/50 cursor-pointer transition-colors">
-                  <div className="flex justify-between items-start mb-1">
-                    <span className="text-sm font-medium">Estoque Baixo</span>
-                    <span className="text-[10px] text-muted-foreground">Há 2h</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Vaso Romano (Terracota) com apenas 2 unidades restantes.</p>
-                </div>
-                <div className="px-4 py-3 bg-muted/20 hover:bg-muted/50 cursor-pointer transition-colors">
-                  <div className="flex justify-between items-start mb-1">
-                    <span className="text-sm font-medium">Pagamento Aprovado</span>
-                    <span className="text-[10px] text-muted-foreground">Há 5h</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Fatura #890 quitada por Garden Center ABC.</p>
-                </div>
+                ))}
               </div>
               <div className="p-2 border-t text-center">
-                <Button variant="ghost" className="w-full text-xs text-brand hover:text-brand/80 h-8">Ver todas as notificações</Button>
+                <Link to="/app/notificacoes">
+                  <Button variant="ghost" className="w-full text-xs text-brand hover:text-brand/80 h-8">Ver todas as notificações</Button>
+                </Link>
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -202,8 +242,16 @@ export function AppShell({ children }: { children: ReactNode }) {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem><UserCircle className="mr-2 h-4 w-4" />Perfil</DropdownMenuItem>
-              <DropdownMenuItem><Settings className="mr-2 h-4 w-4" />Configurações</DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/app/configuracoes" className="cursor-pointer">
+                  <UserCircle className="mr-2 h-4 w-4" />Perfil
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/app/configuracoes" className="cursor-pointer">
+                  <Settings className="mr-2 h-4 w-4" />Configurações
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link to="/"><LogOut className="mr-2 h-4 w-4" />Sair</Link>

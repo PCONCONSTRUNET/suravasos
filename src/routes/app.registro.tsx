@@ -1,10 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/app-shell";
 import { Card, CardContent } from "@/components/ui/card";
 import { ShoppingCart, UserPlus, Map, Wallet, Boxes, Receipt, ArrowRight, Check, ChevronsUpDown } from "lucide-react";
+import { toast } from "sonner";
 import {
   Drawer,
   DrawerClose,
@@ -23,7 +24,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 
 export const Route = createFileRoute("/app/registro")({
-  head: () => ({ meta: [{ title: "Registro Rápido — VIVAVERDE ERP" }] }),
+  head: () => ({ meta: [{ title: "Registro Rapido - VIVAVERDE ERP" }] }),
   component: RegistroRapido,
 });
 
@@ -35,15 +36,102 @@ function RegistroRapido() {
   const [rotas, setRotas] = useState<any[]>([]);
   const [openRota, setOpenRota] = useState(false);
   const [rotaSelecionada, setRotaSelecionada] = useState<any>(null);
+  const [saving, setSaving] = useState(false);
+
+  // Campos dos formularios
+  const [clienteNome, setClienteNome] = useState("");
+  const [qtd, setQtd] = useState("1");
+  const [valorVenda, setValorVenda] = useState("");
+  const [descFinanca, setDescFinanca] = useState("");
+  const [valorFinanca, setValorFinanca] = useState("");
+  const [tipoFinanca, setTipoFinanca] = useState("receita");
+  const [statusFinanca, setStatusFinanca] = useState("paga");
+  const [clienteNomeCad, setClienteNomeCad] = useState("");
+  const [clienteTelCad, setClienteTelCad] = useState("");
+  const [clienteCpfCad, setClienteCpfCad] = useState("");
+  const [qtdEstoque, setQtdEstoque] = useState("");
+  const [acaoEstoque, setAcaoEstoque] = useState("entrada");
+  const [motorista, setMotorista] = useState("");
+  const [pedidoRef, setPedidoRef] = useState("");
+  const [statusEntrega, setStatusEntrega] = useState("pendente");
+  const [fornecedor, setFornecedor] = useState("");
+  const [qtdCompra, setQtdCompra] = useState("1");
+  const [custoCompra, setCustoCompra] = useState("");
+  const drawerCloseRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    supabase.from('produtos').select('*').eq('status', 'Ativo').then(({data}) => {
-      if(data) setProdutos(data);
+    supabase.from('produtos').select('*').eq('status', 'Ativo').then(({ data }) => {
+      if (data) setProdutos(data);
     });
-    supabase.from('rotas').select('*').order('created_at', { ascending: false }).then(({data}) => {
-      if(data) setRotas(data);
+    supabase.from('rotas').select('*').order('created_at', { ascending: false }).then(({ data }) => {
+      if (data) setRotas(data);
     });
   }, []);
+
+  const handleSalvar = async (actionId: string) => {
+    setSaving(true);
+    try {
+      if (actionId === "venda") {
+        if (!produtoSelecionado) throw new Error("Selecione um produto.");
+        const { data: venda } = await supabase.from('vendas').insert([{
+          tipo: 'PDV', status: 'Pago', valor_total: Number(valorVenda) || produtoSelecionado.preco_venda * Number(qtd)
+        }]).select().single();
+        if (venda) {
+          await supabase.from('vendas_itens').insert([{
+            venda_id: venda.id, produto_id: produtoSelecionado.id,
+            quantidade: Number(qtd), valor_unitario: produtoSelecionado.preco_venda,
+            subtotal: produtoSelecionado.preco_venda * Number(qtd)
+          }]);
+          await supabase.from('produtos').update({ estoque: Math.max(0, (produtoSelecionado.estoque || 0) - Number(qtd)) }).eq('id', produtoSelecionado.id);
+        }
+        toast.success("Venda registrada com sucesso!");
+      } else if (actionId === "financas") {
+        if (!descFinanca || !valorFinanca) throw new Error("Preencha descricao e valor.");
+        const table = tipoFinanca === "receita" ? 'contas_receber' : 'contas_pagar';
+        await supabase.from(table).insert([{
+          descricao: descFinanca, valor: Number(valorFinanca),
+          status: statusFinanca === "paga" ? "Pago" : "Pendente",
+          vencimento: new Date().toISOString().split('T')[0]
+        }]);
+        toast.success("Lancamento financeiro salvo!");
+      } else if (actionId === "cliente") {
+        if (!clienteNomeCad) throw new Error("Preencha o nome do cliente.");
+        await supabase.from('clientes').insert([{ nome: clienteNomeCad, telefone: clienteTelCad, cpf_cnpj: clienteCpfCad }]);
+        toast.success("Cliente cadastrado com sucesso!");
+      } else if (actionId === "estoque") {
+        if (!produtoSelecionado || !qtdEstoque) throw new Error("Selecione produto e quantidade.");
+        const delta = acaoEstoque === "entrada" ? Number(qtdEstoque) : -Number(qtdEstoque);
+        await supabase.from('movimentacoes_estoque').insert([{
+          produto_id: produtoSelecionado.id, tipo: acaoEstoque === "entrada" ? "Entrada" : "Saida",
+          quantidade: Number(qtdEstoque), motivo: "Registro Rapido"
+        }]);
+        await supabase.from('produtos').update({ estoque: Math.max(0, (produtoSelecionado.estoque || 0) + delta) }).eq('id', produtoSelecionado.id);
+        toast.success("Estoque atualizado com sucesso!");
+      } else if (actionId === "entregas") {
+        if (!motorista) throw new Error("Preencha o motorista/entregador.");
+        await supabase.from('rotas').insert([{ motorista, status: statusEntrega, pedidos: pedidoRef ? [pedidoRef] : [] }]);
+        toast.success("Entrega registrada com sucesso!");
+      } else if (actionId === "compra") {
+        if (!fornecedor || !produtoSelecionado) throw new Error("Preencha fornecedor e produto.");
+        await supabase.from('contas_pagar').insert([{
+          descricao: `Compra: ${produtoSelecionado.nome} de ${fornecedor}`,
+          valor: Number(custoCompra), status: "Pendente",
+          vencimento: new Date().toISOString().split('T')[0]
+        }]);
+        await supabase.from('movimentacoes_estoque').insert([{
+          produto_id: produtoSelecionado.id, tipo: "Entrada",
+          quantidade: Number(qtdCompra), motivo: `Compra de ${fornecedor}`
+        }]);
+        await supabase.from('produtos').update({ estoque: (produtoSelecionado.estoque || 0) + Number(qtdCompra) }).eq('id', produtoSelecionado.id);
+        toast.success("Compra registrada com sucesso!");
+      }
+      drawerCloseRef.current?.click();
+    } catch (err: any) {
+      toast.error("Erro: " + err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const actions = [
     {
@@ -57,8 +145,8 @@ function RegistroRapido() {
     },
     {
       id: "financas",
-      title: "Finanças",
-      description: "Lançar receitas ou despesas",
+      title: "Financas",
+      description: "Lancar receitas ou despesas",
       icon: Wallet,
       to: "/app/financeiro",
       color: "bg-emerald-500",
@@ -76,7 +164,7 @@ function RegistroRapido() {
     {
       id: "estoque",
       title: "Estoque",
-      description: "Registrar entradas ou saídas",
+      description: "Registrar entradas ou saidas",
       icon: Boxes,
       to: "/app/estoque",
       color: "bg-amber-500",
@@ -103,10 +191,10 @@ function RegistroRapido() {
   ];
 
   return (
-    <div className="pb-24"> {/* Extra padding bottom for mobile ease of reach */}
-      <PageHeader 
-        title="Registro Rápido" 
-        subtitle="Ações frequentes otimizadas para uso rápido pelo celular." 
+    <div className="pb-24">
+      <PageHeader
+        title="Registro Rapido"
+        subtitle="Acoes frequentes otimizadas para uso rapido pelo celular."
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -135,20 +223,22 @@ function RegistroRapido() {
                 <div className="mx-auto w-full max-w-sm">
                   <DrawerHeader>
                     <DrawerTitle>{action.title}</DrawerTitle>
-                    <DrawerDescription>Registro rápido simplificado para celular.</DrawerDescription>
+                    <DrawerDescription>Registro rapido simplificado para celular.</DrawerDescription>
                   </DrawerHeader>
                   <div className="p-4 pb-0 flex flex-col gap-4 overflow-y-auto max-h-[60vh]">
-                    {action.id === "venda" ? (
+
+                    {/* VENDA */}
+                    {action.id === "venda" && (
                       <>
                         <div className="grid gap-2">
-                          <Label>Cliente</Label>
-                          <Input placeholder="Nome do cliente ou 'Consumidor Final'" />
+                          <Label>Cliente (opcional)</Label>
+                          <Input placeholder="Nome do cliente ou Consumidor Final" value={clienteNome} onChange={e => setClienteNome(e.target.value)} />
                         </div>
                         <div className="grid gap-2">
                           <Label>Produto</Label>
                           <Popover open={openProduto} onOpenChange={setOpenProduto}>
                             <PopoverTrigger asChild>
-                              <Button variant="outline" role="combobox" aria-expanded={openProduto} className="w-full justify-between font-normal">
+                              <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
                                 {produtoSelecionado ? produtoSelecionado.nome : "Selecione um produto..."}
                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                               </Button>
@@ -160,9 +250,9 @@ function RegistroRapido() {
                                   <CommandEmpty>Nenhum produto encontrado.</CommandEmpty>
                                   <CommandGroup>
                                     {produtos.map((p) => (
-                                      <CommandItem key={p.id} value={p.nome} onSelect={() => { setProdutoSelecionado(p); setOpenProduto(false); }}>
+                                      <CommandItem key={p.id} value={p.nome} onSelect={() => { setProdutoSelecionado(p); setOpenProduto(false); setValorVenda((p.preco_venda * 1).toFixed(2)); }}>
                                         <Check className={cn("mr-2 h-4 w-4", produtoSelecionado?.id === p.id ? "opacity-100" : "opacity-0")} />
-                                        {p.nome}
+                                        {p.nome} - R$ {Number(p.preco_venda).toFixed(2)}
                                       </CommandItem>
                                     ))}
                                   </CommandGroup>
@@ -174,31 +264,32 @@ function RegistroRapido() {
                         <div className="grid grid-cols-2 gap-4">
                           <div className="grid gap-2">
                             <Label>Quantidade</Label>
-                            <Input type="number" placeholder="1" />
+                            <Input type="number" placeholder="1" value={qtd} onChange={e => setQtd(e.target.value)} />
                           </div>
                           <div className="grid gap-2">
                             <Label>Valor Total (R$)</Label>
-                            <Input type="number" placeholder="0.00" />
+                            <Input type="number" placeholder="0.00" value={valorVenda} onChange={e => setValorVenda(e.target.value)} />
                           </div>
                         </div>
                       </>
-                    ) : action.id === "financas" ? (
+                    )}
+
+                    {/* FINANCAS */}
+                    {action.id === "financas" && (
                       <>
                         <div className="grid gap-2">
-                          <Label>Descrição</Label>
-                          <Input placeholder="Ex: Venda balcão, Conta de luz..." />
+                          <Label>Descricao</Label>
+                          <Input placeholder="Ex: Venda balcao, Conta de luz..." value={descFinanca} onChange={e => setDescFinanca(e.target.value)} />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div className="grid gap-2">
                             <Label>Valor (R$)</Label>
-                            <Input type="number" placeholder="0.00" />
+                            <Input type="number" placeholder="0.00" value={valorFinanca} onChange={e => setValorFinanca(e.target.value)} />
                           </div>
                           <div className="grid gap-2">
                             <Label>Tipo</Label>
-                            <Select defaultValue="receita">
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione..." />
-                              </SelectTrigger>
+                            <Select value={tipoFinanca} onValueChange={setTipoFinanca}>
+                              <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="receita">Receita (+)</SelectItem>
                                 <SelectItem value="despesa">Despesa (-)</SelectItem>
@@ -208,10 +299,8 @@ function RegistroRapido() {
                         </div>
                         <div className="grid gap-2">
                           <Label>Status</Label>
-                          <Select defaultValue="paga">
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecione..." />
-                            </SelectTrigger>
+                          <Select value={statusFinanca} onValueChange={setStatusFinanca}>
+                            <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="paga">Pago / Recebido</SelectItem>
                               <SelectItem value="pendente">Pendente</SelectItem>
@@ -219,28 +308,34 @@ function RegistroRapido() {
                           </Select>
                         </div>
                       </>
-                    ) : action.id === "cliente" ? (
+                    )}
+
+                    {/* CLIENTE */}
+                    {action.id === "cliente" && (
                       <>
                         <div className="grid gap-2">
                           <Label>Nome do Cliente</Label>
-                          <Input placeholder="Nome completo" />
+                          <Input placeholder="Nome completo" value={clienteNomeCad} onChange={e => setClienteNomeCad(e.target.value)} />
                         </div>
                         <div className="grid gap-2">
                           <Label>WhatsApp / Telefone</Label>
-                          <Input placeholder="(00) 00000-0000" />
+                          <Input placeholder="(00) 00000-0000" value={clienteTelCad} onChange={e => setClienteTelCad(e.target.value)} />
                         </div>
                         <div className="grid gap-2">
                           <Label>CPF / CNPJ</Label>
-                          <Input placeholder="000.000.000-00" />
+                          <Input placeholder="000.000.000-00" value={clienteCpfCad} onChange={e => setClienteCpfCad(e.target.value)} />
                         </div>
                       </>
-                    ) : action.id === "estoque" ? (
+                    )}
+
+                    {/* ESTOQUE */}
+                    {action.id === "estoque" && (
                       <>
                         <div className="grid gap-2">
                           <Label>Produto</Label>
                           <Popover open={openProduto} onOpenChange={setOpenProduto}>
                             <PopoverTrigger asChild>
-                              <Button variant="outline" role="combobox" aria-expanded={openProduto} className="w-full justify-between font-normal">
+                              <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
                                 {produtoSelecionado ? produtoSelecionado.nome : "Selecione um produto..."}
                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                               </Button>
@@ -254,7 +349,7 @@ function RegistroRapido() {
                                     {produtos.map((p) => (
                                       <CommandItem key={p.id} value={p.nome} onSelect={() => { setProdutoSelecionado(p); setOpenProduto(false); }}>
                                         <Check className={cn("mr-2 h-4 w-4", produtoSelecionado?.id === p.id ? "opacity-100" : "opacity-0")} />
-                                        {p.nome}
+                                        {p.nome} - Estoque: {p.estoque}
                                       </CommandItem>
                                     ))}
                                   </CommandGroup>
@@ -266,14 +361,12 @@ function RegistroRapido() {
                         <div className="grid grid-cols-2 gap-4">
                           <div className="grid gap-2">
                             <Label>Quantidade</Label>
-                            <Input type="number" placeholder="0" />
+                            <Input type="number" placeholder="0" value={qtdEstoque} onChange={e => setQtdEstoque(e.target.value)} />
                           </div>
                           <div className="grid gap-2">
-                            <Label>Ação</Label>
-                            <Select defaultValue="entrada">
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione..." />
-                              </SelectTrigger>
+                            <Label>Acao</Label>
+                            <Select value={acaoEstoque} onValueChange={setAcaoEstoque}>
+                              <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="entrada">Entrada (+)</SelectItem>
                                 <SelectItem value="saida">Baixa (-)</SelectItem>
@@ -282,13 +375,16 @@ function RegistroRapido() {
                           </div>
                         </div>
                       </>
-                    ) : action.id === "entregas" ? (
+                    )}
+
+                    {/* ENTREGAS */}
+                    {action.id === "entregas" && (
                       <>
                         <div className="grid gap-2">
                           <Label>Rota (Opcional)</Label>
                           <Popover open={openRota} onOpenChange={setOpenRota}>
                             <PopoverTrigger asChild>
-                              <Button variant="outline" role="combobox" aria-expanded={openRota} className="w-full justify-between font-normal">
+                              <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
                                 {rotaSelecionada ? (rotaSelecionada.motorista || `Rota #${rotaSelecionada.id?.toString().slice(0, 4)}`) : "Selecione uma rota..."}
                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                               </Button>
@@ -313,18 +409,16 @@ function RegistroRapido() {
                         </div>
                         <div className="grid gap-2">
                           <Label>Pedido / Cliente</Label>
-                          <Input placeholder="Referência da venda..." />
+                          <Input placeholder="Referencia da venda..." value={pedidoRef} onChange={e => setPedidoRef(e.target.value)} />
                         </div>
                         <div className="grid gap-2">
                           <Label>Motorista / Entregador</Label>
-                          <Input placeholder="Nome do responsável" />
+                          <Input placeholder="Nome do responsavel" value={motorista} onChange={e => setMotorista(e.target.value)} />
                         </div>
                         <div className="grid gap-2">
                           <Label>Status da Entrega</Label>
-                          <Select defaultValue="pendente">
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecione..." />
-                            </SelectTrigger>
+                          <Select value={statusEntrega} onValueChange={setStatusEntrega}>
+                            <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="pendente">Pendente</SelectItem>
                               <SelectItem value="em_rota">Em Rota</SelectItem>
@@ -333,17 +427,20 @@ function RegistroRapido() {
                           </Select>
                         </div>
                       </>
-                    ) : action.id === "compra" ? (
+                    )}
+
+                    {/* COMPRA */}
+                    {action.id === "compra" && (
                       <>
                         <div className="grid gap-2">
                           <Label>Fornecedor</Label>
-                          <Input placeholder="Nome da empresa..." />
+                          <Input placeholder="Nome da empresa..." value={fornecedor} onChange={e => setFornecedor(e.target.value)} />
                         </div>
                         <div className="grid gap-2">
                           <Label>Produto</Label>
                           <Popover open={openProduto} onOpenChange={setOpenProduto}>
                             <PopoverTrigger asChild>
-                              <Button variant="outline" role="combobox" aria-expanded={openProduto} className="w-full justify-between font-normal">
+                              <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
                                 {produtoSelecionado ? produtoSelecionado.nome : "Selecione um produto..."}
                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                               </Button>
@@ -369,23 +466,26 @@ function RegistroRapido() {
                         <div className="grid grid-cols-2 gap-4">
                           <div className="grid gap-2">
                             <Label>Quantidade</Label>
-                            <Input type="number" placeholder="1" />
+                            <Input type="number" placeholder="1" value={qtdCompra} onChange={e => setQtdCompra(e.target.value)} />
                           </div>
                           <div className="grid gap-2">
                             <Label>Custo Total (R$)</Label>
-                            <Input type="number" placeholder="0.00" />
+                            <Input type="number" placeholder="0.00" value={custoCompra} onChange={e => setCustoCompra(e.target.value)} />
                           </div>
                         </div>
                       </>
-                    ) : null}
+                    )}
+
                   </div>
                   <DrawerFooter>
-                    <Button className="w-full bg-gradient-brand">Salvar Registro</Button>
+                    <Button className="w-full bg-gradient-brand" onClick={() => handleSalvar(action.id)} disabled={saving}>
+                      {saving ? "Salvando..." : "Salvar Registro"}
+                    </Button>
                     <Button variant="outline" className="w-full" onClick={() => navigate({ to: action.to })}>
                       Abrir Tela Completa <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                     <DrawerClose asChild>
-                      <Button variant="ghost">Cancelar</Button>
+                      <Button ref={drawerCloseRef} variant="ghost">Cancelar</Button>
                     </DrawerClose>
                   </DrawerFooter>
                 </div>

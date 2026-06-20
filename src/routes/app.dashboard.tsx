@@ -103,7 +103,27 @@ function Dashboard() {
         subtitle={`${new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date())} — bom dia, Douglas 👋`}
         actions={
           <>
-            <Button variant="outline">Exportar</Button>
+            <Button variant="outline" onClick={async () => {
+              const { data } = await supabase.from('vendas').select('*, clientes(nome)').order('created_at', { ascending: false }).limit(100);
+              if (!data || data.length === 0) { alert("Nenhuma venda encontrada para exportar."); return; }
+              const rows = [
+                ["ID", "Cliente", "Tipo", "Status", "Valor Total", "Data"],
+                ...data.map(v => [
+                  v.id.slice(0,8).toUpperCase(),
+                  v.clientes?.nome || "Consumidor Final",
+                  v.tipo || "",
+                  v.status || "",
+                  `R$ ${Number(v.valor_total || 0).toFixed(2)}`,
+                  new Date(v.created_at).toLocaleDateString('pt-BR')
+                ])
+              ];
+              const csv = rows.map(r => r.map(c => `"${c}"`).join(";")).join("\n");
+              const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url; a.download = `relatorio_vendas_${new Date().toISOString().split('T')[0]}.csv`;
+              document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+            }}>Exportar CSV</Button>
             <Button asChild className="bg-gradient-brand text-primary-foreground">
               <Link to="/app/vendas">Novo Pedido</Link>
             </Button>

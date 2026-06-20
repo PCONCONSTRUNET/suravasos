@@ -62,7 +62,24 @@ function PublicCatalogo() {
   };
 
   const handleBuy = (produto: any) => {
-    const text = encodeURIComponent(`Olá! Tenho interesse no produto: *${produto.nome}* (Ref: ${produto.codigo}). Qual o procedimento para compra?`);
+    const valorFormatado = Number(produto.valor).toFixed(2).replace('.', ',');
+    
+    let mensagem = `Olá! Tenho interesse no produto: *${produto.nome}*\n\n`;
+    
+    if (produto.codigo) mensagem += `*Referência/Código:* ${produto.codigo}\n`;
+    mensagem += `*Valor:* R$ ${valorFormatado}\n`;
+    if (produto.categoria) mensagem += `*Categoria:* ${produto.categoria}\n`;
+    if (produto.numero) mensagem += `*Número:* ${produto.numero}\n`;
+    if (produto.dimensao) mensagem += `*Dimensões:* ${produto.dimensao}\n`;
+    if (produto.volume) mensagem += `*Volume:* ${produto.volume} L\n`;
+    if (produto.comprimento) mensagem += `*Comprimento:* ${produto.comprimento} cm\n`;
+    if (produto.cores && produto.cores.length > 0) {
+      mensagem += `*Cores:* ${produto.cores.join(', ')}\n`;
+    }
+    
+    mensagem += `\nQual o procedimento para compra?`;
+    
+    const text = encodeURIComponent(mensagem);
     // Idealmente você colocaria aqui o número oficial do WhatsApp da empresa
     window.open(`https://wa.me/?text=${text}`, '_blank');
   };
