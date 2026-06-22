@@ -129,13 +129,9 @@ function PublicCatalogo() {
   const handleEnviarPedido = () => {
     if (cart.length === 0) return;
 
-    const pedidoData = cart.map(item => ({
-      id: item.id,
-      codigo: item.codigo,
-      produto: item.nome,
-      qtd: item.quantidade,
-      vlrUnit: item.valor,
-    }));
+    // Encodifica apenas [id, quantidade] — link muito mais curto
+    // O DAV busca os detalhes do produto pelo Supabase
+    const pedidoData = cart.map(item => [item.id, item.quantidade]);
 
     const base64 = btoa(unescape(encodeURIComponent(JSON.stringify(pedidoData))));
     const link = `${window.location.origin}/app/dav-novo?pedido=${base64}`;

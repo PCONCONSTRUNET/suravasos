@@ -34,24 +34,43 @@ function NovoDAV() {
   // Pré-preencher a partir do link do catálogo
   useEffect(() => {
     if (!pedido) return;
-    try {
-      const decoded = decodeURIComponent(escape(atob(pedido)));
-      const itensPedido = JSON.parse(decoded);
-      if (Array.isArray(itensPedido) && itensPedido.length > 0) {
-        setItens(
-          itensPedido.map((i: any, idx: number) => ({
+    const carregar = async () => {
+      try {
+        // Formato compacto: [[id, qtd], [id, qtd], ...]
+        const decoded = decodeURIComponent(escape(atob(pedido)));
+        const pares: [string, number][] = JSON.parse(decoded);
+        if (!Array.isArray(pares) || pares.length === 0) return;
+
+        const ids = pares.map(p => p[0]);
+        const { data: produtos, error } = await supabase
+          .from('produtos')
+          .select('id, codigo, nome, valor')
+          .in('id', ids);
+
+        if (error || !produtos) return;
+
+        const mapa = Object.fromEntries(produtos.map(p => [p.id, p]));
+
+        const itensPreenchidos = pares.map(([id, qtd], idx) => {
+          const p = mapa[id];
+          return {
             id: Date.now() + idx,
-            codigo: i.codigo || "",
-            produto: i.produto || "",
-            qtd: Number(i.qtd) || 1,
-            vlrUnit: Number(i.vlrUnit) || 0,
-          }))
-        );
-        setPedidoDosCatalogo(true);
+            codigo: p?.codigo || "",
+            produto: p?.nome || "",
+            qtd: Number(qtd) || 1,
+            vlrUnit: Number(p?.valor) || 0,
+          };
+        }).filter(i => i.produto);
+
+        if (itensPreenchidos.length > 0) {
+          setItens(itensPreenchidos);
+          setPedidoDosCatalogo(true);
+        }
+      } catch (e) {
+        console.error("Erro ao decodificar pedido do catálogo:", e);
       }
-    } catch (e) {
-      console.error("Erro ao decodificar pedido do catálogo:", e);
-    }
+    };
+    carregar();
   }, [pedido]);
 
   const addItem = () => setItens([...itens, { id: Date.now(), codigo: "", produto: "", qtd: 1, vlrUnit: 0 }]);
