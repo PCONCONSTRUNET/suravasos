@@ -26,11 +26,16 @@ function DAVList() {
     try {
       const { data, error } = await supabase
         .from('davs')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('*');
 
       if (error) throw error;
-      setDavs(data || []);
+      // Ordena no cliente pelo campo que existir
+      const sorted = (data || []).sort((a: any, b: any) => {
+        const dateA = a.created_at || a.data || a.validade || "";
+        const dateB = b.created_at || b.data || b.validade || "";
+        return dateB.localeCompare(dateA);
+      });
+      setDavs(sorted);
     } catch (err: any) {
       console.error(err);
       alert("Erro ao buscar orçamentos: " + err.message);

@@ -112,7 +112,8 @@ function NovoDAV() {
         frete_valor: freteValor,
         total: total,
         observacoes: observacoes,
-        validade: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+        validade: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        created_at: new Date().toISOString(),
       }).select('id').single();
 
       if (davError) throw davError;
