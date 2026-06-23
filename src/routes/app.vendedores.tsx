@@ -119,7 +119,7 @@ function VendedoresAdmin() {
 
       const { error } = await supabase.from('vendas').update({ 
         status_aprovacao: 'Aprovada',
-        status: 'Pago',
+        status: 'Pendente',
         valor_comissao: valorComissao,
         status_pagamento_comissao: 'Pendente'
       }).eq('id', venda.id);
@@ -127,14 +127,25 @@ function VendedoresAdmin() {
       if (error) throw error;
 
       const dataAtual = new Date().toISOString().split('T')[0];
+      
+      // Lançar Faturamento como Pendente
       await supabase.from('contas_receber').insert([{
          venda_id: venda.id,
          descricao: `Venda Parceiro #${venda.id.substring(0,8).toUpperCase()} - ${vendedorCompleto?.nome || ''}`,
          valor: valorVenda,
          vencimento: dataAtual,
-         status: "Recebido",
-         data_pagamento: dataAtual
+         status: "Pendente"
       }]);
+
+      // Lançar Comissão como Despesa Pendente
+      if (valorComissao > 0) {
+        await supabase.from('contas_pagar').insert([{
+           descricao: `Comissão Parceiro #${venda.id.substring(0,8).toUpperCase()} - ${vendedorCompleto?.nome || ''}`,
+           valor: valorComissao,
+           vencimento: dataAtual,
+           status: "Pendente"
+        }]);
+      }
 
       // Baixar estoque dos itens
       const { data: itens } = await supabase.from('vendas_itens').select('*').eq('venda_id', venda.id);
@@ -194,8 +205,9 @@ function VendedoresAdmin() {
              }
           }
 
-          // Excluir contas a receber e itens vinculados à venda, para não dar erro de chave estrangeira
+          // Excluir contas a receber, contas a pagar e itens vinculados à venda, para não dar erro de chave estrangeira
           await supabase.from('contas_receber').delete().eq('venda_id', id);
+          await supabase.from('contas_pagar').delete().ilike('descricao', `%${id.substring(0,8).toUpperCase()}%`);
           await supabase.from('vendas_itens').delete().eq('venda_id', id);
           
           // A deleção apaga a venda
@@ -265,6 +277,12 @@ function VendedoresAdmin() {
       onConfirm: async () => {
         try {
            await supabase.from('vendas').update({ status_pagamento_comissao: 'Paga' }).eq('id', vendaId);
+           
+           // Dá baixa na despesa de comissão no financeiro
+           await supabase.from('contas_pagar')
+             .update({ status: 'Pago', data_pagamento: new Date().toISOString().split('T')[0] })
+             .ilike('descricao', `%${vendaId.substring(0,8).toUpperCase()}%`);
+
            fetchData();
         } catch(err: any) {
            alert("Erro ao pagar comissão: " + err.message);
