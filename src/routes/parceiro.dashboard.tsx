@@ -5,7 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Wallet, Clock, CheckCircle2, TrendingUp, XCircle } from "lucide-react";
+import { Wallet, Clock, CheckCircle2, TrendingUp, XCircle, Copy, ExternalLink, Link as LinkIcon } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/parceiro/dashboard")({
   head: () => ({ meta: [{ title: "Meu Painel — VIVAVERDE" }] }),
@@ -197,6 +198,48 @@ function ParceiroDashboard() {
         <h1 className="text-2xl font-bold font-display text-slate-800">Olá, {nome.split(' ')[0]}! 👋</h1>
         <p className="text-sm text-muted-foreground">Aqui está o resumo das suas vendas.</p>
       </div>
+
+      {/* Affiliate Link Section */}
+      {vendedorId && status === 'Ativo' && (
+        <Card className="mb-6 border-emerald-200 bg-emerald-50/50 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
+            <LinkIcon className="h-32 w-32" />
+          </div>
+          <CardContent className="p-6">
+            <h2 className="text-lg font-bold text-emerald-900 flex items-center gap-2 mb-2">
+              <LinkIcon className="h-5 w-5" /> Seu Catálogo Exclusivo
+            </h2>
+            <p className="text-emerald-700 text-sm mb-4">
+              Compartilhe o link abaixo com seus clientes. Quando eles montarem o pedido e clicarem em "Enviar", 
+              o pedido chegará no <strong>seu WhatsApp</strong> e você poderá finalizá-lo por aqui!
+            </p>
+            <div className="flex gap-2">
+              <Input 
+                readOnly 
+                value={`${window.location.origin}/catalogo?ref=${vendedorId}`} 
+                className="bg-white border-emerald-200 text-emerald-800 font-medium"
+              />
+              <Button 
+                onClick={() => {
+                  navigator.clipboard.writeText(`${window.location.origin}/catalogo?ref=${vendedorId}`);
+                  toast.success("Link copiado!");
+                }}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white shrink-0"
+              >
+                <Copy className="h-4 w-4 mr-2" /> Copiar
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => window.open(`/catalogo?ref=${vendedorId}`, '_blank')}
+                className="border-emerald-200 text-emerald-700 hover:bg-emerald-100 shrink-0"
+                title="Abrir catálogo"
+              >
+                <ExternalLink className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-2 gap-4">
         <Card className="col-span-2 bg-gradient-brand text-primary-foreground border-0 shadow-lg shadow-primary/20">

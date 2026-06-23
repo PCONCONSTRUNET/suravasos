@@ -51,13 +51,34 @@ function PublicCatalogo() {
   const [modalProduto, setModalProduto] = useState<any | null>(null);
   const [modalQtd, setModalQtd] = useState(1);
 
+  // Afiliado
+  const [partnerPhone, setPartnerPhone] = useState<string>("5519997331112"); // Default owner phone
+  const [partnerId, setPartnerId] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchProdutos = async () => {
       const { data } = await supabase.from('produtos').select('*').eq('status', 'Ativo');
       if (data) setProdutos(data);
       setLoading(false);
     };
+
+    const fetchPartner = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const ref = params.get('ref');
+      if (ref) {
+        const { data, error } = await supabase.from('vendedores').select('id, contato').eq('id', ref).maybeSingle();
+        if (data && data.contato) {
+          // Limpa o número para deixar só dígitos
+          let fone = data.contato.replace(/\D/g, '');
+          if (!fone.startsWith('55')) fone = '55' + fone;
+          setPartnerPhone(fone);
+          setPartnerId(data.id);
+        }
+      }
+    };
+
     fetchProdutos();
+    fetchPartner();
   }, []);
 
   const categorias = Array.from(new Set(produtos.map(p => p.categoria))).filter(Boolean) as string[];
@@ -130,24 +151,28 @@ function PublicCatalogo() {
     if (cart.length === 0) return;
 
     // Encodifica apenas [id, quantidade] — link muito mais curto
-    // O DAV busca os detalhes do produto pelo Supabase
+    // O DAV (dono) ou DAV Parceiro busca os detalhes do produto pelo Supabase
     const pedidoData = cart.map(item => [item.id, item.quantidade]);
 
     const base64 = btoa(unescape(encodeURIComponent(JSON.stringify(pedidoData))));
-    const link = `${window.location.origin}/app/dav-novo?pedido=${base64}`;
+    
+    // Se tem um parceiro (afiliado), o link aponta pro DAV do Parceiro, senão pro DAV principal
+    const linkPath = partnerId ? '/parceiro/dav' : '/app/dav-novo';
+    const link = `${window.location.origin}${linkPath}?pedido=${base64}`;
 
     const linhasProdutos = cart
       .map(i => `▪ *${i.nome}* — Qtd: ${i.quantidade} × R$ ${i.valor.toFixed(2).replace('.', ',')} = *R$ ${(i.quantidade * i.valor).toFixed(2).replace('.', ',')}*`)
       .join('\n');
 
+    const saudacao = partnerId ? "Olá!" : "Olá Douglas!";
     const mensagem =
-      `Olá Douglas! Tenho um pedido pronto pelo catálogo 🛒\n\n` +
+      `${saudacao} Tenho um pedido pronto pelo catálogo 🛒\n\n` +
       `${linhasProdutos}\n\n` +
       `*Total: R$ ${totalValor.toFixed(2).replace('.', ',')}*\n\n` +
       `👇 Clique no link abaixo para abrir o pedido no sistema:\n${link}`;
 
     const text = encodeURIComponent(mensagem);
-    window.open(`https://wa.me/5519997331112?text=${text}`, '_blank');
+    window.open(`https://wa.me/${partnerPhone}?text=${text}`, '_blank');
   };
 
   return (
@@ -428,7 +453,7 @@ function PublicCatalogo() {
                 className="w-full h-13 py-3.5 rounded-xl bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold text-base flex items-center justify-center gap-2.5 transition-colors shadow-lg shadow-green-200"
               >
                 <WhatsAppIcon className="h-5 w-5" />
-                Enviar pedido para Douglas
+                Enviar pedido via WhatsApp
                 <SendHorizonal className="h-4 w-4" />
               </button>
               <p className="text-xs text-center text-slate-400">
