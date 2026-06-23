@@ -516,20 +516,25 @@ function VendedoresAdmin() {
           </form>
         </DialogContent>
       </Dialog>
+
       <Dialog open={isSaleDetailsOpen} onOpenChange={setIsSaleDetailsOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[400px] w-[95vw] max-h-[90vh] overflow-y-auto p-5 sm:p-6 rounded-xl">
           <DialogHeader>
             <DialogTitle>Detalhes do Pedido</DialogTitle>
             <DialogDescription asChild>
               <div>
                 Pedido #{selectedSaleForDetails?.id.substring(0,6)} • Vendedor: {selectedSaleForDetails?.vendedor?.nome || 'Desconhecido'}
-                {selectedSaleForDetails?.clientes?.nome && (
-                  <div className="mt-3 text-sm text-slate-700 bg-slate-100 p-3 rounded-md border border-slate-200">
-                    <p className="font-semibold text-slate-900 flex items-center gap-2">👤 {selectedSaleForDetails.clientes.nome}</p>
-                    {selectedSaleForDetails.clientes.cpf_cnpj && <p className="mt-1">📄 {selectedSaleForDetails.clientes.cpf_cnpj}</p>}
-                    {selectedSaleForDetails.clientes.telefone && <p className="mt-1">📞 {selectedSaleForDetails.clientes.telefone}</p>}
-                  </div>
-                )}
+                <div className="mt-3 text-sm text-slate-700 bg-slate-100 p-3 rounded-md border border-slate-200">
+                  {selectedSaleForDetails?.clientes?.nome ? (
+                    <>
+                      <p className="font-semibold text-slate-900 flex items-center gap-2">👤 {selectedSaleForDetails.clientes.nome}</p>
+                      {selectedSaleForDetails.clientes.cpf_cnpj && <p className="mt-1">📄 {selectedSaleForDetails.clientes.cpf_cnpj}</p>}
+                      {selectedSaleForDetails.clientes.telefone && <p className="mt-1">📞 {selectedSaleForDetails.clientes.telefone}</p>}
+                    </>
+                  ) : (
+                    <p className="text-muted-foreground italic">⚠️ Cliente não identificado ou ocorreu erro no cadastro (possível falha antes da correção do banco).</p>
+                  )}
+                </div>
               </div>
             </DialogDescription>
           </DialogHeader>
