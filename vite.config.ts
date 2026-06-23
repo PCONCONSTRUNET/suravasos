@@ -1,7 +1,7 @@
 // @lovable.dev/vite-tanstack-config already includes the following — do NOT add them manually
 // or the app will break with duplicate plugins:
 //   - tanstackStart, viteReact, tailwindcss, tsConfigPaths, nitro (build-only using cloudflare as a default target),
-//     componentTagger (dev-only), VITE_* env injection, @ path alias, React/TanStack dedupe,
+//     componentTagger (dev-only), VITE_* env define injection, @ path alias, React/TanStack dedupe,
 //     error logger plugins, and sandbox detection (port/host/strictPort).
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
@@ -10,17 +10,16 @@ import fs from "fs";
 import path from "path";
 
 function copyTslibIntoVercelFunction() {
-  const vercelFunctionDir = path.resolve(__dirname, ".vercel/output/functions/__server.func");
-
+  const vercelFunctionDir = path.resolve(".vercel/output/functions/__server.func");
   if (!fs.existsSync(vercelFunctionDir)) {
     return;
   }
-
-  fs.cpSync(
-    path.resolve(__dirname, "node_modules/tslib"),
-    path.join(vercelFunctionDir, "node_modules/tslib"),
-    { recursive: true },
-  );
+  const src = path.resolve("node_modules/tslib");
+  const dest = path.join(vercelFunctionDir, "node_modules/tslib");
+  if (fs.existsSync(dest)) {
+    fs.rmSync(dest, { recursive: true });
+  }
+  fs.cpSync(src, dest, { recursive: true });
 }
 
 export default defineConfig({
@@ -33,7 +32,7 @@ export default defineConfig({
     ],
     resolve: {
       alias: {
-        tslib: path.resolve(__dirname, "node_modules/tslib/tslib.es6.mjs"),
+        tslib: path.resolve("node_modules/tslib/tslib.es6.mjs"),
       },
     },
     ssr: {
@@ -45,7 +44,5 @@ export default defineConfig({
   },
   nitro: {
     preset: "vercel",
-    noExternals: ["tslib"],
-    traceDeps: ["tslib"],
   } as any,
 });
