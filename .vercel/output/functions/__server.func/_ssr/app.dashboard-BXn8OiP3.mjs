@@ -5,7 +5,7 @@ import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+
 import { t as Button } from "./button-BkEeRci-.mjs";
 import { t as Badge } from "./badge-D1Dupn2y.mjs";
 import { g as Link } from "../_libs/@tanstack/react-router+[...].mjs";
-import { J as DollarSign, K as Ellipsis, T as Package, c as TrendingUp, f as ShoppingCart, o as Truck, r as Users, s as TriangleAlert, vt as ArrowUpRight, xt as ArrowDownRight } from "../_libs/lucide-react.mjs";
+import { J as DollarSign, K as Ellipsis, St as ArrowDownRight, T as Package, c as TrendingUp, f as ShoppingCart, o as Truck, r as Users, s as TriangleAlert, yt as ArrowUpRight } from "../_libs/lucide-react.mjs";
 import { n as PageHeader } from "./app-shell-BDkgzrqS.mjs";
 import { a as CardTitle, i as CardHeader, n as CardContent, r as CardDescription, t as Card } from "./card-CtX3ithx.mjs";
 import { a as YAxis, d as Pie, f as ResponsiveContainer, l as CartesianGrid, n as PieChart, o as XAxis, p as Tooltip, r as BarChart, s as Area, t as AreaChart, u as Bar } from "../_libs/recharts+[...].mjs";

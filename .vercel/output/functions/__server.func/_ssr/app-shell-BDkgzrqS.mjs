@@ -8,7 +8,7 @@ import { t as VivaverdeLogo } from "./vivaverde-logo-DWXAFaeL.mjs";
 import { t as Input } from "./input-B8Q2ztVi.mjs";
 import { t as Badge } from "./badge-D1Dupn2y.mjs";
 import { g as Link, l as useRouterState } from "../_libs/@tanstack/react-router+[...].mjs";
-import { A as Map, B as Globe, D as Moon, H as FileText, I as LayoutDashboard, N as LogOut, T as Package, _ as Search, d as Sun, dt as CheckCheck, et as Circle, f as ShoppingCart, ft as ChartColumn, gt as Bell, ht as Boxes, k as Menu, lt as ChevronDown, m as Settings, mt as Calculator, n as Wallet, nt as CircleUser, o as Truck, p as ShoppingBag, r as Users, rt as CirclePlus, st as ChevronRight, t as X, ut as Check, y as Receipt } from "../_libs/lucide-react.mjs";
+import { A as Map, B as Globe, D as Moon, H as FileText, I as LayoutDashboard, N as LogOut, T as Package, _ as Search, _t as Bell, ct as ChevronRight, d as Sun, dt as Check, f as ShoppingCart, ft as CheckCheck, gt as Boxes, ht as Calculator, it as CirclePlus, k as Menu, m as Settings, n as Wallet, o as Truck, p as ShoppingBag, pt as ChartColumn, r as Users, rt as CircleUser, t as X, tt as Circle, ut as ChevronDown, y as Receipt } from "../_libs/lucide-react.mjs";
 import { a as Label2, c as Root2, d as SubTrigger2, f as Trigger, i as ItemIndicator2, l as Separator2, n as Content2, o as Portal2, r as Item2, s as RadioItem2, t as CheckboxItem2, u as SubContent2 } from "../_libs/@radix-ui/react-dropdown-menu+[...].mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/app-shell-BDkgzrqS.js
 var import_react = /* @__PURE__ */ __toESM(require_react());

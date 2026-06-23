@@ -6,7 +6,7 @@ import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+
 import { t as Button } from "./button-BkEeRci-.mjs";
 import { t as Input } from "./input-B8Q2ztVi.mjs";
 import { t as Badge } from "./badge-D1Dupn2y.mjs";
-import { _ as Search, _t as BellOff, dt as CheckCheck, u as Trash2 } from "../_libs/lucide-react.mjs";
+import { _ as Search, ft as CheckCheck, u as Trash2, vt as BellOff } from "../_libs/lucide-react.mjs";
 import { n as PageHeader } from "./app-shell-BDkgzrqS.mjs";
 import { n as CardContent, t as Card } from "./card-CtX3ithx.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/app.notificacoes-B1jh1hek.js

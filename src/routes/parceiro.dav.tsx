@@ -11,7 +11,7 @@ import { supabaseParceiro as supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/parceiro/dav")({
   head: () => ({ meta: [{ title: "Novo Pedido (DAV) — Parceiro VIVAVERDE" }] }),
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): { pedido?: string } => ({
     pedido: search.pedido as string | undefined,
   }),
   component: ParceiroDAV,

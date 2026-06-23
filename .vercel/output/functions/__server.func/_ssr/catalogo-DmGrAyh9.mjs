@@ -7,7 +7,7 @@ import { t as Button } from "./button-BkEeRci-.mjs";
 import { t as VivaverdeLogo } from "./vivaverde-logo-DWXAFaeL.mjs";
 import { t as Input } from "./input-B8Q2ztVi.mjs";
 import { t as Badge } from "./badge-D1Dupn2y.mjs";
-import { O as Minus, T as Package, _ as Search, at as ChevronsUpDown, f as ShoppingCart, g as SendHorizontal, u as Trash2, ut as Check, x as Plus } from "../_libs/lucide-react.mjs";
+import { O as Minus, T as Package, _ as Search, dt as Check, f as ShoppingCart, g as SendHorizontal, ot as ChevronsUpDown, u as Trash2, x as Plus } from "../_libs/lucide-react.mjs";
 import { t as Card } from "./card-CtX3ithx.mjs";
 import { n as PopoverContent, r as PopoverTrigger, t as Popover } from "./popover-Cmlz_mk1.mjs";
 import { a as CommandItem, i as CommandInput, n as CommandEmpty, o as CommandList, r as CommandGroup, t as Command$1 } from "./command-BrmsamRj.mjs";

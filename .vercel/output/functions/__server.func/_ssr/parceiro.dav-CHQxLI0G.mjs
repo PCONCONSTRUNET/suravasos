@@ -5,7 +5,7 @@ import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+
 import { t as Button } from "./button-BkEeRci-.mjs";
 import { t as Input } from "./input-B8Q2ztVi.mjs";
 import { _ as useNavigate, g as Link } from "../_libs/@tanstack/react-router+[...].mjs";
-import { bt as ArrowLeft, f as ShoppingCart, u as Trash2, v as Save, x as Plus } from "../_libs/lucide-react.mjs";
+import { f as ShoppingCart, u as Trash2, v as Save, x as Plus, xt as ArrowLeft } from "../_libs/lucide-react.mjs";
 import { n as PageHeader } from "./app-shell-BDkgzrqS.mjs";
 import { t as Card } from "./card-CtX3ithx.mjs";
 import { t as Label } from "./label-DBD1bRRP.mjs";

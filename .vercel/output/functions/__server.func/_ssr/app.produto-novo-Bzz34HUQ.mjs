@@ -6,7 +6,7 @@ import { t as Button } from "./button-BkEeRci-.mjs";
 import { t as Input } from "./input-B8Q2ztVi.mjs";
 import { t as Badge } from "./badge-D1Dupn2y.mjs";
 import { _ as useNavigate, g as Link } from "../_libs/@tanstack/react-router+[...].mjs";
-import { F as Link$1, L as Image$1, Z as CloudUpload, bt as ArrowLeft, t as X, v as Save, x as Plus } from "../_libs/lucide-react.mjs";
+import { F as Link$1, L as Image$1, Z as CloudUpload, t as X, v as Save, x as Plus, xt as ArrowLeft } from "../_libs/lucide-react.mjs";
 import { n as PageHeader } from "./app-shell-BDkgzrqS.mjs";
 import { t as Card } from "./card-CtX3ithx.mjs";
 import { t as Label } from "./label-DBD1bRRP.mjs";

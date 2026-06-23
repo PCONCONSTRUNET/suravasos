@@ -12,7 +12,7 @@ import { useConfirm } from "@/contexts/ConfirmContext";
 
 export const Route = createFileRoute("/app/dav")({
   head: () => ({ meta: [{ title: "Orçamentos (DAV) — VIVAVERDE ERP" }] }),
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): { id?: string } => ({
     id: search.id as string | undefined,
   }),
   component: DAVList,

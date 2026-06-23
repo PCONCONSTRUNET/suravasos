@@ -11,7 +11,7 @@ import { supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/app/dav-novo")({
   head: () => ({ meta: [{ title: "Novo DAV — VIVAVERDE ERP" }] }),
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): { pedido?: string } => ({
     pedido: search.pedido as string | undefined,
   }),
   component: NovoDAV,

@@ -606,6 +606,26 @@ var Clock = createLucideIcon("clock", [["circle", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var CloudDownload = createLucideIcon("cloud-download", [
+	["path", {
+		d: "M12 13v8l-4-4",
+		key: "1f5nwf"
+	}],
+	["path", {
+		d: "m12 21 4-4",
+		key: "1lfcce"
+	}],
+	["path", {
+		d: "M4.393 15.269A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.436 8.284",
+		key: "ui1hmy"
+	}]
+]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var CloudUpload = createLucideIcon("cloud-upload", [
 	["path", {
 		d: "M12 13v8",
@@ -1621,4 +1641,4 @@ var X = createLucideIcon("x", [["path", {
 	key: "d8bk6v"
 }]]);
 //#endregion
-export { ClipboardList as $, Map as A, Globe as B, Phone as C, Moon as D, PackagePlus as E, Link as F, ExternalLink as G, FileText as H, LayoutDashboard as I, DollarSign as J, Ellipsis as K, Image as L, Mail as M, LogOut as N, Minus as O, LoaderCircle as P, Clock as Q, House as R, PiggyBank as S, ArrowDownLeft as St, Package as T, FileSpreadsheet as U, Funnel as V, Eye as W, Copy as X, Database as Y, CloudUpload as Z, Search as _, BellOff as _t, UserPlus as a, ChevronsUpDown as at, Printer as b, ArrowLeft as bt, TrendingUp as c, ChevronLeft as ct, Sun as d, CheckCheck as dt, Circle as et, ShoppingCart as f, ChartColumn as ft, SendHorizontal as g, Bell as gt, Settings2 as h, Boxes as ht, User as i, CircleCheck as it, MapPin as j, Menu as k, TrendingDown as l, ChevronDown as lt, Settings as m, Calculator as mt, Wallet as n, CircleUser as nt, Truck as o, ChevronUp as ot, ShoppingBag as p, Calendar as pt, Download as q, Users as r, CirclePlus as rt, TriangleAlert as s, ChevronRight as st, X as t, CircleX as tt, Trash2 as u, Check as ut, Save as v, ArrowUpRight as vt, Pencil as w, Plus as x, ArrowDownRight as xt, Receipt as y, ArrowRight as yt, Heart as z };
+export { Clock as $, Map as A, Globe as B, Phone as C, ArrowDownLeft as Ct, Moon as D, PackagePlus as E, Link as F, ExternalLink as G, FileText as H, LayoutDashboard as I, DollarSign as J, Ellipsis as K, Image as L, Mail as M, LogOut as N, Minus as O, LoaderCircle as P, CloudDownload as Q, House as R, PiggyBank as S, ArrowDownRight as St, Package as T, FileSpreadsheet as U, Funnel as V, Eye as W, Copy as X, Database as Y, CloudUpload as Z, Search as _, Bell as _t, UserPlus as a, CircleCheck as at, Printer as b, ArrowRight as bt, TrendingUp as c, ChevronRight as ct, Sun as d, Check as dt, ClipboardList as et, ShoppingCart as f, CheckCheck as ft, SendHorizontal as g, Boxes as gt, Settings2 as h, Calculator as ht, User as i, CirclePlus as it, MapPin as j, Menu as k, TrendingDown as l, ChevronLeft as lt, Settings as m, Calendar as mt, Wallet as n, CircleX as nt, Truck as o, ChevronsUpDown as ot, ShoppingBag as p, ChartColumn as pt, Download as q, Users as r, CircleUser as rt, TriangleAlert as s, ChevronUp as st, X as t, Circle as tt, Trash2 as u, ChevronDown as ut, Save as v, BellOff as vt, Pencil as w, Plus as x, ArrowLeft as xt, Receipt as y, ArrowUpRight as yt, Heart as z };
