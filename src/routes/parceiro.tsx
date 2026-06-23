@@ -17,21 +17,9 @@ export const Route = createFileRoute("/parceiro")({
         throw redirect({ to: "/parceiro/login" });
       }
 
-      // Verifica se o parceiro está aprovado no sistema
-      const { data: vendedor } = await supabase
-        .from('vendedores')
-        .select('status')
-        .eq('user_id', session.user.id)
-        .maybeSingle();
-
-      if (vendedor && vendedor.status !== 'Ativo') {
-        // Usa sessionStorage para comunicar o bloqueio sem search params
-        sessionStorage.setItem('parceiro_blocked', '1');
-        await supabase.auth.signOut();
-        throw redirect({ to: "/parceiro/login" });
-      }
-
-      // Parceiro está OK — limpa flag de bloqueio se existir
+      // Parceiro está logado, a proteção da rota foi garantida pelo session check.
+      // O controle de tela (Aguardando Aprovação / Rejeitado) será feito diretamente
+      // dentro do parceiro.dashboard.tsx para que o usuário não seja expulso.
       sessionStorage.removeItem('parceiro_blocked');
 
     } catch (err: any) {

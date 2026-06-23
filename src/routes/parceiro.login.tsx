@@ -20,13 +20,7 @@ function LoginParceiro() {
   const [resetSent, setResetSent] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
 
-  // Verifica se o parceiro foi bloqueado via sessionStorage
-  useEffect(() => {
-    if (sessionStorage.getItem('parceiro_blocked') === '1') {
-      setError("⚠️ Sua conta ainda está aguardando aprovação. Aguarde o contato do administrador.");
-      sessionStorage.removeItem('parceiro_blocked');
-    }
-  }, []);
+  // parceiro_blocked verifier removed because unapproved partners can stay logged in now.
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
