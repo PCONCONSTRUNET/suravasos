@@ -72,12 +72,15 @@ function VendedoresAdmin() {
 
       const { data: vendasData, error } = await supabase
         .from('vendas')
-        .select('*, vendedor:vendedores(nome), cliente:clientes(nome, cpf_cnpj, telefone)')
+        .select('*, vendedor:vendedores(nome), clientes(nome, cpf_cnpj, telefone)')
         .not('vendedor_id', 'is', null)
         .order('created_at', { ascending: false });
       
       if (!error && vendasData) {
         setTodasVendas(vendasData);
+      } else if (error) {
+        console.error("Erro vendas:", error);
+        alert("Erro ao buscar vendas dos parceiros: " + error.message);
       }
     } catch (e) {
       console.warn("Erro:", e);
@@ -520,11 +523,11 @@ function VendedoresAdmin() {
             <DialogDescription asChild>
               <div>
                 Pedido #{selectedSaleForDetails?.id.substring(0,6)} • Vendedor: {selectedSaleForDetails?.vendedor?.nome || 'Desconhecido'}
-                {selectedSaleForDetails?.cliente?.nome && (
+                {selectedSaleForDetails?.clientes?.nome && (
                   <div className="mt-3 text-sm text-slate-700 bg-slate-100 p-3 rounded-md border border-slate-200">
-                    <p className="font-semibold text-slate-900 flex items-center gap-2">👤 {selectedSaleForDetails.cliente.nome}</p>
-                    {selectedSaleForDetails.cliente.cpf_cnpj && <p className="mt-1">📄 {selectedSaleForDetails.cliente.cpf_cnpj}</p>}
-                    {selectedSaleForDetails.cliente.telefone && <p className="mt-1">📞 {selectedSaleForDetails.cliente.telefone}</p>}
+                    <p className="font-semibold text-slate-900 flex items-center gap-2">👤 {selectedSaleForDetails.clientes.nome}</p>
+                    {selectedSaleForDetails.clientes.cpf_cnpj && <p className="mt-1">📄 {selectedSaleForDetails.clientes.cpf_cnpj}</p>}
+                    {selectedSaleForDetails.clientes.telefone && <p className="mt-1">📞 {selectedSaleForDetails.clientes.telefone}</p>}
                   </div>
                 )}
               </div>

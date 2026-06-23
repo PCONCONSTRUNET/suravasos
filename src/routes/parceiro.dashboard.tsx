@@ -74,11 +74,16 @@ function ParceiroDashboard() {
           setStatus(vData.status || 'Ativo');
 
           // Busca as vendas dele
-          const { data: vendasData } = await supabase
+          const { data: vendasData, error: vDashError } = await supabase
             .from('vendas')
-            .select('*, cliente:clientes(nome, cpf_cnpj, telefone)')
+            .select('*, clientes(nome, cpf_cnpj, telefone)')
             .eq('vendedor_id', vData.id)
             .order('created_at', { ascending: false });
+            
+          if (vDashError) {
+            console.error("Erro ao carregar vendas no dashboard:", vDashError);
+            alert("Erro ao buscar suas vendas: " + vDashError.message);
+          }
             
           if (vendasData) setVendas(vendasData);
         }
@@ -92,8 +97,12 @@ function ParceiroDashboard() {
     carregarDados();
   }, []);
 
-  const totalComissoes = vendas
-    .filter(v => v.status_aprovacao === 'Aprovada')
+  const totalComissoesAReceber = vendas
+    .filter(v => v.status_aprovacao === 'Aprovada' && v.status_pagamento_comissao !== 'Paga')
+    .reduce((acc, v) => acc + (Number(v.valor_comissao) || 0), 0);
+
+  const totalComissoesPagas = vendas
+    .filter(v => v.status_aprovacao === 'Aprovada' && v.status_pagamento_comissao === 'Paga')
     .reduce((acc, v) => acc + (Number(v.valor_comissao) || 0), 0);
 
   const aguardandoAprovacao = vendas.filter(v => v.status_aprovacao === 'Pendente').length;
@@ -192,14 +201,28 @@ function ParceiroDashboard() {
       <div className="grid grid-cols-2 gap-4">
         <Card className="col-span-2 bg-gradient-brand text-primary-foreground border-0 shadow-lg shadow-primary/20">
           <CardContent className="p-6">
-            <div className="flex items-center gap-2 mb-2 opacity-90">
-              <Wallet className="h-5 w-5" />
-              <h3 className="font-medium text-sm">Comissões a Receber</h3>
+            <div className="flex justify-between items-start">
+              <div>
+                <div className="flex items-center gap-2 mb-2 opacity-90">
+                  <Wallet className="h-5 w-5" />
+                  <h3 className="font-medium text-sm">Comissões a Receber</h3>
+                </div>
+                <p className="text-4xl font-extrabold font-display">
+                  <span className="text-2xl font-bold mr-1 opacity-80">R$</span>
+                  {totalComissoesAReceber.toFixed(2).replace('.', ',')}
+                </p>
+              </div>
+              <div className="text-right">
+                <div className="flex items-center justify-end gap-1 mb-1 opacity-80">
+                  <CheckCircle2 className="h-4 w-4" />
+                  <h3 className="font-medium text-xs">Já Pagas</h3>
+                </div>
+                <p className="text-xl font-bold">
+                  <span className="text-sm font-bold mr-1 opacity-80">R$</span>
+                  {totalComissoesPagas.toFixed(2).replace('.', ',')}
+                </p>
+              </div>
             </div>
-            <p className="text-4xl font-extrabold font-display">
-              <span className="text-2xl font-bold mr-1 opacity-80">R$</span>
-              {totalComissoes.toFixed(2).replace('.', ',')}
-            </p>
           </CardContent>
         </Card>
 
@@ -268,11 +291,11 @@ function ParceiroDashboard() {
             <DialogDescription asChild>
               <div>
                 Pedido #{selectedSaleForDetails?.id.substring(0,6)} • {new Date(selectedSaleForDetails?.created_at).toLocaleDateString()}
-                {selectedSaleForDetails?.cliente?.nome && (
+                {selectedSaleForDetails?.clientes?.nome && (
                   <div className="mt-3 text-sm text-slate-700 bg-slate-100 p-3 rounded-md border border-slate-200 text-left">
-                    <p className="font-semibold text-slate-900 flex items-center gap-2">👤 {selectedSaleForDetails.cliente.nome}</p>
-                    {selectedSaleForDetails.cliente.cpf_cnpj && <p className="mt-1">📄 {selectedSaleForDetails.cliente.cpf_cnpj}</p>}
-                    {selectedSaleForDetails.cliente.telefone && <p className="mt-1">📞 {selectedSaleForDetails.cliente.telefone}</p>}
+                    <p className="font-semibold text-slate-900 flex items-center gap-2">👤 {selectedSaleForDetails.clientes.nome}</p>
+                    {selectedSaleForDetails.clientes.cpf_cnpj && <p className="mt-1">📄 {selectedSaleForDetails.clientes.cpf_cnpj}</p>}
+                    {selectedSaleForDetails.clientes.telefone && <p className="mt-1">📞 {selectedSaleForDetails.clientes.telefone}</p>}
                   </div>
                 )}
               </div>
