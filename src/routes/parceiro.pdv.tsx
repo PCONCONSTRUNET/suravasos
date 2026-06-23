@@ -26,15 +26,31 @@ function ParceiroPDV() {
   useEffect(() => {
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const { data: vData } = await supabase.from('vendedores').select('id, status').eq('user_id', session.user.id).single();
-        if (vData) {
-          setVendedorId(vData.id);
-          if (vData.status === 'Aguardando Aprovação') {
-            navigate({ to: "/parceiro/dashboard" });
-            return;
-          }
+      if (!session) {
+        navigate({ to: "/parceiro/login" });
+        return;
+      }
+      
+      const { data: vData, error: vError } = await supabase
+        .from('vendedores')
+        .select('id, status')
+        .eq('user_id', session.user.id)
+        .limit(1)
+        .maybeSingle();
+        
+      if (vError) {
+        console.error("Erro ao buscar vendedor no PDV:", vError);
+      }
+
+      if (vData) {
+        setVendedorId(vData.id);
+        if (vData.status === 'Aguardando Aprovação') {
+          navigate({ to: "/parceiro/dashboard" });
+          return;
         }
+      } else {
+        navigate({ to: "/parceiro/dashboard" });
+        return;
       }
 
       const { data } = await supabase.from('produtos').select('*').eq('status', 'Ativo');

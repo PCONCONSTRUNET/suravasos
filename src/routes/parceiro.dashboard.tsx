@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabaseParceiro as supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,6 +13,7 @@ export const Route = createFileRoute("/parceiro/dashboard")({
 });
 
 function ParceiroDashboard() {
+  const navigate = useNavigate();
   const [vendedorId, setVendedorId] = useState<string | null>(null);
   const [nome, setNome] = useState("");
   const [status, setStatus] = useState("");
@@ -50,10 +51,22 @@ function ParceiroDashboard() {
     const carregarDados = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        if (!session) return;
+        if (!session) {
+          navigate({ to: "/parceiro/login" });
+          return;
+        }
 
         // Tenta achar o vendedor atrelado a este usuário
-        const { data: vData } = await supabase.from('vendedores').select('*').eq('user_id', session.user.id).single();
+        const { data: vData, error: vError } = await supabase
+          .from('vendedores')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .limit(1)
+          .maybeSingle();
+        
+        if (vError) {
+          console.error("Erro ao buscar vendedor:", vError);
+        }
         
         if (vData) {
           setVendedorId(vData.id);
