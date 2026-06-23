@@ -36,7 +36,24 @@ export default defineConfig({
     },
     ssr: {
       noExternal: [/^@radix-ui/],
-      external: ["pg"],
+      // tslib e a família @supabase/* ficam de fora do bundle do Rolldown.
+      // O Rolldown (bundler novo do Vite 8) tem um bug de interop ESM/CJS
+      // que gera "Cannot destructure property '__extends' of '__toESM(...).default'"
+      // ao tentar empacotar o tslib usado internamente pelo @supabase/supabase-js.
+      // Mantendo external, esses pacotes são carregados direto do node_modules
+      // em runtime (via require/import nativo do Node), sem passar pelo Rolldown.
+      external: [
+        "pg",
+        "tslib",
+        "@supabase/supabase-js",
+        "@supabase/auth-js",
+        "@supabase/postgrest-js",
+        "@supabase/realtime-js",
+        "@supabase/storage-js",
+        "@supabase/functions-js",
+        "@supabase/phoenix",
+        "iceberg-js",
+      ],
     },
   },
   tanstackStart: {
