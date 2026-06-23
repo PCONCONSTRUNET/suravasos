@@ -216,12 +216,12 @@ function ParceiroDashboard() {
             <div className="flex gap-2">
               <Input 
                 readOnly 
-                value={`${window.location.origin}/catalogo?ref=${vendedorId}`} 
+                value={`${window.location.origin}/catalogo?ref=${nome.split(' ')[0].toLowerCase()}`} 
                 className="bg-white border-emerald-200 text-emerald-800 font-medium"
               />
               <Button 
                 onClick={() => {
-                  navigator.clipboard.writeText(`${window.location.origin}/catalogo?ref=${vendedorId}`);
+                  navigator.clipboard.writeText(`${window.location.origin}/catalogo?ref=${nome.split(' ')[0].toLowerCase()}`);
                   toast.success("Link copiado!");
                 }}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white shrink-0"
@@ -230,7 +230,7 @@ function ParceiroDashboard() {
               </Button>
               <Button 
                 variant="outline" 
-                onClick={() => window.open(`/catalogo?ref=${vendedorId}`, '_blank')}
+                onClick={() => window.open(`/catalogo?ref=${nome.split(' ')[0].toLowerCase()}`, '_blank')}
                 className="border-emerald-200 text-emerald-700 hover:bg-emerald-100 shrink-0"
                 title="Abrir catálogo"
               >

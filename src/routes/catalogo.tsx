@@ -66,10 +66,17 @@ function PublicCatalogo() {
       const params = new URLSearchParams(window.location.search);
       const ref = params.get('ref');
       if (ref) {
-        const { data, error } = await supabase.from('vendedores').select('id, contato').eq('id', ref).maybeSingle();
-        if (data && data.contato) {
+        let query = supabase.from('vendedores').select('id, telefone, status').eq('status', 'Ativo');
+        if (ref.length > 20) {
+          query = query.eq('id', ref);
+        } else {
+          query = query.ilike('nome', `${ref}%`);
+        }
+        
+        const { data } = await query.limit(1).maybeSingle();
+        if (data && data.telefone) {
           // Limpa o número para deixar só dígitos
-          let fone = data.contato.replace(/\D/g, '');
+          let fone = data.telefone.replace(/\D/g, '');
           if (!fone.startsWith('55')) fone = '55' + fone;
           setPartnerPhone(fone);
           setPartnerId(data.id);
