@@ -35,7 +35,7 @@ export default defineConfig({
       },
     },
     ssr: {
-      noExternal: [/^@radix-ui/, "tslib"],
+      noExternal: [/^@radix-ui/],
       external: ["pg"],
     },
   },
@@ -44,9 +44,6 @@ export default defineConfig({
   },
   nitro: {
     preset: "vercel",
-    externals: {
-      inline: ["tslib", /^@supabase/],
-    },
     traceDeps: ["tslib", "@supabase/supabase-js"],
   } as any,
 });
