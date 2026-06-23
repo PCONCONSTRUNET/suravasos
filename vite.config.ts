@@ -6,10 +6,31 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
+import fs from "fs";
 import path from "path";
+
+function copyTslibIntoVercelFunction() {
+  const vercelFunctionDir = path.resolve(__dirname, ".vercel/output/functions/__server.func");
+
+  if (!fs.existsSync(vercelFunctionDir)) {
+    return;
+  }
+
+  fs.cpSync(
+    path.resolve(__dirname, "node_modules/tslib"),
+    path.join(vercelFunctionDir, "node_modules/tslib"),
+    { recursive: true },
+  );
+}
 
 export default defineConfig({
   vite: {
+    plugins: [
+      {
+        name: "copy-tslib-into-vercel-function",
+        closeBundle: copyTslibIntoVercelFunction,
+      },
+    ],
     resolve: {
       alias: {
         tslib: path.resolve(__dirname, "node_modules/tslib/tslib.es6.mjs"),
@@ -24,5 +45,7 @@ export default defineConfig({
   },
   nitro: {
     preset: "vercel",
-  },
+    noExternals: ["tslib"],
+    traceDeps: ["tslib"],
+  } as any,
 });
