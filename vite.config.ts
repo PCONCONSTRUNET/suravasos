@@ -35,7 +35,8 @@ export default defineConfig({
       },
     },
     ssr: {
-      noExternal: [/^@radix-ui/, /^@supabase/, "tslib"],
+      noExternal: true,
+      external: ["pg"],
     },
   },
   tanstackStart: {
