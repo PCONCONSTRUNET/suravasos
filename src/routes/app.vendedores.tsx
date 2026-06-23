@@ -223,15 +223,17 @@ function VendedoresAdmin() {
   const excluirVendedor = async (id: string) => {
     setConfirmModal({
       isOpen: true,
-      title: "Excluir Parceiro",
-      desc: "Tem certeza que deseja excluir esse parceiro? Ele não terá mais acesso, mas o histórico de vendas será preservado no caixa geral.",
+      title: "Excluir Parceiro Permanentemente",
+      desc: "Tem certeza que deseja excluir esse parceiro? O cadastro, email e senha dele serão APAGADOS permanentemente. O histórico de vendas continuará salvo no caixa geral.",
       onConfirm: async () => {
         try {
-          await supabase.from('vendedores').update({ status: 'Inativo' }).eq('id', id);
+          const { error } = await supabase.rpc('excluir_vendedor_e_usuario', { p_vendedor_id: id });
+          if (error) throw error;
+          
           setIsSheetOpen(false);
           fetchData();
         } catch(err: any) {
-          alert("Erro ao excluir parceiro: " + err.message);
+          alert("Erro ao excluir parceiro. Você executou o comando SQL no Supabase? Detalhe: " + err.message);
         }
       }
     });
