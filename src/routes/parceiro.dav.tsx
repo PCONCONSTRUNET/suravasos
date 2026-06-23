@@ -126,15 +126,26 @@ function ParceiroDAV() {
     try {
       // 1. Salvar ou buscar cliente
       let finalClienteId = null;
-      const { data: clienteData, error: clienteError } = await supabase.from('clientes').insert([{
-        nome: cliente.nome,
-        cpf_cnpj: cliente.cnpj,
-        telefone: cliente.telefone,
-        endereco: cliente.endereco
-      }]).select().single();
+      
+      const { data: existingCliente } = await supabase.from('clientes')
+        .select('id')
+        .or(`cpf_cnpj.eq."${cliente.cnpj}",nome.ilike."${cliente.nome}"`)
+        .limit(1)
+        .maybeSingle();
 
-      if (!clienteError && clienteData) {
-        finalClienteId = clienteData.id;
+      if (existingCliente) {
+        finalClienteId = existingCliente.id;
+      } else {
+        const { data: clienteData, error: clienteError } = await supabase.from('clientes').insert([{
+          nome: cliente.nome,
+          cpf_cnpj: cliente.cnpj,
+          telefone: cliente.telefone,
+          endereco: cliente.endereco
+        }]).select().single();
+
+        if (!clienteError && clienteData) {
+          finalClienteId = clienteData.id;
+        }
       }
 
       // 2. Criar a Venda Pendente para o Dono aprovar comissão/estoque
