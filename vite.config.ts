@@ -14,13 +14,13 @@ export default defineConfig({
       tslib: path.resolve(__dirname, "node_modules/tslib/tslib.es6.mjs"),
     },
   },
+  ssr: {
+    noExternal: ["@radix-ui/*", "tslib"],
+  },
   tanstackStart: {
     server: { entry: "server" },
   },
   nitro: {
     preset: "vercel",
-    externals: {
-      inline: ["tslib"],
-    },
   },
 });
