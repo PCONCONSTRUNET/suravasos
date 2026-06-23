@@ -129,18 +129,81 @@ function VendedoresAdmin() {
       const dataAtual = new Date().toISOString().split('T')[0];
       await supabase.from('contas_receber').insert([{
          venda_id: venda.id,
-         descricao: `Venda Parceiro #${venda.id.substring(0,8).toUpperCase()} - ${vendedor?.nome || ''}`,
+         descricao: `Venda Parceiro #${venda.id.substring(0,8).toUpperCase()} - ${vendedorCompleto?.nome || ''}`,
          valor: valorVenda,
          vencimento: dataAtual,
          status: "Recebido",
          data_pagamento: dataAtual
       }]);
 
-      alert("Venda aprovada com sucesso! Financeiro e Comissão gerados.");
+      // Baixar estoque dos itens
+      const { data: itens } = await supabase.from('vendas_itens').select('*').eq('venda_id', venda.id);
+      if (itens && itens.length > 0) {
+        const movimentos = itens.map(i => ({
+          produto_id: i.produto_id,
+          tipo: 'SAIDA',
+          quantidade: i.quantidade,
+          motivo: 'Venda Parceiro Aprovada',
+          referencia_id: venda.id
+        }));
+        await supabase.from('estoque_movimentacoes').insert(movimentos);
+
+        for (const item of itens) {
+          const { data: prod } = await supabase.from('produtos').select('estoque').eq('id', item.produto_id).single();
+          if (prod) {
+            const novoEstoque = (prod.estoque || 0) - item.quantidade;
+            await supabase.from('produtos').update({ estoque: novoEstoque }).eq('id', item.produto_id);
+          }
+        }
+      }
+
+      alert("Venda aprovada com sucesso! Financeiro e Comissão gerados, e estoque descontado.");
       fetchData();
     } catch (err: any) {
       alert("Erro ao aprovar: " + err.message);
     }
+  };
+
+  const excluirVenda = async (id: string, statusAprovacao: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: "Excluir Venda",
+      desc: "Tem certeza? Se aprovada, o estoque será restaurado e o financeiro excluído.",
+      onConfirm: async () => {
+        try {
+          if (statusAprovacao === 'Aprovada') {
+             // Restaurar estoque
+             const { data: itens } = await supabase.from('vendas_itens').select('*').eq('venda_id', id);
+             if (itens && itens.length > 0) {
+                const movimentos = itens.map(i => ({
+                  produto_id: i.produto_id,
+                  tipo: 'ENTRADA',
+                  quantidade: i.quantidade,
+                  motivo: 'Exclusão Venda Parceiro',
+                  referencia_id: id
+                }));
+                await supabase.from('estoque_movimentacoes').insert(movimentos);
+
+                for (const item of itens) {
+                  const { data: prod } = await supabase.from('produtos').select('estoque').eq('id', item.produto_id).single();
+                  if (prod) {
+                    const novoEstoque = (prod.estoque || 0) + item.quantidade;
+                    await supabase.from('produtos').update({ estoque: novoEstoque }).eq('id', item.produto_id);
+                  }
+                }
+             }
+             // Excluir contas a receber associadas
+             await supabase.from('contas_receber').delete().eq('venda_id', id);
+          }
+
+          // A deleção apaga a venda
+          await supabase.from('vendas').delete().eq('id', id);
+          fetchData();
+        } catch (err: any) {
+           alert("Erro ao excluir venda: " + err.message);
+        }
+      }
+    });
   };
 
   const rejeitarVenda = async (id: string) => {
@@ -373,6 +436,9 @@ function VendedoresAdmin() {
                       <Button size="sm" variant="destructive" onClick={() => rejeitarVenda(v.id)} className="h-8 px-2" title="Rejeitar">
                         <XCircle className="h-4 w-4" />
                       </Button>
+                      <Button size="sm" variant="ghost" onClick={() => excluirVenda(v.id, v.status_aprovacao)} className="h-8 px-2 text-destructive hover:bg-destructive/10" title="Excluir do Sistema">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -448,10 +514,13 @@ function VendedoresAdmin() {
                         <div className="flex items-center gap-2">
                           {v.status_pagamento_comissao !== 'Paga' && (
                             <Button size="sm" variant="outline" className="h-7 text-xs border-amber-200 text-amber-700 hover:bg-amber-50" onClick={() => pagarComissao(v.id)}>
-                              Marcar como Pago
+                              Pagar Comissão
                             </Button>
                           )}
-                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive" onClick={() => excluirVendaAprovada(v.id)} title="Excluir Venda do Parceiro">
+                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => openSaleDetails(v)} title="Ver Detalhes">
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive hover:bg-destructive/10" onClick={() => excluirVenda(v.id, v.status_aprovacao)} title="Excluir Venda">
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
