@@ -45,8 +45,13 @@ export default defineConfig({
   nitro: {
     preset: "vercel",
     externals: {
-      inline: ["tslib"],
+      inline: ["tslib", /^@supabase/],
     },
-    traceDeps: ["tslib"],
+    traceDeps: ["tslib", "@supabase/supabase-js"],
+    rollupConfig: {
+      output: {
+        interop: "auto",
+      },
+    },
   } as any,
 });
