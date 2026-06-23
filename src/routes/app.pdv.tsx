@@ -38,11 +38,23 @@ function PDV() {
 
   const importarDav = async (dav: any) => {
     let clienteId = null;
-    if (dav.cliente_cnpj || dav.cliente_nome) {
+    if (dav.cliente_cnpj) {
       const { data: cData } = await supabase.from('clientes')
         .select('id, nome')
-        .or(`cpf_cnpj.eq."${dav.cliente_cnpj}",nome.ilike."${dav.cliente_nome}"`)
-        .limit(1).maybeSingle();
+        .eq('cpf_cnpj', dav.cliente_cnpj)
+        .limit(1)
+        .maybeSingle();
+      if (cData) {
+        clienteId = cData.id;
+      }
+    }
+    
+    if (!clienteId && dav.cliente_nome) {
+      const { data: cData } = await supabase.from('clientes')
+        .select('id, nome')
+        .ilike('nome', dav.cliente_nome)
+        .limit(1)
+        .maybeSingle();
       if (cData) {
         clienteId = cData.id;
       }
