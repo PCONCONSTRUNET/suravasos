@@ -63,6 +63,7 @@ function Dashboard() {
   });
 
   useEffect(() => {
+    const loadData = async () => {
       const { data: vendasData } = await supabase.from('vendas').select('*').in('tipo', ['VENDA', 'PDV', 'Afiliado']);
       const { data: produtos } = await supabase.from('produtos').select('*');
       const { count: clientesCount } = await supabase.from('clientes').select('*', { count: 'exact', head: true });
