@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
+    "postbuild": "node -e \"const fs=require('fs'); fs.mkdirSync('.vercel/output/functions/__server.func/node_modules/tslib', {recursive:true}); fs.cpSync('node_modules/tslib', '.vercel/output/functions/__server.func/node_modules/tslib', {recursive:true})\"",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
