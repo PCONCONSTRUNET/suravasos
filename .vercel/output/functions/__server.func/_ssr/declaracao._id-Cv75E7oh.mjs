@@ -1,7 +1,7 @@
 import { i as __toESM } from "../_runtime.mjs";
 import { t as supabase } from "./supabase-B8pFCf1w.mjs";
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
-import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
+import { n as require_jsx_runtime } from "../_libs/radix-ui__react-context+react.mjs";
 import { t as Route } from "./declaracao._id-EoBoEkPO.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/declaracao._id-Cv75E7oh.js
 var import_react = /* @__PURE__ */ __toESM(require_react());

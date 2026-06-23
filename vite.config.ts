@@ -32,11 +32,10 @@ export default defineConfig({
     ],
     resolve: {
       alias: {
-        tslib: path.resolve("node_modules/tslib/tslib.es6.mjs"),
       },
     },
     ssr: {
-      noExternal: ["@radix-ui/*", "tslib"],
+      noExternal: [/^@radix-ui/, "tslib"],
     },
   },
   tanstackStart: {
@@ -44,5 +43,9 @@ export default defineConfig({
   },
   nitro: {
     preset: "vercel",
+    externals: {
+      inline: ["tslib"],
+    },
+    traceDeps: ["tslib"],
   } as any,
 });

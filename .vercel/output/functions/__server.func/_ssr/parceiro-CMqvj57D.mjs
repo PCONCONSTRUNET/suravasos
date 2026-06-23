@@ -1,6 +1,6 @@
 import { n as supabaseParceiro } from "./supabase-B8pFCf1w.mjs";
 import { t as cn } from "./utils-C_uf36nf.mjs";
-import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
+import { n as require_jsx_runtime } from "../_libs/radix-ui__react-context+react.mjs";
 import { t as VivaverdeLogo } from "./vivaverde-logo-DWXAFaeL.mjs";
 import { f as Outlet, g as Link, l as useRouterState } from "../_libs/@tanstack/react-router+[...].mjs";
 import { N as LogOut, R as House, ht as Calculator } from "../_libs/lucide-react.mjs";

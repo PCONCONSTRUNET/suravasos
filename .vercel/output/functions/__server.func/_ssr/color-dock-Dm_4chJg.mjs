@@ -1,4 +1,4 @@
-import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
+import { n as require_jsx_runtime } from "../_libs/radix-ui__react-context+react.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/color-dock-Dm_4chJg.js
 var import_jsx_runtime = require_jsx_runtime();
 var colorMap = {

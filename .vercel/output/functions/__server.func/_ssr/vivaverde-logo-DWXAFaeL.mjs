@@ -1,5 +1,5 @@
 import { t as cn } from "./utils-C_uf36nf.mjs";
-import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
+import { n as require_jsx_runtime } from "../_libs/radix-ui__react-context+react.mjs";
 import { t as vivaverde_logo_default } from "./vivaverde-logo-DI6iBV0x.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/vivaverde-logo-DWXAFaeL.js
 var import_jsx_runtime = require_jsx_runtime();

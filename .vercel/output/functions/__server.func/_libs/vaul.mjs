@@ -1,6 +1,6 @@
 import { i as __toESM } from "../_runtime.mjs";
 import { u as require_react } from "./@floating-ui/react-dom+[...].mjs";
-import { d as DialogContent, f as DialogDescription, g as DialogTrigger, h as DialogTitle, l as Dialog, m as DialogPortal, p as DialogOverlay, u as DialogClose } from "./@radix-ui/react-alert-dialog+[...].mjs";
+import { a as DialogOverlay, c as DialogTrigger, i as DialogDescription, n as DialogClose, o as DialogPortal, r as DialogContent, s as DialogTitle, t as Dialog } from "./@radix-ui/react-dialog+[...].mjs";
 //#region node_modules/vaul/dist/index.mjs
 var import_react = /* @__PURE__ */ __toESM(require_react(), 1);
 function __insertCSS(code) {
