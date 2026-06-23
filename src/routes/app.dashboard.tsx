@@ -63,37 +63,97 @@ function Dashboard() {
   });
 
   useEffect(() => {
-    async function loadData() {
       const { data: vendasData } = await supabase.from('vendas').select('*').in('tipo', ['VENDA', 'PDV', 'Afiliado']);
-      const { count: produtosCount } = await supabase.from('produtos').select('*', { count: 'exact', head: true }).eq('status', 'Ativo');
+      const { data: produtos } = await supabase.from('produtos').select('*');
       const { count: clientesCount } = await supabase.from('clientes').select('*', { count: 'exact', head: true });
       const { data: vendasRecentes } = await supabase.from('vendas')
         .select('*, clientes(nome)')
         .in('tipo', ['VENDA', 'PDV', 'Afiliado'])
         .order('created_at', { ascending: false })
         .limit(5);
+      const { data: receitas } = await supabase.from('contas_receber').select('valor, status');
+      const { data: despesas } = await supabase.from('contas_pagar').select('valor, status');
+      const { data: compras } = await supabase.from('compras').select('valor_total, created_at, status');
 
       let fat = 0;
       let pedHoje = 0;
       let entPend = 0;
+      let delivered = 0;
       const hoje = new Date().toISOString().split('T')[0];
+
+      const monthlyVendas: Record<string, number> = {};
+      const monthlyCompras: Record<string, number> = {};
 
       vendasData?.forEach(v => {
         if (v.status !== 'Cancelada' && v.status !== 'Rejeitada' && v.status_aprovacao !== 'Rejeitada') {
           fat += Number(v.valor_total || v.total || 0);
+          const month = v.created_at ? v.created_at.substring(0, 7) : '2026-06';
+          monthlyVendas[month] = (monthlyVendas[month] || 0) + Number(v.valor_total || v.total || 0);
         }
         if (v.created_at?.startsWith(hoje)) pedHoje++;
-        if (v.status === 'PENDENTE' || v.status === 'Pendente' || v.status === 'EM_ROTA') entPend++;
+        if (v.status === 'PENDENTE' || v.status === 'Pendente' || v.status === 'EM_ROTA' || v.status === 'Em Transporte') entPend++;
+        if (v.status === 'Entregue' || v.status === 'Concluída') delivered++;
       });
+
+      compras?.forEach(c => {
+        if (c.status !== 'Cancelado') {
+          const month = c.created_at ? c.created_at.substring(0, 7) : '2026-06';
+          monthlyCompras[month] = (monthlyCompras[month] || 0) + Number(c.valor_total || 0);
+        }
+      });
+
+      const totalReceitas = receitas?.filter(r => r.status === 'Recebido').reduce((acc, r) => acc + Number(r.valor), 0) || 0;
+      const totalDespesas = despesas?.filter(d => d.status === 'Pago').reduce((acc, d) => acc + Number(d.valor), 0) || 0;
+      const margin = totalReceitas > 0 ? ((totalReceitas - totalDespesas) / totalReceitas) * 100 : 0;
+
+      const totalVendasConcluidas = (vendasData?.length || 0) - entPend;
+      const otif = totalVendasConcluidas > 0 ? (delivered / totalVendasConcluidas) * 100 : 100;
+      const ticketMedio = (vendasData?.length || 0) > 0 ? fat / vendasData!.length : 0;
+
+      const categoryMix: Record<string, number> = {};
+      produtos?.forEach(p => {
+        if (p.categoria) {
+           categoryMix[p.categoria] = (categoryMix[p.categoria] || 0) + (Number(p.estoque || 0) * Number(p.valor || 0));
+        }
+      });
+
+      const pieData = Object.entries(categoryMix).filter(([_, v]) => v > 0).map(([k, v]) => ({ name: k, value: v }));
+      const COLORS = ['#22C55E', '#166534', '#84CC16', '#EAB308', '#F97316'];
+      pieData.forEach((d, i) => { (d as any).fill = COLORS[i % COLORS.length]; });
+
+      const topProducts = produtos?.sort((a, b) => Number(b.valor || 0) * Number(b.estoque || 0) - Number(a.valor || 0) * Number(a.estoque || 0)).slice(0, 5).map(p => ({
+        name: p.nome.substring(0, 15) + "...",
+        v: Number(p.estoque || 0)
+      })) || [];
+
+      // Generate last 6 months for chart
+      const chartData = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date();
+        d.setMonth(d.getMonth() - i);
+        const mStr = d.toISOString().substring(0, 7);
+        chartData.push({
+          m: d.toLocaleDateString('pt-BR', { month: 'short' }),
+          v: monthlyVendas[mStr] || 0,
+          c: monthlyCompras[mStr] || 0
+        });
+      }
 
       setStats({
         faturamento: fat,
         pedidosHoje: pedHoje,
-        produtosEstoque: produtosCount || 0,
+        produtosEstoque: produtos?.length || 0,
         clientesAtivos: clientesCount || 0,
         entregasPendentes: entPend,
-        recent: vendasRecentes || []
-      });
+        recent: vendasRecentes || [],
+        critical: produtos?.filter(p => Number(p.estoque || 0) <= 10).length || 0,
+        ticketMedio,
+        margin,
+        otif,
+        chartData,
+        pieData,
+        topProducts
+      } as any);
     }
     loadData();
   }, []);
@@ -137,7 +197,7 @@ function Dashboard() {
         <KPI icon={DollarSign} label="Faturamento" value={`R$ ${stats.faturamento.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} delta="" tone="primary" />
         <KPI icon={ShoppingCart} label="Pedidos do dia" value={stats.pedidosHoje.toString()} delta="" tone="info" />
         <KPI icon={Package} label="Produtos ativos" value={stats.produtosEstoque.toString()} delta="" tone="success" />
-        <KPI icon={AlertTriangle} label="Produtos críticos" value="0" delta="" tone="warning" />
+        <KPI icon={AlertTriangle} label="Produtos críticos" value={(stats as any).critical?.toString() || "0"} delta="" tone="warning" />
         <KPI icon={Users} label="Clientes ativos" value={stats.clientesAtivos.toString()} delta="" tone="terra" />
         <KPI icon={Truck} label="Entregas pendentes" value={stats.entregasPendentes.toString()} delta="" up={false} tone="destructive" />
       </div>
@@ -147,7 +207,7 @@ function Dashboard() {
           <CardHeader className="flex flex-row items-start justify-between">
             <div>
               <CardTitle>Vendas vs Compras</CardTitle>
-              <CardDescription>Últimos 12 meses — em reais (R$)</CardDescription>
+              <CardDescription>Últimos 6 meses — em reais (R$)</CardDescription>
             </div>
             <div className="flex gap-2 text-xs">
               <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-primary" />Vendas</span>
@@ -156,7 +216,7 @@ function Dashboard() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={280}>
-              <AreaChart data={[]}>
+              <AreaChart data={(stats as any).chartData || []}>
                 <defs>
                   <linearGradient id="gv" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#166534" stopOpacity={0.4} />
@@ -170,9 +230,9 @@ function Dashboard() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                 <XAxis dataKey="m" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `${v / 1000}k`} />
-                <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #e2e8f0" }} />
-                <Area type="monotone" dataKey="v" stroke="#166534" strokeWidth={2.5} fill="url(#gv)" />
-                <Area type="monotone" dataKey="c" stroke="#92400E" strokeWidth={2} fill="url(#gc)" />
+                <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #e2e8f0" }} formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
+                <Area type="monotone" dataKey="v" name="Vendas" stroke="#166534" strokeWidth={2.5} fill="url(#gv)" />
+                <Area type="monotone" dataKey="c" name="Compras" stroke="#92400E" strokeWidth={2} fill="url(#gc)" />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
@@ -181,18 +241,18 @@ function Dashboard() {
         <Card className="shadow-card">
           <CardHeader>
             <CardTitle>Mix de Categorias</CardTitle>
-            <CardDescription>Participação no faturamento</CardDescription>
+            <CardDescription>Participação em estoque (R$)</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
-                <Pie data={[]} dataKey="value" innerRadius={55} outerRadius={85} paddingAngle={2}>
+                <Pie data={(stats as any).pieData || []} dataKey="value" nameKey="name" innerRadius={55} outerRadius={85} paddingAngle={2}>
                 </Pie>
-                <Tooltip />
+                <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
               </PieChart>
             </ResponsiveContainer>
             <ul className="mt-2 space-y-1.5 text-sm text-center text-muted-foreground">
-              <li>Sem dados suficientes.</li>
+              {!(stats as any).pieData?.length && <li>Sem dados suficientes.</li>}
             </ul>
           </CardContent>
         </Card>
@@ -218,7 +278,7 @@ function Dashboard() {
                     <p className="text-xs text-muted-foreground truncate">{r.clientes?.nome || "Consumidor Final"}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-semibold">R$ {Number(r.total || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                    <p className="text-sm font-semibold">R$ {Number(r.total || r.valor_total || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                     <Badge variant="secondary" className="mt-0.5 text-[10px]">{r.status}</Badge>
                   </div>
                 </div>
@@ -229,17 +289,17 @@ function Dashboard() {
 
         <Card className="shadow-card">
           <CardHeader>
-            <CardTitle>Mais vendidos</CardTitle>
-            <CardDescription>Top 5 do mês — em unidades</CardDescription>
+            <CardTitle>Maior Valor de Estoque</CardTitle>
+            <CardDescription>Top 5 — Unidades Atuais</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={230}>
-              <BarChart data={[]} layout="vertical" margin={{ left: 10 }}>
+              <BarChart data={(stats as any).topProducts || []} layout="vertical" margin={{ left: 10 }}>
                 <CartesianGrid horizontal={false} stroke="#e2e8f0" />
                 <XAxis type="number" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
                 <YAxis dataKey="name" type="category" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} width={110} />
                 <Tooltip contentStyle={{ borderRadius: 12 }} />
-                <Bar dataKey="v" fill="#22C55E" radius={[0, 6, 6, 0]} />
+                <Bar dataKey="v" name="Unidades" fill="#22C55E" radius={[0, 6, 6, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -248,9 +308,9 @@ function Dashboard() {
 
       <div className="mt-6 grid gap-6 md:grid-cols-3">
         {[
-          { title: "Margem líquida", value: "0,0%", icon: TrendingUp, tone: "text-success" },
-          { title: "Ticket médio", value: "R$ 0,00", icon: DollarSign, tone: "text-primary" },
-          { title: "OTIF (entregas no prazo)", value: "0,0%", icon: Truck, tone: "text-info" },
+          { title: "Margem líquida", value: `${((stats as any).margin || 0).toFixed(1)}%`, icon: TrendingUp, tone: "text-success" },
+          { title: "Ticket médio", value: `R$ ${((stats as any).ticketMedio || 0).toFixed(2)}`, icon: DollarSign, tone: "text-primary" },
+          { title: "Taxa de Entrega", value: `${((stats as any).otif || 0).toFixed(1)}%`, icon: Truck, tone: "text-info" },
         ].map((s) => (
           <Card key={s.title} className="shadow-card">
             <CardContent className="flex items-center justify-between p-6">
