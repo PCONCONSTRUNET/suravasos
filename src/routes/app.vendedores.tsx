@@ -104,15 +104,16 @@ function VendedoresAdmin() {
     if (!confirm("Confirmar aprovação da venda e registro da comissão?")) return;
     
     try {
-      const vendedor = venda.vendedor || vendedores.find(v => v.id === venda.vendedor_id);
+      // Pega o vendedor completo da lista para ter acesso à taxa de comissão
+      const vendedorCompleto = vendedores.find(v => v.id === venda.vendedor_id);
       const valorVenda = Number(venda.valor_total) || 0;
       let valorComissao = 0;
       
-      if (vendedor) {
-        if (vendedor.tipo_comissao === 'porcentagem') {
-          valorComissao = valorVenda * (Number(vendedor.valor_comissao || 0) / 100);
+      if (vendedorCompleto) {
+        if (vendedorCompleto.tipo_comissao === 'porcentagem') {
+          valorComissao = valorVenda * (Number(vendedorCompleto.valor_comissao || 0) / 100);
         } else {
-          valorComissao = Number(vendedor.valor_comissao || 0);
+          valorComissao = Number(vendedorCompleto.valor_comissao || 0);
         }
       }
 
