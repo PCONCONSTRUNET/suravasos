@@ -192,10 +192,12 @@ function VendedoresAdmin() {
                   }
                 }
              }
-             // Excluir contas a receber associadas
-             await supabase.from('contas_receber').delete().eq('venda_id', id);
           }
 
+          // Excluir contas a receber e itens vinculados à venda, para não dar erro de chave estrangeira
+          await supabase.from('contas_receber').delete().eq('venda_id', id);
+          await supabase.from('vendas_itens').delete().eq('venda_id', id);
+          
           // A deleção apaga a venda
           await supabase.from('vendas').delete().eq('id', id);
           fetchData();

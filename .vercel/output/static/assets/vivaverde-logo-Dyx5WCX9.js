@@ -1,0 +1,1 @@
+var e=`/assets/vivaverde-logo-C46YhcCn.png`;export{e as t};
