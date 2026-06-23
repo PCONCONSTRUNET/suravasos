@@ -35,7 +35,7 @@ export default defineConfig({
       },
     },
     ssr: {
-      noExternal: [/^@radix-ui/, /^@supabase/, "tslib"],
+      noExternal: [/^@radix-ui/, "tslib"],
       external: ["pg"],
     },
   },
@@ -48,10 +48,5 @@ export default defineConfig({
       inline: ["tslib", /^@supabase/],
     },
     traceDeps: ["tslib", "@supabase/supabase-js"],
-    rollupConfig: {
-      output: {
-        interop: "auto",
-      },
-    },
   } as any,
 });
