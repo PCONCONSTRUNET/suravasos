@@ -18,6 +18,7 @@ ADD COLUMN IF NOT EXISTS status_aprovacao TEXT DEFAULT 'Aprovada', -- Vendas nor
 ADD COLUMN IF NOT EXISTS valor_comissao NUMERIC DEFAULT 0,
 ADD COLUMN IF NOT EXISTS status_pagamento_comissao TEXT DEFAULT 'Pendente';
 
--- 3. (Opcional, se precisar) Permissões Básicas
--- Liberar acesso anônimo/autenticado se você não usa RLS rigoroso
--- (Verifique como estão as outras tabelas)
+-- 3. Correção para a tabela de clientes (se estiver faltando)
+ALTER TABLE public.clientes
+ADD COLUMN IF NOT EXISTS cpf_cnpj TEXT,
+ADD COLUMN IF NOT EXISTS telefone TEXT;
