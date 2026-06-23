@@ -13,9 +13,10 @@ CREATE TABLE public.vendedores (
 
 -- 2. Adição de colunas na tabela de vendas existente
 ALTER TABLE public.vendas
-ADD COLUMN vendedor_id UUID REFERENCES public.vendedores(id),
-ADD COLUMN status_aprovacao TEXT DEFAULT 'Aprovada', -- Vendas normais já nascem aprovadas
-ADD COLUMN valor_comissao NUMERIC DEFAULT 0;
+ADD COLUMN IF NOT EXISTS vendedor_id UUID REFERENCES public.vendedores(id),
+ADD COLUMN IF NOT EXISTS status_aprovacao TEXT DEFAULT 'Aprovada', -- Vendas normais já nascem aprovadas
+ADD COLUMN IF NOT EXISTS valor_comissao NUMERIC DEFAULT 0,
+ADD COLUMN IF NOT EXISTS status_pagamento_comissao TEXT DEFAULT 'Pendente';
 
 -- 3. (Opcional, se precisar) Permissões Básicas
 -- Liberar acesso anônimo/autenticado se você não usa RLS rigoroso
