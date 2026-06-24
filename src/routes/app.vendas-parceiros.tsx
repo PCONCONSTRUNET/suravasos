@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Search, CheckCircle, Store, Banknote } from "lucide-react";
@@ -18,6 +19,8 @@ function VendasParceiros() {
   const [vendas, setVendas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtro, setFiltro] = useState("");
+  const [filtroStatusVenda, setFiltroStatusVenda] = useState("Todos");
+  const [filtroStatusComissao, setFiltroStatusComissao] = useState("Todos");
 
   const fetchVendas = async () => {
     try {
@@ -60,11 +63,19 @@ function VendasParceiros() {
     }
   };
 
-  const vendasFiltradas = vendas.filter(v => 
-    v.id.toLowerCase().includes(filtro.toLowerCase()) || 
-    (v.vendedor?.nome || "").toLowerCase().includes(filtro.toLowerCase()) ||
-    (v.cliente?.nome || "").toLowerCase().includes(filtro.toLowerCase())
-  );
+  const vendasFiltradas = vendas.filter(v => {
+    const matchBusca = v.id.toLowerCase().includes(filtro.toLowerCase()) || 
+      (v.vendedor?.nome || "").toLowerCase().includes(filtro.toLowerCase()) ||
+      (v.cliente?.nome || "").toLowerCase().includes(filtro.toLowerCase());
+      
+    const statusVendaStr = v.status || v.status_aprovacao || 'Indefinido';
+    const matchStatusVenda = filtroStatusVenda === "Todos" || statusVendaStr === filtroStatusVenda;
+    
+    const comissaoStatusStr = v.status_pagamento_comissao === 'Paga' ? 'Paga' : 'Pendente';
+    const matchStatusComissao = filtroStatusComissao === "Todos" || comissaoStatusStr === filtroStatusComissao;
+    
+    return matchBusca && matchStatusVenda && matchStatusComissao;
+  });
 
   return (
     <>
@@ -74,8 +85,8 @@ function VendasParceiros() {
       />
 
       <Card className="shadow-card mb-6">
-        <CardContent className="p-4 flex gap-4">
-          <div className="relative flex-1 max-w-md">
+        <CardContent className="p-4 flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input 
               placeholder="Buscar por vendedor, cliente ou nº do pedido..." 
@@ -84,6 +95,29 @@ function VendasParceiros() {
               className="pl-9" 
             />
           </div>
+          <Select value={filtroStatusVenda} onValueChange={setFiltroStatusVenda}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Status Venda" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Todos">Todas as Vendas</SelectItem>
+              <SelectItem value="Faturado">Faturadas</SelectItem>
+              <SelectItem value="Entregue">Entregues</SelectItem>
+              <SelectItem value="Pendente">Pendentes</SelectItem>
+              <SelectItem value="Aguardando Pagamento">Aguard. Pagamento</SelectItem>
+              <SelectItem value="Cancelado">Canceladas</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={filtroStatusComissao} onValueChange={setFiltroStatusComissao}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Status Comissão" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Todos">Todas as Comissões</SelectItem>
+              <SelectItem value="Pendente">Pendentes</SelectItem>
+              <SelectItem value="Paga">Pagas</SelectItem>
+            </SelectContent>
+          </Select>
         </CardContent>
       </Card>
 
