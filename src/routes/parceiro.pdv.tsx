@@ -157,6 +157,9 @@ function ParceiroPDV() {
         if (clientForm.telefone && clientForm.telefone.trim() !== '') {
           payload.telefone = clientForm.telefone.trim();
         }
+        if (clientForm.endereco && clientForm.endereco.trim() !== '') {
+          payload.endereco = clientForm.endereco.trim();
+        }
 
         const { data: clienteData, error: clienteError } = await supabase
           .from('clientes')
@@ -246,6 +249,11 @@ function ParceiroPDV() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const closeSuccessModal = () => {
+    setIsSuccessModalOpen(false);
+    navigate({ to: "/parceiro/dashboard" });
   };
 
   const handleShareWhatsApp = () => {
