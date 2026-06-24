@@ -11,6 +11,7 @@ import { supabase } from "@/lib/supabase";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/app/venda-nova")({
   head: () => ({ meta: [{ title: "Nova Venda/DAV — VIVAVERDE ERP" }] }),
@@ -33,6 +34,13 @@ function NovaVenda() {
   const [produtoSelecionado, setProdutoSelecionado] = useState("");
   const [quantidade, setQuantidade] = useState(1);
   const [openProduto, setOpenProduto] = useState(false);
+  const [descontoPerc, setDescontoPerc] = useState(0);
+  const [freteValor, setFreteValor] = useState(0);
+
+  // States for new client modal
+  const [openModalCliente, setOpenModalCliente] = useState(false);
+  const [novoCliente, setNovoCliente] = useState({ nome: "", cpf_cnpj: "", telefone: "", endereco: "" });
+  const [loadingCliente, setLoadingCliente] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -76,17 +84,66 @@ function NovaVenda() {
   const valorTotal = itens.reduce((acc, item) => acc + item.subtotal, 0);
 
   const handleSalvar = async () => {
-    if (!clienteId) { alert("Selecione um cliente."); return; }
-    if (itens.length === 0) { alert("Adicione pelo menos um produto."); return; }
+    if (itens.length === 0) {
+      alert("Adicione pelo menos um item.");
+      return;
+    }
+    
+    // Se não tiver cliente selecionado, abre o modal de novo cliente
+    if (!clienteId) {
+      setOpenModalCliente(true);
+      return;
+    }
 
+    await executarSalvamentoVenda(clienteId);
+  };
+
+  const handleSalvarNovoCliente = async () => {
+    if (!novoCliente.nome) {
+      alert("O nome da empresa/cliente é obrigatório!");
+      return;
+    }
+    
+    setLoadingCliente(true);
+    try {
+      const payload = {
+        nome: novoCliente.nome,
+        cpf_cnpj: novoCliente.cpf_cnpj,
+        telefone: novoCliente.telefone,
+        endereco: novoCliente.endereco,
+        status: "Ativo"
+      };
+      
+      const { data, error } = await supabase.from('clientes').insert([payload]).select().single();
+      if (error) throw error;
+      
+      setClienteId(data.id);
+      setOpenModalCliente(false);
+      
+      // Procede com a gravação do DAV/Venda com o novo cliente
+      await executarSalvamentoVenda(data.id);
+      
+    } catch (err: any) {
+      console.error(err);
+      alert("Erro ao criar novo cliente: " + err.message);
+    } finally {
+      setLoadingCliente(false);
+    }
+  };
+
+  const executarSalvamentoVenda = async (idDoCliente: string) => {
     setLoading(true);
     try {
+      const subtotal = itens.reduce((acc, i) => acc + i.subtotal, 0);
+      const descontoValor = subtotal * (descontoPerc / 100);
+      const totalVenda = subtotal - descontoValor + freteValor;
+
       // 1. Criar a Venda/DAV
       const { data: vendaData, error: vendaError } = await supabase.from('vendas').insert([{
-        cliente_id: clienteId,
+        cliente_id: idDoCliente,
         tipo: tipo,
         status: status,
-        valor_total: valorTotal
+        valor_total: totalVenda
       }]).select().single();
 
       if (vendaError) throw vendaError;
@@ -117,9 +174,9 @@ function NovaVenda() {
         vencimento.setDate(vencimento.getDate() + 30); // 30 dias de prazo
         await supabase.from('contas_receber').insert([{
            venda_id: vendaId,
-           cliente_id: clienteId,
+           cliente_id: idDoCliente,
            descricao: `Venda #${vendaId.substring(0,8).toUpperCase()}`,
-           valor: valorTotal,
+           valor: totalVenda,
            vencimento: vencimento.toISOString().split('T')[0],
            status: status === "Pago" ? "Recebido" : "Pendente",
            data_pagamento: status === "Pago" ? new Date().toISOString().split('T')[0] : null
@@ -294,6 +351,42 @@ function NovaVenda() {
           </Card>
         </div>
       </div>
+
+      {/* Modal para criar novo cliente on-the-fly */}
+      <Dialog open={openModalCliente} onOpenChange={setOpenModalCliente}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Preencher Dados do Cliente</DialogTitle>
+            <DialogDescription>
+              Você não selecionou um cliente. Preencha os dados abaixo para cadastrar e emitir o {tipo === "DAV" ? "Orçamento" : "Pedido"} automaticamente.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label>Nome / Empresa *</Label>
+              <Input value={novoCliente.nome} onChange={e => setNovoCliente({...novoCliente, nome: e.target.value})} placeholder="Nome completo ou Razão Social" />
+            </div>
+            <div className="space-y-2">
+              <Label>CPF / CNPJ</Label>
+              <Input value={novoCliente.cpf_cnpj} onChange={e => setNovoCliente({...novoCliente, cpf_cnpj: e.target.value})} placeholder="000.000.000-00 ou 00.000.000/0000-00" />
+            </div>
+            <div className="space-y-2">
+              <Label>Telefone</Label>
+              <Input value={novoCliente.telefone} onChange={e => setNovoCliente({...novoCliente, telefone: e.target.value})} placeholder="(00) 00000-0000" />
+            </div>
+            <div className="space-y-2">
+              <Label>Endereço / Cidade</Label>
+              <Input value={novoCliente.endereco} onChange={e => setNovoCliente({...novoCliente, endereco: e.target.value})} placeholder="Endereço completo" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpenModalCliente(false)} disabled={loadingCliente}>Cancelar</Button>
+            <Button onClick={handleSalvarNovoCliente} disabled={loadingCliente} className="bg-gradient-brand text-primary-foreground">
+              {loadingCliente ? "Emitindo..." : "Confirmar e Emitir"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
