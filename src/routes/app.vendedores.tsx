@@ -224,14 +224,16 @@ function VendedoresAdmin() {
     setConfirmModal({
       isOpen: true,
       title: "Excluir Parceiro",
-      desc: "Tem certeza que deseja excluir esse parceiro? Ele não terá mais acesso, mas o histórico de vendas será preservado no caixa geral.",
+      desc: "Tem certeza que deseja excluir esse parceiro? O cadastro e o acesso dele serão permanentemente apagados do banco de dados.",
       onConfirm: async () => {
         try {
-          await supabase.from('vendedores').update({ status: 'Inativo' }).eq('id', id);
+          const { error } = await supabase.rpc('delete_vendedor_and_user', { p_vendedor_id: id });
+          if (error) throw error;
+          
           setIsSheetOpen(false);
           fetchData();
         } catch(err: any) {
-          alert("Erro ao excluir parceiro: " + err.message);
+          alert("Erro ao excluir parceiro: " + err.message + "\n\nVocê precisa rodar o script SQL de deleção no painel do Supabase primeiro!");
         }
       }
     });
@@ -241,13 +243,14 @@ function VendedoresAdmin() {
     setConfirmModal({
       isOpen: true,
       title: "Recusar Solicitação",
-      desc: "Tem certeza que deseja recusar a solicitação de parceria deste usuário? Ele será notificado na tela dele.",
+      desc: "Tem certeza que deseja recusar e excluir a solicitação deste usuário? O cadastro dele será apagado do banco de dados para liberar o e-mail.",
       onConfirm: async () => {
         try {
-          await supabase.from('vendedores').update({ status: 'Rejeitado' }).eq('id', vendedorId);
+          const { error } = await supabase.rpc('delete_vendedor_and_user', { p_vendedor_id: vendedorId });
+          if (error) throw error;
           fetchData();
         } catch(err: any) {
-          alert("Erro ao rejeitar parceiro: " + err.message);
+          alert("Erro ao rejeitar parceiro: " + err.message + "\n\nVocê precisa rodar o script SQL de deleção no painel do Supabase primeiro!");
         }
       }
     });
