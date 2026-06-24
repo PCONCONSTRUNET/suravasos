@@ -1,12 +1,11 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabaseParceiro as supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Wallet, Clock, CheckCircle2, TrendingUp, XCircle, Copy, ExternalLink, Link as LinkIcon } from "lucide-react";
-import { toast } from "sonner";
+import { Wallet, Clock, CheckCircle2, TrendingUp, XCircle } from "lucide-react";
 
 export const Route = createFileRoute("/parceiro/dashboard")({
   head: () => ({ meta: [{ title: "Meu Painel — VIVAVERDE" }] }),
@@ -14,7 +13,6 @@ export const Route = createFileRoute("/parceiro/dashboard")({
 });
 
 function ParceiroDashboard() {
-  const navigate = useNavigate();
   const [vendedorId, setVendedorId] = useState<string | null>(null);
   const [nome, setNome] = useState("");
   const [status, setStatus] = useState("");
@@ -52,22 +50,10 @@ function ParceiroDashboard() {
     const carregarDados = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          navigate({ to: "/parceiro/login" });
-          return;
-        }
+        if (!session) return;
 
         // Tenta achar o vendedor atrelado a este usuário
-        const { data: vData, error: vError } = await supabase
-          .from('vendedores')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .limit(1)
-          .maybeSingle();
-        
-        if (vError) {
-          console.error("Erro ao buscar vendedor:", vError);
-        }
+        const { data: vData } = await supabase.from('vendedores').select('*').eq('user_id', session.user.id).single();
         
         if (vData) {
           setVendedorId(vData.id);
@@ -75,16 +61,11 @@ function ParceiroDashboard() {
           setStatus(vData.status || 'Ativo');
 
           // Busca as vendas dele
-          const { data: vendasData, error: vDashError } = await supabase
+          const { data: vendasData } = await supabase
             .from('vendas')
-            .select('*, clientes(nome, cpf_cnpj, telefone)')
+            .select('*, cliente:clientes(nome, cpf_cnpj, telefone)')
             .eq('vendedor_id', vData.id)
             .order('created_at', { ascending: false });
-            
-          if (vDashError) {
-            console.error("Erro ao carregar vendas no dashboard:", vDashError);
-            alert("Erro ao buscar suas vendas: " + vDashError.message);
-          }
             
           if (vendasData) setVendas(vendasData);
         }
@@ -98,12 +79,8 @@ function ParceiroDashboard() {
     carregarDados();
   }, []);
 
-  const totalComissoesAReceber = vendas
-    .filter(v => v.status_aprovacao === 'Aprovada' && v.status_pagamento_comissao !== 'Paga')
-    .reduce((acc, v) => acc + (Number(v.valor_comissao) || 0), 0);
-
-  const totalComissoesPagas = vendas
-    .filter(v => v.status_aprovacao === 'Aprovada' && v.status_pagamento_comissao === 'Paga')
+  const totalComissoes = vendas
+    .filter(v => v.status_aprovacao === 'Aprovada')
     .reduce((acc, v) => acc + (Number(v.valor_comissao) || 0), 0);
 
   const aguardandoAprovacao = vendas.filter(v => v.status_aprovacao === 'Pendente').length;
@@ -199,73 +176,17 @@ function ParceiroDashboard() {
         <p className="text-sm text-muted-foreground">Aqui está o resumo das suas vendas.</p>
       </div>
 
-      {/* Affiliate Link Section */}
-      {vendedorId && status === 'Ativo' && (
-        <Card className="mb-6 border-emerald-200 bg-emerald-50/50 shadow-sm relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
-            <LinkIcon className="h-32 w-32" />
-          </div>
-          <CardContent className="p-6">
-            <h2 className="text-lg font-bold text-emerald-900 flex items-center gap-2 mb-2">
-              <LinkIcon className="h-5 w-5" /> Seu Catálogo Exclusivo
-            </h2>
-            <p className="text-emerald-700 text-sm mb-4">
-              Compartilhe o link abaixo com seus clientes. Quando eles montarem o pedido e clicarem em "Enviar", 
-              o pedido chegará no <strong>seu WhatsApp</strong> e você poderá finalizá-lo por aqui!
-            </p>
-            <div className="flex gap-2">
-              <Input 
-                readOnly 
-                value={`${window.location.origin}/catalogo?ref=${nome.split(' ')[0].toLowerCase()}`} 
-                className="bg-white border-emerald-200 text-emerald-800 font-medium"
-              />
-              <Button 
-                onClick={() => {
-                  navigator.clipboard.writeText(`${window.location.origin}/catalogo?ref=${nome.split(' ')[0].toLowerCase()}`);
-                  toast.success("Link copiado!");
-                }}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white shrink-0"
-              >
-                <Copy className="h-4 w-4 mr-2" /> Copiar
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => window.open(`/catalogo?ref=${nome.split(' ')[0].toLowerCase()}`, '_blank')}
-                className="border-emerald-200 text-emerald-700 hover:bg-emerald-100 shrink-0"
-                title="Abrir catálogo"
-              >
-                <ExternalLink className="h-4 w-4" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       <div className="grid grid-cols-2 gap-4">
         <Card className="col-span-2 bg-gradient-brand text-primary-foreground border-0 shadow-lg shadow-primary/20">
           <CardContent className="p-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <div className="flex items-center gap-2 mb-2 opacity-90">
-                  <Wallet className="h-5 w-5" />
-                  <h3 className="font-medium text-sm">Comissões a Receber</h3>
-                </div>
-                <p className="text-4xl font-extrabold font-display">
-                  <span className="text-2xl font-bold mr-1 opacity-80">R$</span>
-                  {totalComissoesAReceber.toFixed(2).replace('.', ',')}
-                </p>
-              </div>
-              <div className="text-right">
-                <div className="flex items-center justify-end gap-1 mb-1 opacity-80">
-                  <CheckCircle2 className="h-4 w-4" />
-                  <h3 className="font-medium text-xs">Já Pagas</h3>
-                </div>
-                <p className="text-xl font-bold">
-                  <span className="text-sm font-bold mr-1 opacity-80">R$</span>
-                  {totalComissoesPagas.toFixed(2).replace('.', ',')}
-                </p>
-              </div>
+            <div className="flex items-center gap-2 mb-2 opacity-90">
+              <Wallet className="h-5 w-5" />
+              <h3 className="font-medium text-sm">Comissões a Receber</h3>
             </div>
+            <p className="text-4xl font-extrabold font-display">
+              <span className="text-2xl font-bold mr-1 opacity-80">R$</span>
+              {totalComissoes.toFixed(2).replace('.', ',')}
+            </p>
           </CardContent>
         </Card>
 
@@ -328,23 +249,19 @@ function ParceiroDashboard() {
       </div>
 
       <Dialog open={isSaleDetailsOpen} onOpenChange={setIsSaleDetailsOpen}>
-        <DialogContent className="sm:max-w-[400px] w-[95vw] max-h-[90vh] overflow-y-auto p-5 sm:p-6 rounded-xl">
+        <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
             <DialogTitle>Ficha do Pedido</DialogTitle>
             <DialogDescription asChild>
               <div>
                 Pedido #{selectedSaleForDetails?.id.substring(0,6)} • {new Date(selectedSaleForDetails?.created_at).toLocaleDateString()}
-                <div className="mt-3 text-sm text-slate-700 bg-slate-100 p-3 rounded-md border border-slate-200 text-left">
-                  {selectedSaleForDetails?.clientes?.nome ? (
-                    <>
-                      <p className="font-semibold text-slate-900 flex items-center gap-2">👤 {selectedSaleForDetails.clientes.nome}</p>
-                      {selectedSaleForDetails.clientes.cpf_cnpj && <p className="mt-1">📄 {selectedSaleForDetails.clientes.cpf_cnpj}</p>}
-                      {selectedSaleForDetails.clientes.telefone && <p className="mt-1">📞 {selectedSaleForDetails.clientes.telefone}</p>}
-                    </>
-                  ) : (
-                    <p className="text-muted-foreground italic">⚠️ Cliente não identificado ou ocorreu erro no cadastro (possível falha antes da correção do banco).</p>
-                  )}
-                </div>
+                {selectedSaleForDetails?.cliente?.nome && (
+                  <div className="mt-3 text-sm text-slate-700 bg-slate-100 p-3 rounded-md border border-slate-200 text-left">
+                    <p className="font-semibold text-slate-900 flex items-center gap-2">👤 {selectedSaleForDetails.cliente.nome}</p>
+                    {selectedSaleForDetails.cliente.cpf_cnpj && <p className="mt-1">📄 {selectedSaleForDetails.cliente.cpf_cnpj}</p>}
+                    {selectedSaleForDetails.cliente.telefone && <p className="mt-1">📞 {selectedSaleForDetails.cliente.telefone}</p>}
+                  </div>
+                )}
               </div>
             </DialogDescription>
           </DialogHeader>

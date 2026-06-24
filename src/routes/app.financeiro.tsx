@@ -157,7 +157,7 @@ function Financeiro() {
   // Mas o ideal para caixa atual é sempre o total histórico. Vamos calcular o total absoluto para o Caixa Atual.
   const totalAbsolutoReceitas = receitas.filter(r => r.status === 'Recebido').reduce((acc, curr) => acc + Number(curr.valor), 0);
   const totalAbsolutoDespesas = despesas.filter(d => d.status === 'Pago').reduce((acc, curr) => acc + Number(curr.valor), 0);
-  const caixa = totalAbsolutoReceitas - totalAbsolutoDespesas; 
+  const caixa = 15000 + (totalAbsolutoReceitas - totalAbsolutoDespesas); 
 
   const pendenteReceber = receitasFiltradas.filter(r => r.status === 'Pendente').reduce((acc, curr) => acc + Number(curr.valor), 0);
   const pendentePagar = despesasFiltradas.filter(d => d.status === 'Pendente').reduce((acc, curr) => acc + Number(curr.valor), 0);

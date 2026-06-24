@@ -5,78 +5,31 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Save, Plus, Trash2, ShoppingCart } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Save, Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/app/dav-novo")({
   head: () => ({ meta: [{ title: "Novo DAV — VIVAVERDE ERP" }] }),
-  validateSearch: (search: Record<string, unknown>): { pedido?: string } => ({
-    pedido: search.pedido as string | undefined,
-  }),
   component: NovoDAV,
 });
 
 function NovoDAV() {
   const navigate = useNavigate();
-  const { pedido } = Route.useSearch();
   const [loading, setLoading] = useState(false);
-  const [pedidoDosCatalogo, setPedidoDosCatalogo] = useState(false);
-
+  
   const [cliente, setCliente] = useState({ nome: "", cnpj: "", endereco: "", telefone: "" });
   const [condicoes, setCondicoes] = useState({ vendedor: "", pagamento: "30/60/90 dias — Boleto", frete: "CIF", prazo: "3 dias úteis" });
   const [observacoes, setObservacoes] = useState("");
-
+  
   const [itens, setItens] = useState([{ id: Date.now(), codigo: "", produto: "", qtd: 1, vlrUnit: 0 }]);
   const [descontoPerc, setDescontoPerc] = useState(0);
   const [freteValor, setFreteValor] = useState(0);
 
-  // Pré-preencher a partir do link do catálogo
-  useEffect(() => {
-    if (!pedido) return;
-    const carregar = async () => {
-      try {
-        // Formato compacto: [[id, qtd], [id, qtd], ...]
-        const decoded = decodeURIComponent(escape(atob(pedido)));
-        const pares: [string, number][] = JSON.parse(decoded);
-        if (!Array.isArray(pares) || pares.length === 0) return;
-
-        const ids = pares.map(p => p[0]);
-        const { data: produtos, error } = await supabase
-          .from('produtos')
-          .select('id, codigo, nome, valor')
-          .in('id', ids);
-
-        if (error || !produtos) return;
-
-        const mapa = Object.fromEntries(produtos.map(p => [p.id, p]));
-
-        const itensPreenchidos = pares.map(([id, qtd], idx) => {
-          const p = mapa[id];
-          return {
-            id: Date.now() + idx,
-            codigo: p?.codigo || "",
-            produto: p?.nome || "",
-            qtd: Number(qtd) || 1,
-            vlrUnit: Number(p?.valor) || 0,
-          };
-        }).filter(i => i.produto);
-
-        if (itensPreenchidos.length > 0) {
-          setItens(itensPreenchidos);
-          setPedidoDosCatalogo(true);
-        }
-      } catch (e) {
-        console.error("Erro ao decodificar pedido do catálogo:", e);
-      }
-    };
-    carregar();
-  }, [pedido]);
-
   const addItem = () => setItens([...itens, { id: Date.now(), codigo: "", produto: "", qtd: 1, vlrUnit: 0 }]);
-
+  
   const removeItem = (id: number) => setItens(itens.filter(i => i.id !== id));
-
+  
   const updateItem = (id: number, field: string, value: string | number) => {
     setItens(itens.map(i => i.id === id ? { ...i, [field]: value } : i));
   };
@@ -97,6 +50,7 @@ function NovoDAV() {
 
     setLoading(true);
     try {
+      // 1. Salvar o DAV principal
       const { data: dav, error: davError } = await supabase.from('davs').insert({
         cliente_nome: cliente.nome,
         cliente_cnpj: cliente.cnpj,
@@ -112,12 +66,12 @@ function NovoDAV() {
         frete_valor: freteValor,
         total: total,
         observacoes: observacoes,
-        validade: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        created_at: new Date().toISOString(),
+        validade: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // +7 dias
       }).select('id').single();
 
       if (davError) throw davError;
 
+      // 2. Salvar os itens
       const itensToInsert = itens.map(i => ({
         dav_id: dav.id,
         codigo: i.codigo,
@@ -130,6 +84,7 @@ function NovoDAV() {
       const { error: itemsError } = await supabase.from('dav_items').insert(itensToInsert);
       if (itemsError) throw itemsError;
 
+      // Sucesso! Redirecionar para a visualização do DAV
       navigate({ to: "/app/dav", search: { id: dav.id } });
 
     } catch (err: any) {
@@ -147,21 +102,6 @@ function NovoDAV() {
           <Save className="mr-2 h-4 w-4" /> {loading ? "Salvando..." : "Salvar DAV"}
         </Button>
       } />
-
-      {/* Banner do pedido recebido do catálogo */}
-      {pedidoDosCatalogo && (
-        <div className="mb-6 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4">
-          <div className="h-10 w-10 rounded-full bg-emerald-100 grid place-items-center shrink-0">
-            <ShoppingCart className="h-5 w-5 text-emerald-600" />
-          </div>
-          <div>
-            <p className="font-semibold text-emerald-800">Pedido recebido do catálogo público!</p>
-            <p className="text-sm text-emerald-600 mt-0.5">
-              Os itens abaixo foram preenchidos automaticamente. Complete os dados do cliente e salve.
-            </p>
-          </div>
-        </div>
-      )}
 
       <Card className="shadow-card p-6 max-w-5xl mx-auto space-y-8">
         <div className="grid md:grid-cols-2 gap-6">
@@ -211,7 +151,7 @@ function NovoDAV() {
             <h3 className="font-semibold">Produtos</h3>
             <Button variant="outline" size="sm" onClick={addItem}><Plus className="mr-2 h-4 w-4" /> Adicionar Produto</Button>
           </div>
-
+          
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>

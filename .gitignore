@@ -32,5 +32,3 @@ dist-ssr
 *.sw?
 
 .env
-
-.vercel

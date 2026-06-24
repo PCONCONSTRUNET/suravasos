@@ -137,10 +137,10 @@ function Estoque() {
   const getSomaCategoria = (categoria: string) => produtos.filter(p => p.categoria === categoria).reduce((acc, p) => acc + Number(p.estoque || 0), 0);
 
   const cats = [
-    { l: "Total de Vasos", v: getSomaCategoria("Vasos de Produção") + getSomaCategoria("Vasos Decorativos"), c: "bg-primary/10 text-primary" },
-    { l: "Total de Floreiras", v: getSomaCategoria("Floreiras"), c: "bg-success/15 text-success" },
-    { l: "Total de Cuias", v: getSomaCategoria("Cuias"), c: "bg-terra/10 text-terra" },
-    { l: "Total de Pratos", v: getSomaCategoria("Pratos"), c: "bg-info/10 text-info" },
+    { l: "Total de Vasos", v: getSomaCategoria("Vasos de Produção") + getSomaCategoria("Vasos Decorativos"), c: "bg-primary/10 text-primary", pct: 78 },
+    { l: "Total de Floreiras", v: getSomaCategoria("Floreiras"), c: "bg-success/15 text-success", pct: 62 },
+    { l: "Total de Cuias", v: getSomaCategoria("Cuias"), c: "bg-terra/10 text-terra", pct: 48 },
+    { l: "Total de Pratos", v: getSomaCategoria("Pratos"), c: "bg-info/10 text-info", pct: 55 },
   ];
 
   const critical = produtos.filter(p => Number(p.estoque) <= 10).slice(0, 5);
@@ -166,9 +166,11 @@ function Estoque() {
             <CardContent className="p-5">
               <div className="flex items-center justify-between">
                 <div className={`grid h-10 w-10 place-items-center rounded-lg ${c.c}`}><Package className="h-5 w-5" /></div>
+                <Badge variant="secondary">{c.pct}% capacidade</Badge>
               </div>
               <p className="mt-4 text-sm text-muted-foreground">{c.l}</p>
               <p className="mt-1 font-display text-2xl font-bold">{c.v.toLocaleString('pt-BR')}</p>
+              <Progress value={c.pct} className="mt-3 h-1.5" />
             </CardContent>
           </Card>
         ))}

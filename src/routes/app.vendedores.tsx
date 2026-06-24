@@ -72,15 +72,12 @@ function VendedoresAdmin() {
 
       const { data: vendasData, error } = await supabase
         .from('vendas')
-        .select('*, vendedor:vendedores(nome), clientes(nome, cpf_cnpj, telefone)')
+        .select('*, vendedor:vendedores(nome), cliente:clientes(nome, cpf_cnpj, telefone)')
         .not('vendedor_id', 'is', null)
         .order('created_at', { ascending: false });
       
       if (!error && vendasData) {
         setTodasVendas(vendasData);
-      } else if (error) {
-        console.error("Erro vendas:", error);
-        alert("Erro ao buscar vendas dos parceiros: " + error.message);
       }
     } catch (e) {
       console.warn("Erro:", e);
@@ -104,22 +101,21 @@ function VendedoresAdmin() {
     if (!confirm("Confirmar aprovação da venda e registro da comissão?")) return;
     
     try {
-      // Pega o vendedor completo da lista para ter acesso à taxa de comissão
-      const vendedorCompleto = vendedores.find(v => v.id === venda.vendedor_id);
+      const vendedor = venda.vendedor || vendedores.find(v => v.id === venda.vendedor_id);
       const valorVenda = Number(venda.valor_total) || 0;
       let valorComissao = 0;
       
-      if (vendedorCompleto) {
-        if (vendedorCompleto.tipo_comissao === 'porcentagem') {
-          valorComissao = valorVenda * (Number(vendedorCompleto.valor_comissao || 0) / 100);
+      if (vendedor) {
+        if (vendedor.tipo_comissao === 'porcentagem') {
+          valorComissao = valorVenda * (Number(vendedor.valor_comissao || 0) / 100);
         } else {
-          valorComissao = Number(vendedorCompleto.valor_comissao || 0);
+          valorComissao = Number(vendedor.valor_comissao || 0);
         }
       }
 
       const { error } = await supabase.from('vendas').update({ 
         status_aprovacao: 'Aprovada',
-        status: 'Pendente',
+        status: 'Pago',
         valor_comissao: valorComissao,
         status_pagamento_comissao: 'Pendente'
       }).eq('id', venda.id);
@@ -127,97 +123,20 @@ function VendedoresAdmin() {
       if (error) throw error;
 
       const dataAtual = new Date().toISOString().split('T')[0];
-      
-      // Lançar Faturamento como Pendente
       await supabase.from('contas_receber').insert([{
          venda_id: venda.id,
-         descricao: `Venda Parceiro #${venda.id.substring(0,8).toUpperCase()} - ${vendedorCompleto?.nome || ''}`,
+         descricao: `Venda Parceiro #${venda.id.substring(0,8).toUpperCase()} - ${vendedor?.nome || ''}`,
          valor: valorVenda,
          vencimento: dataAtual,
-         status: "Pendente"
+         status: "Recebido",
+         data_pagamento: dataAtual
       }]);
 
-      // Lançar Comissão como Despesa Pendente
-      if (valorComissao > 0) {
-        await supabase.from('contas_pagar').insert([{
-           descricao: `Comissão Parceiro #${venda.id.substring(0,8).toUpperCase()} - ${vendedorCompleto?.nome || ''}`,
-           valor: valorComissao,
-           vencimento: dataAtual,
-           status: "Pendente"
-        }]);
-      }
-
-      // Baixar estoque dos itens
-      const { data: itens } = await supabase.from('vendas_itens').select('*').eq('venda_id', venda.id);
-      if (itens && itens.length > 0) {
-        const movimentos = itens.map(i => ({
-          produto_id: i.produto_id,
-          tipo: 'SAIDA',
-          quantidade: i.quantidade,
-          motivo: 'Venda Parceiro Aprovada',
-          referencia_id: venda.id
-        }));
-        await supabase.from('estoque_movimentacoes').insert(movimentos);
-
-        for (const item of itens) {
-          const { data: prod } = await supabase.from('produtos').select('estoque').eq('id', item.produto_id).single();
-          if (prod) {
-            const novoEstoque = (prod.estoque || 0) - item.quantidade;
-            await supabase.from('produtos').update({ estoque: novoEstoque }).eq('id', item.produto_id);
-          }
-        }
-      }
-
-      alert("Venda aprovada com sucesso! Financeiro e Comissão gerados, e estoque descontado.");
+      alert("Venda aprovada com sucesso! Financeiro e Comissão gerados.");
       fetchData();
     } catch (err: any) {
       alert("Erro ao aprovar: " + err.message);
     }
-  };
-
-  const excluirVenda = async (id: string, statusAprovacao: string) => {
-    setConfirmModal({
-      isOpen: true,
-      title: "Excluir Venda",
-      desc: "Tem certeza? Se aprovada, o estoque será restaurado e o financeiro excluído.",
-      onConfirm: async () => {
-        try {
-          if (statusAprovacao === 'Aprovada') {
-             // Restaurar estoque
-             const { data: itens } = await supabase.from('vendas_itens').select('*').eq('venda_id', id);
-             if (itens && itens.length > 0) {
-                const movimentos = itens.map(i => ({
-                  produto_id: i.produto_id,
-                  tipo: 'ENTRADA',
-                  quantidade: i.quantidade,
-                  motivo: 'Exclusão Venda Parceiro',
-                  referencia_id: id
-                }));
-                await supabase.from('estoque_movimentacoes').insert(movimentos);
-
-                for (const item of itens) {
-                  const { data: prod } = await supabase.from('produtos').select('estoque').eq('id', item.produto_id).single();
-                  if (prod) {
-                    const novoEstoque = (prod.estoque || 0) + item.quantidade;
-                    await supabase.from('produtos').update({ estoque: novoEstoque }).eq('id', item.produto_id);
-                  }
-                }
-             }
-          }
-
-          // Excluir contas a receber, contas a pagar e itens vinculados à venda, para não dar erro de chave estrangeira
-          await supabase.from('contas_receber').delete().eq('venda_id', id);
-          await supabase.from('contas_pagar').delete().ilike('descricao', `%${id.substring(0,8).toUpperCase()}%`);
-          await supabase.from('vendas_itens').delete().eq('venda_id', id);
-          
-          // A deleção apaga a venda
-          await supabase.from('vendas').delete().eq('id', id);
-          fetchData();
-        } catch (err: any) {
-           alert("Erro ao excluir venda: " + err.message);
-        }
-      }
-    });
   };
 
   const rejeitarVenda = async (id: string) => {
@@ -277,12 +196,6 @@ function VendedoresAdmin() {
       onConfirm: async () => {
         try {
            await supabase.from('vendas').update({ status_pagamento_comissao: 'Paga' }).eq('id', vendaId);
-           
-           // Dá baixa na despesa de comissão no financeiro
-           await supabase.from('contas_pagar')
-             .update({ status: 'Pago', data_pagamento: new Date().toISOString().split('T')[0] })
-             .ilike('descricao', `%${vendaId.substring(0,8).toUpperCase()}%`);
-
            fetchData();
         } catch(err: any) {
            alert("Erro ao pagar comissão: " + err.message);
@@ -310,17 +223,15 @@ function VendedoresAdmin() {
   const excluirVendedor = async (id: string) => {
     setConfirmModal({
       isOpen: true,
-      title: "Excluir Parceiro Permanentemente",
-      desc: "Tem certeza que deseja excluir esse parceiro? O cadastro, email e senha dele serão APAGADOS permanentemente. O histórico de vendas continuará salvo no caixa geral.",
+      title: "Excluir Parceiro",
+      desc: "Tem certeza que deseja excluir esse parceiro? Ele não terá mais acesso, mas o histórico de vendas será preservado no caixa geral.",
       onConfirm: async () => {
         try {
-          const { error } = await supabase.rpc('excluir_vendedor_e_usuario', { p_vendedor_id: id });
-          if (error) throw error;
-          
+          await supabase.from('vendedores').update({ status: 'Inativo' }).eq('id', id);
           setIsSheetOpen(false);
           fetchData();
         } catch(err: any) {
-          alert("Erro ao excluir parceiro. Você executou o comando SQL no Supabase? Detalhe: " + err.message);
+          alert("Erro ao excluir parceiro: " + err.message);
         }
       }
     });
@@ -456,9 +367,6 @@ function VendedoresAdmin() {
                       <Button size="sm" variant="destructive" onClick={() => rejeitarVenda(v.id)} className="h-8 px-2" title="Rejeitar">
                         <XCircle className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" variant="ghost" onClick={() => excluirVenda(v.id, v.status_aprovacao)} className="h-8 px-2 text-destructive hover:bg-destructive/10" title="Excluir do Sistema">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -534,13 +442,10 @@ function VendedoresAdmin() {
                         <div className="flex items-center gap-2">
                           {v.status_pagamento_comissao !== 'Paga' && (
                             <Button size="sm" variant="outline" className="h-7 text-xs border-amber-200 text-amber-700 hover:bg-amber-50" onClick={() => pagarComissao(v.id)}>
-                              Pagar Comissão
+                              Marcar como Pago
                             </Button>
                           )}
-                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => openSaleDetails(v)} title="Ver Detalhes">
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive hover:bg-destructive/10" onClick={() => excluirVenda(v.id, v.status_aprovacao)} title="Excluir Venda">
+                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive" onClick={() => excluirVendaAprovada(v.id)} title="Excluir Venda do Parceiro">
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
@@ -606,25 +511,20 @@ function VendedoresAdmin() {
           </form>
         </DialogContent>
       </Dialog>
-
       <Dialog open={isSaleDetailsOpen} onOpenChange={setIsSaleDetailsOpen}>
-        <DialogContent className="sm:max-w-[400px] w-[95vw] max-h-[90vh] overflow-y-auto p-5 sm:p-6 rounded-xl">
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Detalhes do Pedido</DialogTitle>
             <DialogDescription asChild>
               <div>
                 Pedido #{selectedSaleForDetails?.id.substring(0,6)} • Vendedor: {selectedSaleForDetails?.vendedor?.nome || 'Desconhecido'}
-                <div className="mt-3 text-sm text-slate-700 bg-slate-100 p-3 rounded-md border border-slate-200">
-                  {selectedSaleForDetails?.clientes?.nome ? (
-                    <>
-                      <p className="font-semibold text-slate-900 flex items-center gap-2">👤 {selectedSaleForDetails.clientes.nome}</p>
-                      {selectedSaleForDetails.clientes.cpf_cnpj && <p className="mt-1">📄 {selectedSaleForDetails.clientes.cpf_cnpj}</p>}
-                      {selectedSaleForDetails.clientes.telefone && <p className="mt-1">📞 {selectedSaleForDetails.clientes.telefone}</p>}
-                    </>
-                  ) : (
-                    <p className="text-muted-foreground italic">⚠️ Cliente não identificado ou ocorreu erro no cadastro (possível falha antes da correção do banco).</p>
-                  )}
-                </div>
+                {selectedSaleForDetails?.cliente?.nome && (
+                  <div className="mt-3 text-sm text-slate-700 bg-slate-100 p-3 rounded-md border border-slate-200">
+                    <p className="font-semibold text-slate-900 flex items-center gap-2">👤 {selectedSaleForDetails.cliente.nome}</p>
+                    {selectedSaleForDetails.cliente.cpf_cnpj && <p className="mt-1">📄 {selectedSaleForDetails.cliente.cpf_cnpj}</p>}
+                    {selectedSaleForDetails.cliente.telefone && <p className="mt-1">📞 {selectedSaleForDetails.cliente.telefone}</p>}
+                  </div>
+                )}
               </div>
             </DialogDescription>
           </DialogHeader>

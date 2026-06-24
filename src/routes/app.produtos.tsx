@@ -24,8 +24,6 @@ function Produtos() {
   const [loading, setLoading] = useState(true);
   const [busca, setBusca] = useState("");
   const [categoriaFilter, setCategoriaFilter] = useState("Todas");
-  const [statusFilter, setStatusFilter] = useState("Todos");
-  const [showFilters, setShowFilters] = useState(true);
 
   const fetchProducts = async () => {
     try {
@@ -63,8 +61,7 @@ function Produtos() {
     const matchBusca = p.nome.toLowerCase().includes(busca.toLowerCase()) || 
       (p.codigo && p.codigo.toLowerCase().includes(busca.toLowerCase()));
     const matchCat = categoriaFilter === "Todas" || p.categoria === categoriaFilter;
-    const matchStatus = statusFilter === "Todos" || p.status === statusFilter;
-    return matchBusca && matchCat && matchStatus;
+    return matchBusca && matchCat;
   });
 
   return (
@@ -74,13 +71,7 @@ function Produtos() {
         subtitle={`${products.length} SKUs cadastrados — atualizado agora`}
         actions={
           <>
-            <Button 
-              variant={showFilters ? "secondary" : "outline"} 
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <Filter className="mr-2 h-4 w-4" />
-              Filtros
-            </Button>
+            <Button variant="outline"><Filter className="mr-2 h-4 w-4" />Filtros</Button>
             <Button asChild className="bg-gradient-brand text-primary-foreground">
               <Link to="/app/produto-novo"><Plus className="mr-2 h-4 w-4" />Novo Produto</Link>
             </Button>
@@ -103,41 +94,29 @@ function Produtos() {
       </div>
 
       <Card className="shadow-card">
-        {showFilters && (
-          <div className="flex flex-wrap items-center gap-3 border-b p-4">
-            <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input 
-                placeholder="Buscar por código ou nome…" 
-                className="pl-9" 
-                value={busca}
-                onChange={(e) => setBusca(e.target.value)}
-              />
-            </div>
-            <Select value={categoriaFilter} onValueChange={setCategoriaFilter}>
-              <SelectTrigger className="w-[180px] h-9">
-                <SelectValue placeholder="Categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Todas">Todas categorias</SelectItem>
-                {Array.from(new Set(products.map(p => p.categoria).filter(Boolean))).sort().map((cat: any) => (
-                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[150px] h-9">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Todos">Todos os status</SelectItem>
-                <SelectItem value="Ativo">Ativos</SelectItem>
-                <SelectItem value="Crítico">Críticos</SelectItem>
-                <SelectItem value="Inativo">Inativos</SelectItem>
-              </SelectContent>
-            </Select>
+        <div className="flex flex-wrap items-center gap-3 border-b p-4">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input 
+              placeholder="Buscar por código ou nome…" 
+              className="pl-9" 
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+            />
           </div>
-        )}
+          <Select value={categoriaFilter} onValueChange={setCategoriaFilter}>
+            <SelectTrigger className="w-[180px] h-9">
+              <SelectValue placeholder="Categoria" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Todas">Todas categorias</SelectItem>
+              {Array.from(new Set(products.map(p => p.categoria).filter(Boolean))).sort().map((cat: any) => (
+                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button variant="outline" size="sm">Status: Ativos</Button>
+        </div>
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
