@@ -7,6 +7,23 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
+  vite: {
+    ssr: {
+      noExternal: [/^@radix-ui/],
+      external: [
+        "pg",
+        "tslib",
+        "@supabase/supabase-js",
+        "@supabase/auth-js",
+        "@supabase/postgrest-js",
+        "@supabase/realtime-js",
+        "@supabase/storage-js",
+        "@supabase/functions-js",
+        "@supabase/phoenix",
+        "iceberg-js",
+      ],
+    },
+  },
   nitro: {
     preset: "vercel",
   },
