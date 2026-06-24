@@ -11,9 +11,14 @@ function DeclaracaoConteudo() {
   const { id } = Route.useParams();
   const [venda, setVenda] = useState<any>(null);
   const [itens, setItens] = useState<any[]>([]);
+  const [config, setConfig] = useState<any>(null);
 
   useEffect(() => {
     async function loadData() {
+      // Carregar configurações do sistema
+      const { data: conf } = await supabase.from("configuracoes").select("*").eq("id", 1).single();
+      if (conf) setConfig(conf);
+
       const { data: v } = await supabase
         .from("vendas")
         .select("*, clientes(*)")
@@ -37,12 +42,12 @@ function DeclaracaoConteudo() {
   if (!venda) return <div className="p-8 text-center font-sans">Carregando formulário...</div>;
 
   const remetente = {
-    nome: "Douglas de Almeida",
-    endereco: "Rua Bom Jesus, 267 - Paraisolandia",
+    nome: config?.razao_social || "Douglas de Almeida",
+    endereco: config?.endereco || "Rua Bom Jesus, 267 - Paraisolandia",
     cidade: "Charqueada",
     uf: "SP",
     cep: "13.519-008",
-    cpf_cnpj: "63.874.628/0001-36",
+    cpf_cnpj: config?.cnpj || "63.874.628/0001-36",
   };
 
   const destinatario = venda.clientes || {};
