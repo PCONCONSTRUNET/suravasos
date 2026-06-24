@@ -34,11 +34,23 @@ function PublicCatalogo() {
   const [busca, setBusca] = useState("");
   const [categoriaAtiva, setCategoriaAtiva] = useState<string>("Todas");
   const [openCategoria, setOpenCategoria] = useState(false);
+  const [partner, setPartner] = useState<any>(null);
 
   useEffect(() => {
     const fetchProdutos = async () => {
       const { data } = await supabase.from('produtos').select('*').eq('status', 'Ativo');
       if (data) setProdutos(data);
+      
+      const params = new URLSearchParams(window.location.search);
+      const p = params.get('p');
+      if (p) {
+        // Busca o parceiro pelo começo do ID
+        const { data: parceiroData } = await supabase.from('vendedores').select('id, nome, telefone').ilike('id', `${p}%`).single();
+        if (parceiroData) {
+          setPartner(parceiroData);
+        }
+      }
+
       setLoading(false);
     };
     fetchProdutos();
@@ -82,9 +94,21 @@ function PublicCatalogo() {
     }
     
     mensagem += `\nQual o procedimento para compra?`;
+
+    let telefoneDestino = '5519997331112'; // Telefone padrão do dono
+    if (partner && partner.telefone) {
+      // Limpa caracteres especiais do telefone do parceiro
+      const numLimpo = partner.telefone.replace(/\D/g, '');
+      if (numLimpo.length >= 10) {
+        telefoneDestino = `55${numLimpo}`;
+      }
+      
+      // Adiciona o link mágico para o parceiro gerar o pedido rápido
+      mensagem += `\n\n_Link do Pedido (Para o Vendedor):_\n${window.location.origin}/parceiro/pdv?produto=${produto.id}`;
+    }
     
     const text = encodeURIComponent(mensagem);
-    window.open(`https://wa.me/5519997331112?text=${text}`, '_blank');
+    window.open(`https://wa.me/${telefoneDestino}?text=${text}`, '_blank');
   };
 
   return (
@@ -94,6 +118,12 @@ function PublicCatalogo() {
       </header>
 
       <main className="mx-auto max-w-6xl p-4 py-8">
+        {partner && (
+          <div className="mb-6 bg-brand/10 border border-brand/20 text-brand p-3 rounded-xl flex items-center justify-center text-sm font-medium animate-in fade-in slide-in-from-top-4">
+            Você está comprando com o parceiro: <strong className="ml-1">{partner.nome}</strong>
+          </div>
+        )}
+
         <div className="mb-8 text-center max-w-2xl mx-auto">
           <h1 className="text-3xl md:text-4xl font-display font-bold text-slate-900">Catálogo de Produtos</h1>
           <p className="text-muted-foreground mt-3 text-lg">Confira nossos vasos, suportes e acessórios e faça seu pedido diretamente pelo WhatsApp.</p>

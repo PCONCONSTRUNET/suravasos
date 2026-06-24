@@ -215,6 +215,24 @@ function ParceiroDashboard() {
         <p className="text-sm text-muted-foreground">Aqui está o resumo das suas vendas.</p>
       </div>
 
+      <div className="bg-brand/5 border border-brand/20 p-4 rounded-xl flex items-center justify-between gap-4">
+        <div>
+          <p className="text-sm font-bold text-brand">Seu Catálogo Digital</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Envie este link para seus clientes comprarem com você.</p>
+        </div>
+        <Button 
+          variant="outline" 
+          className="border-brand/30 text-brand hover:bg-brand/10 shrink-0"
+          onClick={() => {
+            const link = `${window.location.origin}/catalogo?p=${vendedorId.substring(0,8)}`;
+            navigator.clipboard.writeText(link);
+            alert("Link do catálogo copiado!\n\n" + link);
+          }}
+        >
+          Copiar Link
+        </Button>
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <Card className="col-span-2 bg-gradient-brand text-primary-foreground border-0 shadow-lg shadow-primary/20">
           <CardContent className="p-6">

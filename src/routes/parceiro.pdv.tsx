@@ -38,7 +38,21 @@ function ParceiroPDV() {
       }
 
       const { data } = await supabase.from('produtos').select('*').eq('status', 'Ativo');
-      if (data) setProdutos(data);
+      if (data) {
+        setProdutos(data);
+        
+        // Verifica se veio um produto mágico pela URL
+        const params = new URLSearchParams(window.location.search);
+        const produtoIdMagic = params.get('produto');
+        if (produtoIdMagic) {
+          const magicProduct = data.find(p => p.id === produtoIdMagic);
+          if (magicProduct) {
+            setCart([{ id: magicProduct.id, p: magicProduct.nome, q: 1, u: Number(magicProduct.valor), t: Number(magicProduct.valor), emoji: magicProduct.emoji }]);
+            // Limpa a URL para não adicionar de novo num refresh
+            window.history.replaceState({}, '', '/parceiro/pdv');
+          }
+        }
+      }
     };
     init();
   }, []);
