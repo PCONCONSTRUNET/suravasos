@@ -3,7 +3,8 @@ import { PageHeader } from "@/components/app-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Trash2, CreditCard, Banknote, QrCode, Receipt } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Search, Trash2, CreditCard, Banknote, QrCode, Receipt, DownloadCloud, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -17,6 +18,21 @@ function PDV() {
   const [cart, setCart] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [metodoPagamento, setMetodoPagamento] = useState("Cartão");
+  
+  const [orcamentos, setOrcamentos] = useState<any[]>([]);
+  const [isOrcamentoModalOpen, setIsOrcamentoModalOpen] = useState(false);
+  const [orcamentoIdSelecionado, setOrcamentoIdSelecionado] = useState<string | null>(null);
+  const [clienteSelecionado, setClienteSelecionado] = useState<{ id: string; nome: string } | null>(null);
+
+  const fetchOrcamentos = async () => {
+    const { data } = await supabase
+      .from('vendas')
+      .select('*, cliente:clientes(nome)')
+      .eq('tipo', 'DAV')
+      .in('status', ['Orçamento', 'Aguardando Pagamento'])
+      .order('created_at', { ascending: false });
+    if (data) setOrcamentos(data);
+  };
 
   useEffect(() => {
     const fetchProdutos = async () => {
@@ -24,7 +40,43 @@ function PDV() {
       if (data) setProdutos(data);
     };
     fetchProdutos();
+    fetchOrcamentos();
   }, []);
+
+  const puxarOrcamento = async (orcamento: any) => {
+    try {
+      const { data } = await supabase
+        .from('vendas_itens')
+        .select('*, produto:produtos(nome, estoque, valor_venda, valor, emoji)')
+        .eq('venda_id', orcamento.id);
+
+      if (data) {
+        const novoCarrinho = data.map(item => ({
+          id: item.produto_id,
+          p: item.produto?.nome || 'Produto não encontrado',
+          q: item.quantidade,
+          u: Number(item.valor_unitario),
+          t: Number(item.subtotal),
+          emoji: item.produto?.emoji || '📦',
+          max: item.produto?.estoque || 0
+        }));
+        setCart(novoCarrinho);
+        setOrcamentoIdSelecionado(orcamento.id);
+        if (orcamento.cliente_id && orcamento.cliente) {
+          setClienteSelecionado({ id: orcamento.cliente_id, nome: orcamento.cliente.nome });
+        }
+        setIsOrcamentoModalOpen(false);
+      }
+    } catch (e) {
+      alert("Erro ao puxar itens do orçamento.");
+    }
+  };
+
+  const limparCaixa = () => {
+    setCart([]);
+    setOrcamentoIdSelecionado(null);
+    setClienteSelecionado(null);
+  };
 
   const addToCart = (produto: any) => {
     if (produto.estoque <= 0) {
@@ -68,11 +120,13 @@ function PDV() {
     setLoading(true);
 
     try {
-      // Cria a venda (sem cliente_id = Consumidor Final)
+      // Cria a venda
       const { data: vendaData, error: vendaError } = await supabase.from('vendas').insert([{
         tipo: 'PDV',
         status: 'Pago',
-        valor_total: subtotal
+        valor_total: subtotal,
+        cliente_id: clienteSelecionado?.id || null,
+        metodo_pagamento: metodoPagamento
       }]).select().single();
 
       if (vendaError) throw vendaError;
@@ -111,8 +165,14 @@ function PDV() {
          }
       }
 
+      // Atualiza o orçamento anterior se foi puxado
+      if (orcamentoIdSelecionado) {
+         await supabase.from('vendas').update({ status: 'Faturado' }).eq('id', orcamentoIdSelecionado);
+         fetchOrcamentos();
+      }
+
       alert("Venda realizada com sucesso!");
-      setCart([]);
+      limparCaixa();
     } catch (err: any) {
       console.error(err);
       alert("Erro ao finalizar venda: " + err.message);
@@ -144,7 +204,12 @@ function PDV() {
           </Card>
 
           <Card className="shadow-card">
-            <CardHeader><CardTitle>Itens · {cart.length}</CardTitle></CardHeader>
+            <CardHeader className="pb-3 flex flex-row items-center justify-between">
+              <CardTitle>Itens · {cart.length}</CardTitle>
+              <Button variant="outline" size="sm" onClick={() => setIsOrcamentoModalOpen(true)} className="h-8 text-brand border-brand/20 hover:bg-brand/10">
+                <DownloadCloud className="w-4 h-4 mr-2" /> Puxar Orçamento
+              </Button>
+            </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y max-h-[50vh] overflow-y-auto">
                 {cart.length === 0 ? (
@@ -174,6 +239,14 @@ function PDV() {
           <CardHeader><CardTitle>Resumo da venda</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-1.5 text-sm">
+              {clienteSelecionado && (
+                <div className="flex justify-between items-center text-brand font-semibold mb-3 bg-brand/10 p-2 rounded-md">
+                  <span>👤 {clienteSelecionado.nome}</span>
+                  <Button variant="ghost" size="icon" className="h-5 w-5 hover:bg-transparent text-brand" onClick={() => setClienteSelecionado(null)}>
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              )}
               <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>R$ {subtotal.toFixed(2)}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Desconto</span><span>R$ 0,00</span></div>
             </div>
@@ -195,6 +268,32 @@ function PDV() {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={isOrcamentoModalOpen} onOpenChange={setIsOrcamentoModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Orçamentos Pendentes</DialogTitle>
+            <DialogDescription>Selecione um orçamento (DAV) para carregar os produtos para o caixa.</DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[350px] overflow-y-auto space-y-2 py-4">
+            {orcamentos.length === 0 ? (
+              <p className="text-center text-muted-foreground py-4">Nenhum orçamento em aberto encontrado.</p>
+            ) : orcamentos.map(orc => (
+              <div key={orc.id} onClick={() => puxarOrcamento(orc)} className="bg-slate-50 p-4 rounded-xl border border-slate-200 cursor-pointer hover:bg-brand/5 hover:border-brand/30 transition-colors flex justify-between items-center">
+                <div>
+                  <p className="font-semibold text-slate-800">#{orc.id.substring(0,8).toUpperCase()}</p>
+                  <p className="text-sm text-slate-600 font-medium">👤 {orc.cliente?.nome || 'Cliente Desconhecido'}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{new Date(orc.created_at).toLocaleDateString()}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-brand">R$ {Number(orc.valor_total).toFixed(2)}</p>
+                  <span className="inline-block mt-1 text-[10px] font-semibold bg-info/10 text-info px-2 py-0.5 rounded">Puxar Venda</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
