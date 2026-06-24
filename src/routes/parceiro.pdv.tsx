@@ -19,17 +19,20 @@ function ParceiroPDV() {
   const [loading, setLoading] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
-  const [clientForm, setClientForm] = useState({ nome: '', documento: '', telefone: '' });
-  const [vendedorId, setVendedorId] = useState<string | null>(null);
+  const [clientForm, setClientForm] = useState({ 
+    nome: '', documento: '', telefone: '', endereco: '', frete: 'Retirada', pagamento: 'Dinheiro / Pix', observacoes: ''
+  });
+  const [vendedorInfo, setVendedorInfo] = useState<{id: string, nome: string} | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [davGeradoId, setDavGeradoId] = useState<string | null>(null);
 
   useEffect(() => {
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        const { data: vData } = await supabase.from('vendedores').select('id, status').eq('user_id', session.user.id).single();
+        const { data: vData } = await supabase.from('vendedores').select('id, status, nome').eq('user_id', session.user.id).single();
         if (vData) {
-          setVendedorId(vData.id);
+          setVendedorInfo({ id: vData.id, nome: vData.nome });
           if (vData.status === 'Aguardando Aprovação') {
             navigate({ to: "/parceiro/dashboard" });
             return;
@@ -114,7 +117,7 @@ function ParceiroPDV() {
   const subtotal = cart.reduce((s, i) => s + i.t, 0);
 
   const handleOpenClientModal = () => {
-    if (cart.length === 0 || !vendedorId) return;
+    if (cart.length === 0 || !vendedorInfo) return;
     setIsClientModalOpen(true);
   };
 
@@ -174,7 +177,7 @@ function ParceiroPDV() {
         status_aprovacao: 'Pendente',
         status: 'Pendente', 
         valor_total: subtotal,
-        vendedor_id: vendedorId,
+        vendedor_id: vendedorInfo?.id,
         cliente_id: finalClienteId
       }]).select().single();
 
@@ -192,7 +195,45 @@ function ParceiroPDV() {
       const { error: itensError } = await supabase.from('vendas_itens').insert(itensToInsert);
       if (itensError) throw itensError;
 
-      // 3. Dispara a notificação para o dono
+      // 3. Gera o DAV Oficial (Orçamento)
+      const { data: dav, error: davError } = await supabase.from('davs').insert({
+        cliente_nome: clientForm.nome,
+        cliente_cnpj: clientForm.documento,
+        cliente_endereco: clientForm.endereco,
+        cliente_telefone: clientForm.telefone,
+        emissor_nome: "VIVAVERDE VASOS",
+        emissor_cnpj: "63.874.628/0001-36",
+        emissor_endereco: "Rua Bom Jesus, 267 - Charqueada/SP",
+        emissor_telefone: "",
+        vendedor: vendedorInfo?.nome || "Parceiro",
+        condicao_pagamento: clientForm.pagamento,
+        frete_tipo: clientForm.frete,
+        prazo_entrega: "A Combinar",
+        subtotal: subtotal,
+        desconto_percentual: 0,
+        desconto_valor: 0,
+        frete_valor: 0,
+        total: subtotal,
+        observacoes: clientForm.observacoes,
+        validade: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      }).select('id').single();
+
+      if (!davError && dav) {
+        setDavGeradoId(dav.id);
+        
+        // Salvar itens do DAV
+        const davItensToInsert = cart.map((i, index) => ({
+          dav_id: dav.id,
+          codigo: "", // Você pode ajustar se tiver código
+          produto: i.p,
+          qtd: i.q,
+          valor_unitario: i.u,
+          total: i.t
+        }));
+        await supabase.from('dav_items').insert(davItensToInsert);
+      }
+
+      // 4. Dispara a notificação para o dono
       await supabase.from('notificacoes').insert([{
         tipo: 'venda',
         titulo: `Novo pedido pendente`,
@@ -207,12 +248,28 @@ function ParceiroPDV() {
     }
   };
 
-  const closeSuccessModal = () => {
-    setIsSuccessModalOpen(false);
-    navigate({ to: "/parceiro/dashboard" });
+  const handleShareWhatsApp = () => {
+    if (!davGeradoId) return;
+    
+    let msg = `*ORÇAMENTO - VIVAVERDE VASOS*\n`;
+    msg += `Nº do Orçamento: ${davGeradoId.substring(0, 8).toUpperCase()}\n\n`;
+    msg += `Olá ${clientForm.nome}, aqui está o seu orçamento detalhado!\n\n`;
+    
+    msg += `*ITENS DO ORÇAMENTO:*\n`;
+    cart.forEach(item => {
+      msg += `• ${item.q}x ${item.p} - R$ ${Number(item.t).toFixed(2).replace('.', ',')}\n`;
+    });
+    
+    msg += `\n*TOTAL: R$ ${subtotal.toFixed(2).replace('.', ',')}*\n\n`;
+    
+    const linkPdf = `${window.location.origin}/orcamento/${davGeradoId}`;
+    msg += `📄 *Acesse o orçamento completo em PDF aqui:*\n${linkPdf}`;
+
+    const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+    window.open(url, '_blank');
   };
 
-  if (!vendedorId) return <div className="text-center py-10">Verificando perfil de vendedor...</div>;
+  if (!vendedorInfo) return <div className="text-center py-10">Verificando perfil de vendedor...</div>;
 
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -308,8 +365,16 @@ function ParceiroPDV() {
               A venda foi registrada com sucesso e está aguardando a aprovação da loja para liberar sua comissão.
             </DialogDescription>
           </div>
-          <DialogFooter className="sm:justify-center">
-            <Button className="w-full bg-gradient-brand text-white h-12 text-lg" onClick={closeSuccessModal}>
+          <DialogFooter className="flex-col gap-2 sm:justify-center">
+            {davGeradoId && (
+              <Button 
+                className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white h-12 text-lg" 
+                onClick={handleShareWhatsApp}
+              >
+                Enviar Orçamento por WhatsApp
+              </Button>
+            )}
+            <Button className="w-full bg-slate-100 text-slate-800 hover:bg-slate-200 h-12 text-lg" onClick={closeSuccessModal}>
               Voltar ao Painel
             </Button>
           </DialogFooter>
@@ -318,31 +383,73 @@ function ParceiroPDV() {
 
       {/* Modal do Cliente */}
       <Dialog open={isClientModalOpen} onOpenChange={setIsClientModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[500px] h-[85vh] overflow-y-auto">
           <form onSubmit={submitOrder}>
             <DialogHeader>
-              <DialogTitle>Identificação do Cliente</DialogTitle>
+              <DialogTitle>Finalizar Geração de Orçamento / Pedido</DialogTitle>
               <DialogDescription>
-                Para quem você está vendendo? Preencha os dados abaixo.
+                Preencha os dados abaixo. Eles sairão no PDF oficial e serão enviados à loja.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <label className="text-sm font-medium">Nome / Empresa *</label>
-                <Input required placeholder="Ex: João Silva ou Construtora X" value={clientForm.nome} onChange={e => setClientForm({...clientForm, nome: e.target.value})} />
+              <div className="space-y-3">
+                <h3 className="font-semibold text-brand text-sm border-b pb-1">Dados do Cliente</h3>
+                <div className="grid gap-2">
+                  <label className="text-sm font-medium">Nome / Empresa *</label>
+                  <Input required placeholder="Ex: João Silva ou Construtora X" value={clientForm.nome} onChange={e => setClientForm({...clientForm, nome: e.target.value})} />
+                </div>
+                <div className="grid gap-2">
+                  <label className="text-sm font-medium">CPF / CNPJ</label>
+                  <Input placeholder="Apenas números" value={clientForm.documento} onChange={e => setClientForm({...clientForm, documento: e.target.value})} />
+                </div>
+                <div className="grid gap-2">
+                  <label className="text-sm font-medium">Telefone / WhatsApp</label>
+                  <Input placeholder="(00) 00000-0000" value={clientForm.telefone} onChange={e => setClientForm({...clientForm, telefone: e.target.value})} />
+                </div>
+                <div className="grid gap-2">
+                  <label className="text-sm font-medium">Endereço Completo</label>
+                  <Input placeholder="Rua, número, bairro, cidade - UF" value={clientForm.endereco} onChange={e => setClientForm({...clientForm, endereco: e.target.value})} />
+                </div>
               </div>
-              <div className="grid gap-2">
-                <label className="text-sm font-medium">CPF / CNPJ (Opcional)</label>
-                <Input placeholder="Apenas números" value={clientForm.documento} onChange={e => setClientForm({...clientForm, documento: e.target.value})} />
-              </div>
-              <div className="grid gap-2">
-                <label className="text-sm font-medium">Telefone (Opcional)</label>
-                <Input placeholder="(00) 00000-0000" value={clientForm.telefone} onChange={e => setClientForm({...clientForm, telefone: e.target.value})} />
+
+              <div className="space-y-3 mt-2">
+                <h3 className="font-semibold text-brand text-sm border-b pb-1">Condições</h3>
+                <div className="grid gap-2">
+                  <label className="text-sm font-medium">Forma de Pagamento</label>
+                  <select 
+                    className="flex h-10 w-full items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
+                    value={clientForm.pagamento} 
+                    onChange={e => setClientForm({...clientForm, pagamento: e.target.value})}
+                  >
+                    <option>Dinheiro / Pix</option>
+                    <option>Cartão de Crédito</option>
+                    <option>Cartão de Débito</option>
+                    <option>Boleto a Prazo</option>
+                  </select>
+                </div>
+                <div className="grid gap-2">
+                  <label className="text-sm font-medium">Forma do Frete</label>
+                  <select 
+                    className="flex h-10 w-full items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
+                    value={clientForm.frete} 
+                    onChange={e => setClientForm({...clientForm, frete: e.target.value})}
+                  >
+                    <option>Retirada</option>
+                    <option>FOB (Por conta do cliente)</option>
+                    <option>CIF (Por conta da loja)</option>
+                  </select>
+                </div>
+                <div className="grid gap-2">
+                  <label className="text-sm font-medium">Observações</label>
+                  <Input placeholder="Anotações extras..." value={clientForm.observacoes} onChange={e => setClientForm({...clientForm, observacoes: e.target.value})} />
+                </div>
               </div>
             </div>
-            <DialogFooter>
+            <DialogFooter className="mt-4">
               <Button type="button" variant="outline" onClick={() => setIsClientModalOpen(false)}>Cancelar</Button>
-              <Button type="submit" className="bg-gradient-brand text-white">Finalizar Pedido</Button>
+              <Button type="submit" disabled={loading} className="bg-gradient-brand text-white">
+                {loading ? "Gerando..." : "Gerar Pedido e Orçamento"}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
