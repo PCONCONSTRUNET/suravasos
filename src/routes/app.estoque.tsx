@@ -118,14 +118,21 @@ function Estoque() {
       if (error) throw error;
 
       // Cria os itens (sugere comprar 50 unidades de cada)
-      const itens = criticos.map(c => ({
-        compra_id: compra.id,
-        produto_id: c.id,
-        quantidade: 50,
-        preco_unitario: c.valor
-      }));
+      const itens = criticos.map(c => {
+        const valorCustoSugestao = Number((c.valor * 0.5).toFixed(2)); // Sugestão 50% do valor de venda
+        return {
+          compra_id: compra.id,
+          produto_id: c.id,
+          quantidade: 50,
+          valor_unitario: valorCustoSugestao,
+          subtotal: 50 * valorCustoSugestao
+        };
+      });
 
       await supabase.from('compras_itens').insert(itens);
+      
+      const totalCompra = itens.reduce((acc, curr) => acc + curr.subtotal, 0);
+      await supabase.from('compras').update({ valor_total: totalCompra }).eq('id', compra.id);
       
       alert("Pedido de compra gerado com sucesso! Redirecionando...");
       navigate({ to: "/app/compras" });
