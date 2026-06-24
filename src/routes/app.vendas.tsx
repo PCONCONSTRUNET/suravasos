@@ -33,6 +33,7 @@ function Vendas() {
       const { data, error } = await supabase
         .from('vendas')
         .select(`*, clientes (nome)`)
+        .or('status_aprovacao.neq.Pendente,status_aprovacao.is.null')
         .order('created_at', { ascending: false });
         
       if (error) throw error;

@@ -32,6 +32,7 @@ function DAVList() {
         .from('vendas')
         .select(`*, clientes (nome)`)
         .eq('tipo', 'DAV')
+        .or('status_aprovacao.neq.Pendente,status_aprovacao.is.null')
         .order('created_at', { ascending: false });
         
       if (error) throw error;

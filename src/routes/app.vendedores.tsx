@@ -546,7 +546,10 @@ function VendedoresAdmin() {
             <DialogTitle>Detalhes do Pedido</DialogTitle>
             <DialogDescription asChild>
               <div>
-                Pedido #{selectedSaleForDetails?.id.substring(0,6)} • Vendedor: {selectedSaleForDetails?.vendedor?.nome || 'Desconhecido'}
+                <p>Pedido #{selectedSaleForDetails?.id?.substring(0,6).toUpperCase()} • Vendedor: {selectedSaleForDetails?.vendedor?.nome || 'Desconhecido'}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Enviado em: {selectedSaleForDetails ? new Date(selectedSaleForDetails.created_at).toLocaleDateString('pt-BR') : ''} às {selectedSaleForDetails ? new Date(selectedSaleForDetails.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ''}
+                </p>
                 {selectedSaleForDetails?.cliente?.nome && (
                   <div className="mt-3 text-sm text-slate-700 bg-slate-100 p-3 rounded-md border border-slate-200">
                     <p className="font-semibold text-slate-900 flex items-center gap-2">👤 {selectedSaleForDetails.cliente.nome}</p>

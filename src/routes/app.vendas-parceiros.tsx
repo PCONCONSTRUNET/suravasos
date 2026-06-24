@@ -38,6 +38,7 @@ function VendasParceiros() {
           vendedor:vendedores(nome)
         `)
         .not('vendedor_id', 'is', null)
+        .or('status_aprovacao.neq.Pendente,status_aprovacao.is.null')
         .order('created_at', { ascending: false });
         
       if (data) setVendas(data);
