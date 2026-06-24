@@ -78,6 +78,16 @@ function ParceiroPDV() {
     }));
   };
 
+  const setQuantity = (id: string, newQ: number) => {
+    setCart(prev => prev.map(i => {
+      if (i.id === id) {
+        if (newQ <= 0) return i; 
+        return { ...i, q: newQ, t: newQ * i.u };
+      }
+      return i;
+    }));
+  };
+
   const removeFromCart = (id: string) => {
     setCart(prev => prev.filter(i => i.id !== id));
   };
@@ -236,7 +246,13 @@ function ParceiroPDV() {
                 </div>
                 <div className="flex items-center gap-1.5 bg-slate-100 rounded-lg p-1">
                   <button onClick={() => updateQuantity(i.id, -1)} className="h-6 w-6 grid place-items-center bg-white rounded shadow-sm text-lg leading-none font-medium">−</button>
-                  <span className="w-4 text-center text-xs font-bold">{i.q}</span>
+                  <input 
+                    type="number" 
+                    min="1" 
+                    value={i.q || ''} 
+                    onChange={(e) => setQuantity(i.id, parseInt(e.target.value) || 1)}
+                    className="w-8 text-center text-xs font-bold bg-transparent border-0 outline-none p-0 focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
                   <button onClick={() => updateQuantity(i.id, 1)} className="h-6 w-6 grid place-items-center bg-white rounded shadow-sm text-lg leading-none font-medium">+</button>
                 </div>
                 <button onClick={() => removeFromCart(i.id)} className="p-1.5 text-destructive bg-destructive/10 rounded-md">

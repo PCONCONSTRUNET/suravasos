@@ -101,7 +101,18 @@ function PDV() {
     setCart(prev => prev.map(i => {
       if (i.id === id) {
         const newQ = i.q + delta;
-        if (newQ <= 0) return i; // Use remove instead
+        if (newQ <= 0) return i; 
+        if (newQ > i.max) { alert("Estoque insuficiente!"); return i; }
+        return { ...i, q: newQ, t: newQ * i.u };
+      }
+      return i;
+    }));
+  };
+
+  const setQuantity = (id: string, newQ: number) => {
+    setCart(prev => prev.map(i => {
+      if (i.id === id) {
+        if (newQ <= 0) return i;
         if (newQ > i.max) { alert("Estoque insuficiente!"); return i; }
         return { ...i, q: newQ, t: newQ * i.u };
       }
@@ -223,7 +234,13 @@ function PDV() {
                     </div>
                     <div className="flex items-center gap-1">
                       <Button onClick={() => updateQuantity(i.id, -1)} size="icon" variant="outline" className="h-8 w-8">−</Button>
-                      <span className="w-8 text-center font-semibold">{i.q}</span>
+                      <input 
+                        type="number" 
+                        min="1" 
+                        value={i.q || ''} 
+                        onChange={(e) => setQuantity(i.id, parseInt(e.target.value) || 1)}
+                        className="w-12 text-center font-semibold bg-transparent border-0 outline-none p-0 focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
                       <Button onClick={() => updateQuantity(i.id, 1)} size="icon" variant="outline" className="h-8 w-8">+</Button>
                     </div>
                     <p className="font-bold text-primary">R$ {i.t.toFixed(2)}</p>
