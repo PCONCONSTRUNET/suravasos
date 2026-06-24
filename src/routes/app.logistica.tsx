@@ -49,15 +49,10 @@ function Logistica() {
         .select('*, clientes(nome, cidade)')
         .eq('tipo', 'VENDA')
         .order('created_at', { ascending: false });
-      if (data && data.length > 0) {
+      if (data) {
         setVendas(data);
       } else {
-        // Dados de exemplo para demonstração caso o banco esteja vazio
-        setVendas([
-          { id: "mock-1", status: "Em Separação", clientes: { nome: "João Silva (Exemplo)", cidade: "São Paulo/SP" } },
-          { id: "mock-2", status: "Em Transporte", clientes: { nome: "Carlos Souza (Exemplo)", cidade: "Bauru/SP" } },
-          { id: "mock-3", status: "Entregue", clientes: { nome: "Maria Oliveira (Exemplo)", cidade: "Campinas/SP" } }
-        ]);
+        setVendas([]);
       }
     } finally {
       setLoading(false);
@@ -75,19 +70,17 @@ function Logistica() {
       return;
     }
 
-    const realIds = pedidosSelecionados.filter(id => !id.startsWith("mock"));
-
     try {
       const { data: novaRota, error: erroRota } = await supabase
         .from('rotas')
         .insert([{ motorista: motoristaRota, veiculo: veiculoRota }])
         .select()
         .single();
-      if (realIds.length > 0) {
+      if (pedidosSelecionados.length > 0) {
         const { error: errVendas } = await supabase
           .from('vendas')
           .update({ rota_id: novaRota.id, status: 'Em Transporte' })
-          .in('id', realIds);
+          .in('id', pedidosSelecionados);
           
         if (errVendas) {
           console.error("Erro Vendas:", errVendas);
@@ -98,14 +91,8 @@ function Logistica() {
       setOpenNovaRota(false);
       setMotoristaRota("");
       setVeiculoRota("");
-      
-      const mockIds = pedidosSelecionados.filter(id => id.startsWith("mock"));
-      if (mockIds.length > 0) {
-        setVendas(prev => prev.map(v => mockIds.includes(v.id) ? { ...v, rota_id: novaRota.id, status: 'Em Transporte' } : v));
-      }
-      
       setPedidosSelecionados([]);
-      if (realIds.length > 0) fetchVendas();
+      if (pedidosSelecionados.length > 0) fetchVendas();
       fetchRotas();
     } catch(err) {
       console.error(err);
@@ -127,10 +114,6 @@ function Logistica() {
 
   const handleEntregar = async (id: string) => {
     if (!await confirm("Confirmar entrega deste pedido?")) return;
-    if (id.startsWith("mock")) {
-      setVendas(vendas.map(v => v.id === id ? { ...v, status: 'Entregue' } : v));
-      return;
-    }
     try {
       await supabase.from('vendas').update({ status: 'Entregue' }).eq('id', id);
       fetchVendas();
@@ -140,10 +123,6 @@ function Logistica() {
   };
 
   const handleEmRota = async (id: string) => {
-    if (id.startsWith("mock")) {
-      setVendas(vendas.map(v => v.id === id ? { ...v, status: 'Em Transporte' } : v));
-      return;
-    }
     try {
       await supabase.from('vendas').update({ status: 'Em Transporte' }).eq('id', id);
       fetchVendas();
@@ -154,10 +133,6 @@ function Logistica() {
 
   const handleExcluir = async (id: string) => {
     if (!await confirm({ description: "Tem certeza que deseja excluir este pedido? Essa ação apagará a venda do sistema.", variant: "destructive" })) return;
-    if (id.startsWith("mock")) {
-      setVendas(vendas.filter(v => v.id !== id));
-      return;
-    }
     try {
       await supabase.from('vendas').delete().eq('id', id);
       fetchVendas();

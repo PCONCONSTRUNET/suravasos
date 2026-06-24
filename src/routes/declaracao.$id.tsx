@@ -14,16 +14,6 @@ function DeclaracaoConteudo() {
 
   useEffect(() => {
     async function loadData() {
-      if (id.startsWith("mock")) {
-        setVenda({ id, valor_total: 150.00, clientes: { nome: "João Silva (Exemplo)", endereco: "Rua das Flores", numero: "123", bairro: "Centro", cidade: "São Paulo", uf: "SP", cep: "01000-000", cpf_cnpj: "111.222.333-44" } });
-        setItens([
-          { quantidade: 2, subtotal: 100, produtos: { nome: "Vaso de Cerâmica Grande" } },
-          { quantidade: 1, subtotal: 50, produtos: { nome: "Suporte de Madeira" } }
-        ]);
-        setTimeout(() => window.print(), 800);
-        return;
-      }
-
       const { data: v } = await supabase.from("vendas").select("*, clientes(*)").eq("id", id).single();
       if (v) setVenda(v);
 
