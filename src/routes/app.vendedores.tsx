@@ -132,7 +132,18 @@ function VendedoresAdmin() {
          data_pagamento: null
       }]);
 
-      alert("Venda aprovada com sucesso! Financeiro e Comissão gerados.");
+      // Dar baixa no estoque
+      const { data: itens } = await supabase.from('vendas_itens').select('produto_id, quantidade').eq('venda_id', venda.id);
+      if (itens) {
+        for (const item of itens) {
+           const { data: prod } = await supabase.from('produtos').select('estoque').eq('id', item.produto_id).single();
+           if (prod) {
+             await supabase.from('produtos').update({ estoque: prod.estoque - item.quantidade }).eq('id', item.produto_id);
+           }
+        }
+      }
+
+      alert("Venda aprovada com sucesso! Financeiro e Comissão gerados, e estoque atualizado.");
       fetchData();
     } catch (err: any) {
       alert("Erro ao aprovar: " + err.message);
@@ -208,10 +219,22 @@ function VendedoresAdmin() {
     setConfirmModal({
       isOpen: true,
       title: "Excluir Venda do Parceiro",
-      desc: "Atenção: Deseja realmente excluir esta venda do parceiro? O valor será removido das comissões dele.",
+      desc: "Atenção: Deseja realmente excluir esta venda do parceiro? O valor será removido das comissões dele e os produtos retornarão ao estoque.",
       onConfirm: async () => {
         try {
-           await supabase.from('vendas').update({ status_aprovacao: 'Rejeitada', valor_comissao: 0 }).eq('id', vendaId);
+           await supabase.from('vendas').update({ status_aprovacao: 'Rejeitada', valor_comissao: 0, status: 'Cancelada' }).eq('id', vendaId);
+           
+           // Retornar ao estoque
+           const { data: itens } = await supabase.from('vendas_itens').select('produto_id, quantidade').eq('venda_id', vendaId);
+           if (itens) {
+             for (const item of itens) {
+                const { data: prod } = await supabase.from('produtos').select('estoque').eq('id', item.produto_id).single();
+                if (prod) {
+                  await supabase.from('produtos').update({ estoque: prod.estoque + item.quantidade }).eq('id', item.produto_id);
+                }
+             }
+           }
+           
            fetchData();
         } catch(err: any) {
            alert("Erro ao excluir venda: " + err.message);

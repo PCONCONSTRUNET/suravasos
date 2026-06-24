@@ -90,10 +90,23 @@ function Vendas() {
     }
   };
 
-  const handleDelete = async (id: string, tipo: string) => {
-    if (!await confirm({ description: `Tem certeza que deseja excluir est${tipo === 'DAV' ? 'e orçamento' : 'a venda'}?`, variant: 'destructive' })) return;
+  const handleDelete = async (venda: any) => {
+    if (!await confirm({ description: `Tem certeza que deseja excluir est${venda.tipo === 'DAV' ? 'e orçamento' : 'a venda'}? ${['Faturado', 'Pago', 'Entregue'].includes(venda.status) ? 'Os itens retornarão ao estoque.' : ''}`, variant: 'destructive' })) return;
     try {
-      const { error } = await supabase.from('vendas').delete().eq('id', id);
+      // Se a venda já foi processada/faturada/paga (baixou estoque), precisa retornar o estoque
+      if (['Faturado', 'Pago', 'Entregue'].includes(venda.status)) {
+         const { data: itens } = await supabase.from('vendas_itens').select('produto_id, quantidade').eq('venda_id', venda.id);
+         if (itens) {
+           for (const item of itens) {
+              const { data: prod } = await supabase.from('produtos').select('estoque').eq('id', item.produto_id).single();
+              if (prod) {
+                await supabase.from('produtos').update({ estoque: prod.estoque + item.quantidade }).eq('id', item.produto_id);
+              }
+           }
+         }
+      }
+
+      const { error } = await supabase.from('vendas').delete().eq('id', venda.id);
       if (error) throw error;
       fetchVendas();
     } catch (err: any) {
@@ -137,7 +150,7 @@ function Vendas() {
                 <TableCell className="text-right font-semibold">R$ {Number(v.valor_total).toFixed(2).replace('.', ',')}</TableCell>
                 <TableCell><Badge className={getTone(v.status)}>{v.status}</Badge></TableCell>
                 <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                   <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(v.id, v.tipo)}><Trash2 className="h-4 w-4" /></Button>
+                   <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(v)}><Trash2 className="h-4 w-4" /></Button>
                 </TableCell>
               </TableRow>
             ))}
