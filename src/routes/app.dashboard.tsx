@@ -93,7 +93,8 @@ function Dashboard() {
       const { data: vendasData } = await supabase
         .from("vendas")
         .select("*")
-        .in("tipo", ["VENDA", "PDV", "Afiliado"]);
+        .in("tipo", ["VENDA", "PDV", "Afiliado"])
+        .or("status_aprovacao.neq.Pendente,status_aprovacao.is.null");
       const { count: produtosCount } = await supabase
         .from("produtos")
         .select("*", { count: "exact", head: true })
@@ -105,6 +106,7 @@ function Dashboard() {
         .from("vendas")
         .select("*, clientes(nome)")
         .in("tipo", ["VENDA", "PDV", "Afiliado"])
+        .or("status_aprovacao.neq.Pendente,status_aprovacao.is.null")
         .order("created_at", { ascending: false })
         .limit(5);
 

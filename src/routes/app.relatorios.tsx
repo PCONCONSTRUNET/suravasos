@@ -64,7 +64,8 @@ function Relatorios() {
       const { data } = await supabase
         .from("vendas")
         .select("*, clientes(nome)")
-        .in("tipo", ["VENDA", "PDV"]);
+        .in("tipo", ["VENDA", "PDV"])
+        .or("status_aprovacao.neq.Pendente,status_aprovacao.is.null");
       if (data) setVendas(data);
       setLoading(false);
     }
