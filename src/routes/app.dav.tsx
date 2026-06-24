@@ -142,7 +142,9 @@ function DAVList() {
                      </svg>
                    </Button>
                    <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" asChild>
-                     <Link to={`/app/imprimir-dav/${v.id}`} target="_blank"><Printer className="h-4 w-4" /></Link>
+                     <Link to="/orcamento/$id" params={{ id: v.id }}>
+                       <Printer className="h-4 w-4" />
+                     </Link>
                    </Button>
                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(v.id)}>
                      <Trash2 className="h-4 w-4" />
@@ -218,9 +220,9 @@ function DAVList() {
                  </svg>
                 Enviar WhatsApp
               </Button>
-              <Button className="flex-1 bg-slate-900" asChild>
-                <Link to={`/orcamento/${selectedDav?.id}`} target="_blank">
-                  Imprimir PDF
+              <Button className="flex-1 bg-brand text-white hover:bg-brand/90" asChild>
+                <Link to="/orcamento/$id" params={{ id: selectedDav?.id }}>
+                  <Printer className="h-4 w-4 mr-2" /> Imprimir / PDF
                 </Link>
               </Button>
             </div>

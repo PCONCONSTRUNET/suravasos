@@ -253,7 +253,7 @@ function Vendas() {
                 Enviar WhatsApp
               </Button>
               <Button className="flex-1 bg-slate-900" asChild>
-                <Link to={`/orcamento/${selectedVenda?.id}`} target="_blank">
+                <Link to="/orcamento/$id" params={{ id: selectedVenda?.id }}>
                   Imprimir PDF
                 </Link>
               </Button>
