@@ -9,7 +9,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/app/vendas")({
   head: () => ({ meta: [{ title: "Vendas — VIVAVERDE ERP" }] }),

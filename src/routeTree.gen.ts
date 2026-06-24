@@ -18,8 +18,10 @@ import { Route as ParceiroPdvRouteImport } from './routes/parceiro.pdv'
 import { Route as ParceiroLoginRouteImport } from './routes/parceiro.login'
 import { Route as ParceiroDashboardRouteImport } from './routes/parceiro.dashboard'
 import { Route as ParceiroCadastroRouteImport } from './routes/parceiro.cadastro'
+import { Route as OrcamentoIdRouteImport } from './routes/orcamento.$id'
 import { Route as DeclaracaoIdRouteImport } from './routes/declaracao.$id'
 import { Route as AppVendedoresRouteImport } from './routes/app.vendedores'
+import { Route as AppVendasParceirosRouteImport } from './routes/app.vendas-parceiros'
 import { Route as AppVendasRouteImport } from './routes/app.vendas'
 import { Route as AppVendaNovaRouteImport } from './routes/app.venda-nova'
 import { Route as AppRelatoriosRouteImport } from './routes/app.relatorios'
@@ -89,6 +91,11 @@ const ParceiroCadastroRoute = ParceiroCadastroRouteImport.update({
   path: '/cadastro',
   getParentRoute: () => ParceiroRoute,
 } as any)
+const OrcamentoIdRoute = OrcamentoIdRouteImport.update({
+  id: '/orcamento/$id',
+  path: '/orcamento/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DeclaracaoIdRoute = DeclaracaoIdRouteImport.update({
   id: '/declaracao/$id',
   path: '/declaracao/$id',
@@ -97,6 +104,11 @@ const DeclaracaoIdRoute = DeclaracaoIdRouteImport.update({
 const AppVendedoresRoute = AppVendedoresRouteImport.update({
   id: '/vendedores',
   path: '/vendedores',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppVendasParceirosRoute = AppVendasParceirosRouteImport.update({
+  id: '/vendas-parceiros',
+  path: '/vendas-parceiros',
   getParentRoute: () => AppRoute,
 } as any)
 const AppVendasRoute = AppVendasRouteImport.update({
@@ -243,8 +255,10 @@ export interface FileRoutesByFullPath {
   '/app/relatorios': typeof AppRelatoriosRoute
   '/app/venda-nova': typeof AppVendaNovaRoute
   '/app/vendas': typeof AppVendasRoute
+  '/app/vendas-parceiros': typeof AppVendasParceirosRoute
   '/app/vendedores': typeof AppVendedoresRoute
   '/declaracao/$id': typeof DeclaracaoIdRoute
+  '/orcamento/$id': typeof OrcamentoIdRoute
   '/parceiro/cadastro': typeof ParceiroCadastroRoute
   '/parceiro/dashboard': typeof ParceiroDashboardRoute
   '/parceiro/login': typeof ParceiroLoginRoute
@@ -278,8 +292,10 @@ export interface FileRoutesByTo {
   '/app/relatorios': typeof AppRelatoriosRoute
   '/app/venda-nova': typeof AppVendaNovaRoute
   '/app/vendas': typeof AppVendasRoute
+  '/app/vendas-parceiros': typeof AppVendasParceirosRoute
   '/app/vendedores': typeof AppVendedoresRoute
   '/declaracao/$id': typeof DeclaracaoIdRoute
+  '/orcamento/$id': typeof OrcamentoIdRoute
   '/parceiro/cadastro': typeof ParceiroCadastroRoute
   '/parceiro/dashboard': typeof ParceiroDashboardRoute
   '/parceiro/login': typeof ParceiroLoginRoute
@@ -315,8 +331,10 @@ export interface FileRoutesById {
   '/app/relatorios': typeof AppRelatoriosRoute
   '/app/venda-nova': typeof AppVendaNovaRoute
   '/app/vendas': typeof AppVendasRoute
+  '/app/vendas-parceiros': typeof AppVendasParceirosRoute
   '/app/vendedores': typeof AppVendedoresRoute
   '/declaracao/$id': typeof DeclaracaoIdRoute
+  '/orcamento/$id': typeof OrcamentoIdRoute
   '/parceiro/cadastro': typeof ParceiroCadastroRoute
   '/parceiro/dashboard': typeof ParceiroDashboardRoute
   '/parceiro/login': typeof ParceiroLoginRoute
@@ -353,8 +371,10 @@ export interface FileRouteTypes {
     | '/app/relatorios'
     | '/app/venda-nova'
     | '/app/vendas'
+    | '/app/vendas-parceiros'
     | '/app/vendedores'
     | '/declaracao/$id'
+    | '/orcamento/$id'
     | '/parceiro/cadastro'
     | '/parceiro/dashboard'
     | '/parceiro/login'
@@ -388,8 +408,10 @@ export interface FileRouteTypes {
     | '/app/relatorios'
     | '/app/venda-nova'
     | '/app/vendas'
+    | '/app/vendas-parceiros'
     | '/app/vendedores'
     | '/declaracao/$id'
+    | '/orcamento/$id'
     | '/parceiro/cadastro'
     | '/parceiro/dashboard'
     | '/parceiro/login'
@@ -424,8 +446,10 @@ export interface FileRouteTypes {
     | '/app/relatorios'
     | '/app/venda-nova'
     | '/app/vendas'
+    | '/app/vendas-parceiros'
     | '/app/vendedores'
     | '/declaracao/$id'
+    | '/orcamento/$id'
     | '/parceiro/cadastro'
     | '/parceiro/dashboard'
     | '/parceiro/login'
@@ -439,6 +463,7 @@ export interface RootRouteChildren {
   CatalogoRoute: typeof CatalogoRoute
   ParceiroRoute: typeof ParceiroRouteWithChildren
   DeclaracaoIdRoute: typeof DeclaracaoIdRoute
+  OrcamentoIdRoute: typeof OrcamentoIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -506,6 +531,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ParceiroCadastroRouteImport
       parentRoute: typeof ParceiroRoute
     }
+    '/orcamento/$id': {
+      id: '/orcamento/$id'
+      path: '/orcamento/$id'
+      fullPath: '/orcamento/$id'
+      preLoaderRoute: typeof OrcamentoIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/declaracao/$id': {
       id: '/declaracao/$id'
       path: '/declaracao/$id'
@@ -518,6 +550,13 @@ declare module '@tanstack/react-router' {
       path: '/vendedores'
       fullPath: '/app/vendedores'
       preLoaderRoute: typeof AppVendedoresRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/vendas-parceiros': {
+      id: '/app/vendas-parceiros'
+      path: '/vendas-parceiros'
+      fullPath: '/app/vendas-parceiros'
+      preLoaderRoute: typeof AppVendasParceirosRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/vendas': {
@@ -708,6 +747,7 @@ interface AppRouteChildren {
   AppRelatoriosRoute: typeof AppRelatoriosRoute
   AppVendaNovaRoute: typeof AppVendaNovaRoute
   AppVendasRoute: typeof AppVendasRoute
+  AppVendasParceirosRoute: typeof AppVendasParceirosRoute
   AppVendedoresRoute: typeof AppVendedoresRoute
   AppIndexRoute: typeof AppIndexRoute
 }
@@ -736,6 +776,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppRelatoriosRoute: AppRelatoriosRoute,
   AppVendaNovaRoute: AppVendaNovaRoute,
   AppVendasRoute: AppVendasRoute,
+  AppVendasParceirosRoute: AppVendasParceirosRoute,
   AppVendedoresRoute: AppVendedoresRoute,
   AppIndexRoute: AppIndexRoute,
 }
@@ -766,6 +807,7 @@ const rootRouteChildren: RootRouteChildren = {
   CatalogoRoute: CatalogoRoute,
   ParceiroRoute: ParceiroRouteWithChildren,
   DeclaracaoIdRoute: DeclaracaoIdRoute,
+  OrcamentoIdRoute: OrcamentoIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
