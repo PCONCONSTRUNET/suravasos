@@ -67,12 +67,18 @@ function PDV() {
 
   const puxarOrcamento = async (orcamento: any) => {
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('vendas_itens')
-        .select('*, produto:produtos(nome, estoque, valor_venda, valor, emoji)')
+        .select('*, produto:produtos(nome, estoque, valor, emoji)')
         .eq('venda_id', orcamento.id);
 
-      if (data) {
+      if (error) {
+        console.error(error);
+        alert("Erro no banco de dados ao puxar os itens: " + error.message);
+        return;
+      }
+
+      if (data && data.length > 0) {
         const novoCarrinho = data.map(item => ({
           id: item.produto_id,
           p: item.produto?.nome || 'Produto não encontrado',
@@ -88,9 +94,11 @@ function PDV() {
           setClienteSelecionado({ id: orcamento.cliente_id, nome: orcamento.cliente.nome });
         }
         setIsOrcamentoModalOpen(false);
+      } else {
+        alert("Nenhum item encontrado neste orçamento.");
       }
-    } catch (e) {
-      alert("Erro ao puxar itens do orçamento.");
+    } catch (e: any) {
+      alert("Erro ao puxar itens do orçamento: " + e.message);
     }
   };
 
