@@ -263,7 +263,7 @@ function PublicCatalogo() {
                       <Button onClick={() => updateQuantity(p.id, 1)} size="icon" variant="ghost" className="h-8 w-8 bg-white shadow-sm shrink-0 hover:bg-white text-lg font-medium">+</Button>
                     </div>
                   ) : (
-                    <Button onClick={() => addToCart(p)} className="w-full bg-brand text-primary-foreground hover:bg-brand/90 h-11 text-base font-semibold shadow-sm">
+                    <Button onClick={() => addToCart(p)} className="w-full bg-success text-success-foreground hover:bg-success/90 h-11 text-base font-semibold shadow-sm">
                       <ShoppingCart className="mr-2 h-5 w-5" /> 
                       Adicionar
                     </Button>
