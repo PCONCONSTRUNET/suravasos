@@ -43,6 +43,5 @@ export default defineConfig({
   nitro: {
     preset: "vercel",
     traceDeps: ["tslib", "@supabase/supabase-js"],
-    errorHandler: "./nitro-error.ts",
   } as any,
 });
