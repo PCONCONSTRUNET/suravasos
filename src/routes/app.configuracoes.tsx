@@ -21,16 +21,17 @@ function Configuracoes() {
   const confirm = useConfirm();
   const [savingProfile, setSavingProfile] = useState(false);
   const [perfil, setPerfil] = useState({
-    razao_social: "VIVAVERDE Distribuidora de Vasos e Acessórios Ltda",
-    cnpj: "12.345.678/0001-99",
-    inscricao_estadual: "123.456.789.012",
-    regime_tributario: "Simples Nacional",
-    endereco: "Rod. Marechal Rondon, KM 342 — Bauru/SP",
-    telefone: "(14) 3344-5566",
-    email_contato: "contato@vivaverde.com.br",
+    razao_social: "",
+    cnpj: "",
+    inscricao_estadual: "",
+    regime_tributario: "",
+    endereco: "",
+    telefone: "",
+    email_contato: "",
   });
   const [users, setUsers] = useState<any[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
+  const [loadingConfigs, setLoadingConfigs] = useState(true);
 
   const [novoUserNome, setNovoUserNome] = useState("");
   const [novoUserEmail, setNovoUserEmail] = useState("");
@@ -69,6 +70,8 @@ function Configuracoes() {
         }
       } catch (err) {
         console.error("Erro ao carregar configurações", err);
+      } finally {
+        setLoadingConfigs(false);
       }
     };
     fetchConfigs();
@@ -203,7 +206,14 @@ function Configuracoes() {
             <CardHeader>
               <CardTitle>Dados da Empresa (Emissor NF-e)</CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
+            <CardContent>
+              {loadingConfigs ? (
+                <div className="flex justify-center items-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  <span className="ml-3 text-muted-foreground">Carregando dados...</span>
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <Label>Razão Social</Label>
                 <Input
@@ -269,6 +279,8 @@ function Configuracoes() {
                   {savingProfile ? "Salvando..." : "Salvar alterações"}
                 </Button>
               </div>
+              </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
