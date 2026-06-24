@@ -102,14 +102,41 @@ function ParceiroPDV() {
     try {
       // 1. Cria ou busca o cliente
       let finalClienteId = null;
-      const { data: clienteData, error: clienteError } = await supabase.from('clientes').insert([{
-        nome: clientForm.nome,
-        cpf_cnpj: clientForm.documento,
-        telefone: clientForm.telefone
-      }]).select().single();
+      
+      // Se o cliente digitou um documento, tenta buscar primeiro para não duplicar
+      if (clientForm.documento && clientForm.documento.trim() !== '') {
+        const { data: existingClient } = await supabase
+          .from('clientes')
+          .select('id')
+          .eq('cpf_cnpj', clientForm.documento.trim())
+          .maybeSingle();
+          
+        if (existingClient) {
+          finalClienteId = existingClient.id;
+        }
+      }
 
-      if (!clienteError && clienteData) {
-        finalClienteId = clienteData.id;
+      // Se não encontrou o cliente, tenta criar um novo
+      if (!finalClienteId) {
+        const payload: any = { nome: clientForm.nome };
+        if (clientForm.documento && clientForm.documento.trim() !== '') {
+          payload.cpf_cnpj = clientForm.documento.trim();
+        }
+        if (clientForm.telefone && clientForm.telefone.trim() !== '') {
+          payload.telefone = clientForm.telefone.trim();
+        }
+
+        const { data: clienteData, error: clienteError } = await supabase
+          .from('clientes')
+          .insert([payload])
+          .select()
+          .maybeSingle();
+
+        if (clienteData) {
+          finalClienteId = clienteData.id;
+        } else if (clienteError) {
+          console.error("Erro ao criar cliente pelo parceiro:", clienteError);
+        }
       }
 
       // 2. Cria a venda pendente
