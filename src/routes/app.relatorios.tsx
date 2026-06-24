@@ -24,7 +24,7 @@ function Relatorios() {
 
   useEffect(() => {
     async function fetchVendas() {
-      const { data } = await supabase.from('vendas').select('*').in('tipo', ['VENDA', 'PDV']);
+      const { data } = await supabase.from('vendas').select('*, clientes(nome)').in('tipo', ['VENDA', 'PDV']);
       if (data) setVendas(data);
       setLoading(false);
     }
@@ -35,31 +35,55 @@ function Relatorios() {
   const totalPedidos = vendas.length;
   const ticketMedio = totalPedidos > 0 ? totalFaturamento / totalPedidos : 0;
 
-  // Dados dinâmicos baseados no filtro selecionado
   const getChartData = () => {
-    const baseJunho = totalFaturamento > 0 ? totalFaturamento + 24000 : 24000;
-    switch (periodo) {
-      case "7d":
-        return [
-          { m: "Seg", v: 1200 }, { m: "Ter", v: 900 }, { m: "Qua", v: 1500 },
-          { m: "Qui", v: 2100 }, { m: "Sex", v: 1800 }, { m: "Sáb", v: 800 }, { m: "Dom", v: 400 }
-        ];
-      case "30d":
-        return [
-          { m: "Sem 1", v: 4500 }, { m: "Sem 2", v: 6200 }, { m: "Sem 3", v: 5100 }, { m: "Sem 4", v: 8200 }
-        ];
-      case "1y":
-        return [
-          { m: "Jan", v: 12.5 }, { m: "Fev", v: 14.2 }, { m: "Mar", v: 11 }, { m: "Abr", v: 18 },
-          { m: "Mai", v: 22 }, { m: "Jun", v: baseJunho / 1000 }, { m: "Jul", v: 15 }, { m: "Ago", v: 19 },
-          { m: "Set", v: 24 }, { m: "Out", v: 28 }, { m: "Nov", v: 35 }, { m: "Dez", v: 42 }
-        ].map(d => ({ m: d.m, v: d.v * 1000 }));
-      case "6m":
-      default:
-        return [
-          { m: "Jan", v: 12500 }, { m: "Fev", v: 14200 }, { m: "Mar", v: 11000 },
-          { m: "Abr", v: 18000 }, { m: "Mai", v: 22000 }, { m: "Jun", v: baseJunho }
-        ];
+    if (vendas.length === 0) return [];
+    
+    const sorted = [...vendas].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    
+    if (periodo === '7d' || periodo === '30d') {
+      const days = periodo === '7d' ? 7 : 30;
+      const dataMap = new Map();
+      const now = new Date();
+      for(let i = days - 1; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        const dateStr = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+        dataMap.set(dateStr, { v: 0, c: 0 });
+      }
+      
+      sorted.forEach(v => {
+        const d = new Date(v.created_at);
+        const dateStr = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+        if (dataMap.has(dateStr)) {
+          const curr = dataMap.get(dateStr);
+          dataMap.set(dateStr, { v: curr.v + Number(v.valor_total), c: curr.c + 1 });
+        }
+      });
+      
+      return Array.from(dataMap.entries()).map(([m, data]) => ({ m, v: data.v, c: data.c }));
+    } else {
+      const months = periodo === '6m' ? 6 : 12;
+      const dataMap = new Map();
+      const now = new Date();
+      for(let i = months - 1; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const monthStr = d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
+        // capitalize first letter
+        const formattedMonth = monthStr.charAt(0).toUpperCase() + monthStr.slice(1);
+        dataMap.set(formattedMonth, { v: 0, c: 0 });
+      }
+      
+      sorted.forEach(v => {
+        const d = new Date(v.created_at);
+        const monthStr = d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
+        const formattedMonth = monthStr.charAt(0).toUpperCase() + monthStr.slice(1);
+        if (dataMap.has(formattedMonth)) {
+          const curr = dataMap.get(formattedMonth);
+          dataMap.set(formattedMonth, { v: curr.v + Number(v.valor_total), c: curr.c + 1 });
+        }
+      });
+      
+      return Array.from(dataMap.entries()).map(([m, data]) => ({ m, v: data.v, c: data.c }));
     }
   };
 
@@ -142,8 +166,8 @@ function Relatorios() {
               <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                 <XAxis dataKey="m" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `R$${v/1000}k`} />
-                <Tooltip contentStyle={{ borderRadius: 12 }} formatter={(value: any) => [`R$ ${value}`, "Faturamento"]} />
+                <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `R$${v >= 1000 ? (v/1000).toFixed(1) + 'k' : v}`} />
+                <Tooltip contentStyle={{ borderRadius: 12 }} formatter={(value: any) => [`R$ ${Number(value).toFixed(2).replace('.', ',')}`, "Faturamento"]} />
                 <Line type="monotone" dataKey="v" stroke="#166534" strokeWidth={3} dot={{ fill: "#166534", r: 5 }} />
               </LineChart>
             </ResponsiveContainer>
@@ -157,8 +181,8 @@ function Relatorios() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                 <XAxis dataKey="m" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip cursor={false} contentStyle={{ borderRadius: 12 }} />
-                <Bar dataKey="v" fill="#22C55E" radius={[6, 6, 0, 0]} />
+                <Tooltip cursor={false} contentStyle={{ borderRadius: 12 }} formatter={(value: any) => [`${value} pedidos`, "Volume"]} />
+                <Bar dataKey="c" fill="#22C55E" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -196,23 +220,29 @@ function Relatorios() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Data</TableHead>
-                  <TableHead>Ref / Lançamento</TableHead>
-                  <TableHead>Classificação</TableHead>
+                  <TableHead>Operação</TableHead>
+                  <TableHead>Cliente/Info</TableHead>
                   <TableHead className="text-right">Valor</TableHead>
                   <TableHead className="text-right">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                  <TableRow key={i}>
-                    <TableCell>0{i}/06/2026</TableCell>
-                    <TableCell className="font-medium">Registro Operacional #{3400 + i * 7}</TableCell>
-                    <TableCell>{selectedReport?.replace("Relatório de ", "") || "Geral"}</TableCell>
+                {loading ? (
+                  <TableRow><TableCell colSpan={5} className="text-center py-4">Carregando...</TableCell></TableRow>
+                ) : vendas.length === 0 ? (
+                  <TableRow><TableCell colSpan={5} className="text-center py-4 text-muted-foreground">Nenhuma venda registrada.</TableCell></TableRow>
+                ) : vendas.map((v) => (
+                  <TableRow key={v.id}>
+                    <TableCell>{new Date(v.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell className="font-medium">{v.tipo} #{v.id.substring(0,8).toUpperCase()}</TableCell>
+                    <TableCell>{v.clientes?.nome || "Consumidor Final"}</TableCell>
                     <TableCell className="text-right font-medium">
-                      R$ {(Math.random() * 800 + 50).toFixed(2)}
+                      R$ {Number(v.valor_total).toFixed(2).replace('.', ',')}
                     </TableCell>
                     <TableCell className="text-right">
-                      <span className="px-2 py-0.5 bg-success/10 text-success rounded-full text-[10px] uppercase font-bold tracking-wider">OK</span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-bold tracking-wider ${v.status === 'Pago' || v.status === 'Faturado' ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
+                        {v.status}
+                      </span>
                     </TableCell>
                   </TableRow>
                 ))}
