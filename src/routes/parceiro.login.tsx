@@ -7,6 +7,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { VivaverdeLogo } from "@/components/vivaverde-logo";
 
 export const Route = createFileRoute("/parceiro/login")({
+  beforeLoad: async () => {
+    if (typeof window !== 'undefined') {
+      await supabase.auth.signOut();
+    }
+  },
   head: () => ({ meta: [{ title: "Login Parceiro — VIVAVERDE" }] }),
   component: LoginParceiro,
 });
