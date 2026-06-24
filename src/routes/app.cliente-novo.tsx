@@ -31,6 +31,29 @@ function NovoCliente() {
     status: "Ativo"
   });
 
+  const formatCpfCnpj = (v: string) => {
+    v = v.replace(/\D/g, "");
+    if (v.length <= 11) {
+      return v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, "$1.$2.$3-$4");
+    } else {
+      return v.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{1,2})/, "$1.$2.$3/$4-$5").substring(0, 18);
+    }
+  };
+
+  const formatTelefone = (v: string) => {
+    v = v.replace(/\D/g, "");
+    if (v.length <= 10) {
+      return v.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
+    } else {
+      return v.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3").substring(0, 15);
+    }
+  };
+
+  const formatCep = (v: string) => {
+    v = v.replace(/\D/g, "");
+    return v.replace(/(\d{5})(\d{3})/, "$1-$2").substring(0, 9);
+  };
+
   const handleSalvar = async () => {
     if (!cliente.nome) {
       alert("Preencha o nome do cliente.");
@@ -64,7 +87,10 @@ function NovoCliente() {
       if (error && error.message && error.message.includes("Could not find the")) {
          console.warn("Retrying insert with safe fields due to schema error:", error);
          const safePayload = {
-            ...rest,
+            nome: cliente.nome,
+            cpf_cnpj: cliente.cpf_cnpj,
+            telefone: cliente.telefone,
+            status: cliente.status,
             endereco: [enderecoCompleto, cidade, uf].filter(Boolean).join(' - ') || null
          };
          const retry = await supabase.from('clientes').insert([safePayload]);
@@ -102,14 +128,14 @@ function NovoCliente() {
             </div>
             <div className="space-y-2">
               <Label>CPF / CNPJ (Opcional)</Label>
-              <Input value={cliente.cpf_cnpj} onChange={e => setCliente({...cliente, cpf_cnpj: e.target.value})} placeholder="000.000.000-00" />
+              <Input value={cliente.cpf_cnpj} onChange={e => setCliente({...cliente, cpf_cnpj: formatCpfCnpj(e.target.value)})} placeholder="000.000.000-00 ou 00.000.000/0000-00" />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Telefone</Label>
-              <Input value={cliente.telefone} onChange={e => setCliente({...cliente, telefone: e.target.value})} placeholder="(11) 90000-0000" />
+              <Input value={cliente.telefone} onChange={e => setCliente({...cliente, telefone: formatTelefone(e.target.value)})} placeholder="(00) 00000-0000" />
             </div>
             <div className="space-y-2">
               <Label>Status</Label>
@@ -131,7 +157,7 @@ function NovoCliente() {
             <div className="grid grid-cols-4 gap-4">
               <div className="space-y-2 col-span-1">
                 <Label>CEP</Label>
-                <Input value={cliente.cep} onChange={e => setCliente({...cliente, cep: e.target.value})} placeholder="00000-000" />
+                <Input value={cliente.cep} onChange={e => setCliente({...cliente, cep: formatCep(e.target.value)})} placeholder="00000-000" />
               </div>
               <div className="space-y-2 col-span-3">
                 <Label>Logradouro / Endereço</Label>
@@ -142,7 +168,7 @@ function NovoCliente() {
             <div className="grid grid-cols-4 gap-4">
                <div className="space-y-2 col-span-1">
                 <Label>Número</Label>
-                <Input value={cliente.numero} onChange={e => setCliente({...cliente, numero: e.target.value})} placeholder="123" />
+                <Input value={cliente.numero} onChange={e => setCliente({...cliente, numero: e.target.value})} placeholder="Ex: 123 ou SN" />
               </div>
               <div className="space-y-2 col-span-1">
                 <Label>Bairro</Label>
