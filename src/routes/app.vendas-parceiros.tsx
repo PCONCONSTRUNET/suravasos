@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Search, CheckCircle, Store, Banknote } from "lucide-react";
@@ -21,6 +22,11 @@ function VendasParceiros() {
   const [filtro, setFiltro] = useState("");
   const [filtroStatusVenda, setFiltroStatusVenda] = useState("Todos");
   const [filtroStatusComissao, setFiltroStatusComissao] = useState("Todos");
+
+  const [isSaleDetailsOpen, setIsSaleDetailsOpen] = useState(false);
+  const [selectedSaleForDetails, setSelectedSaleForDetails] = useState<any>(null);
+  const [saleItems, setSaleItems] = useState<any[]>([]);
+  const [loadingSaleDetails, setLoadingSaleDetails] = useState(false);
 
   const fetchVendas = async () => {
     try {
@@ -44,6 +50,26 @@ function VendasParceiros() {
   useEffect(() => {
     fetchVendas();
   }, []);
+
+  const openSaleDetails = async (sale: any) => {
+    setSelectedSaleForDetails(sale);
+    setIsSaleDetailsOpen(true);
+    setLoadingSaleDetails(true);
+    setSaleItems([]);
+    try {
+      const { data, error } = await supabase
+        .from('vendas_itens')
+        .select('*, produto:produtos(nome, emoji)')
+        .eq('venda_id', sale.id);
+      if (!error && data) {
+        setSaleItems(data);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingSaleDetails(false);
+    }
+  };
 
   const handlePagarComissao = async (id: string, vendedor_id: string, valorComissao: number) => {
     if (!confirm("Confirmar o pagamento desta comissão ao parceiro?")) return;
@@ -144,7 +170,7 @@ function VendasParceiros() {
             ) : vendasFiltradas.length === 0 ? (
               <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Nenhuma venda de parceiro encontrada.</TableCell></TableRow>
             ) : vendasFiltradas.map((v) => (
-              <TableRow key={v.id}>
+              <TableRow key={v.id} className="cursor-pointer hover:bg-muted/50" onClick={() => openSaleDetails(v)}>
                 <TableCell>
                   <p className="font-mono text-xs font-medium">#{v.id.substring(0,8).toUpperCase()}</p>
                   <p className="text-xs text-muted-foreground">{new Date(v.created_at).toLocaleDateString()}</p>
@@ -199,6 +225,58 @@ function VendasParceiros() {
           </TableBody>
         </Table>
       </Card>
+
+      <Dialog open={isSaleDetailsOpen} onOpenChange={setIsSaleDetailsOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Detalhes do Pedido</DialogTitle>
+            <DialogDescription asChild>
+              <div>
+                Pedido #{selectedSaleForDetails?.id?.substring(0,6).toUpperCase()} • Vendedor: {selectedSaleForDetails?.vendedor?.nome || 'Desconhecido'}
+                {selectedSaleForDetails?.cliente?.nome && (
+                  <div className="mt-3 text-sm text-slate-700 bg-slate-100 p-3 rounded-md border border-slate-200">
+                    <p className="font-semibold text-slate-900 flex items-center gap-2">👤 {selectedSaleForDetails.cliente.nome}</p>
+                    {selectedSaleForDetails.cliente.cpf_cnpj && <p className="mt-1">📄 {selectedSaleForDetails.cliente.cpf_cnpj}</p>}
+                    {selectedSaleForDetails.cliente.telefone && <p className="mt-1">📞 {selectedSaleForDetails.cliente.telefone}</p>}
+                    {selectedSaleForDetails.cliente.endereco && <p className="mt-1">🏠 {selectedSaleForDetails.cliente.endereco}</p>}
+                  </div>
+                )}
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            {loadingSaleDetails ? (
+              <div className="text-center py-6 text-muted-foreground">Carregando itens...</div>
+            ) : (
+              <div className="space-y-4">
+                <div className="max-h-[300px] overflow-y-auto divide-y border rounded-lg">
+                  {saleItems.length === 0 ? (
+                    <div className="p-4 text-center text-sm text-muted-foreground">Nenhum item encontrado.</div>
+                  ) : saleItems.map(item => (
+                    <div key={item.id} className="flex items-center justify-between p-3 bg-slate-50/50">
+                      <div className="flex items-center gap-3">
+                        <div className="text-2xl">{item.produto?.emoji || "📦"}</div>
+                        <div>
+                          <p className="font-semibold text-sm text-slate-800">{item.produto?.nome || 'Produto Excluído'}</p>
+                          <p className="text-xs text-muted-foreground">{item.quantidade}x R$ {Number(item.valor_unitario).toFixed(2)}</p>
+                        </div>
+                      </div>
+                      <p className="font-bold text-brand">R$ {Number(item.subtotal).toFixed(2)}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex justify-between items-center p-4 bg-slate-100 rounded-lg">
+                  <span className="font-semibold text-slate-700">Total do Pedido:</span>
+                  <span className="text-xl font-bold font-display text-slate-900">R$ {Number(selectedSaleForDetails?.valor_total || 0).toFixed(2)}</span>
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsSaleDetailsOpen(false)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
