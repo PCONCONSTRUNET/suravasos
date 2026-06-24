@@ -363,7 +363,7 @@ function ParceiroPDV() {
 
       {/* Modal de Sucesso */}
       <Dialog open={isSuccessModalOpen} onOpenChange={closeSuccessModal}>
-        <DialogContent className="sm:max-w-[425px] text-center">
+        <DialogContent className="w-[90vw] sm:max-w-[425px] rounded-2xl text-center">
           <div className="flex flex-col items-center justify-center space-y-4 py-4">
             <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center">
               <CheckCircle2 className="w-8 h-8" />
@@ -391,7 +391,7 @@ function ParceiroPDV() {
 
       {/* Modal do Cliente */}
       <Dialog open={isClientModalOpen} onOpenChange={setIsClientModalOpen}>
-        <DialogContent className="sm:max-w-[500px] h-[85vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] max-w-[500px] max-h-[90vh] overflow-y-auto rounded-2xl p-5 sm:p-6">
           <form onSubmit={submitOrder}>
             <DialogHeader>
               <DialogTitle>Finalizar Geração de Orçamento / Pedido</DialogTitle>
