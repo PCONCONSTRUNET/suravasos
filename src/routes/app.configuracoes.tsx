@@ -160,13 +160,13 @@ function Configuracoes() {
           <Card className="shadow-card">
             <CardHeader><CardTitle>Dados da Empresa (Emissor NF-e)</CardTitle></CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
-              <div><Label>Razão Social</Label><Input className="mt-1.5" value={perfil.razao_social} onChange={e => setPerfil(p => ({...p, razao_social: e.target.value}))} /></div>
-              <div><Label>CNPJ</Label><Input className="mt-1.5" value={perfil.cnpj} onChange={e => setPerfil(p => ({...p, cnpj: e.target.value}))} /></div>
-              <div><Label>Inscrição Estadual</Label><Input className="mt-1.5" value={perfil.inscricao_estadual} onChange={e => setPerfil(p => ({...p, inscricao_estadual: e.target.value}))} /></div>
-              <div><Label>Regime Tributário</Label><Input className="mt-1.5" value={perfil.regime_tributario} onChange={e => setPerfil(p => ({...p, regime_tributario: e.target.value}))} /></div>
-              <div className="md:col-span-2"><Label>Endereço</Label><Input className="mt-1.5" value={perfil.endereco} onChange={e => setPerfil(p => ({...p, endereco: e.target.value}))} /></div>
-              <div><Label>Telefone</Label><Input className="mt-1.5" value={perfil.telefone} onChange={e => setPerfil(p => ({...p, telefone: e.target.value}))} /></div>
-              <div><Label>E-mail de Contato</Label><Input className="mt-1.5" value={perfil.email_contato} onChange={e => setPerfil(p => ({...p, email_contato: e.target.value}))} /></div>
+              <div><Label>Razão Social</Label><Input className="mt-1.5" value={perfil.razao_social || ""} onChange={e => setPerfil(p => ({...p, razao_social: e.target.value}))} /></div>
+              <div><Label>CNPJ</Label><Input className="mt-1.5" value={perfil.cnpj || ""} onChange={e => setPerfil(p => ({...p, cnpj: e.target.value}))} /></div>
+              <div><Label>Inscrição Estadual</Label><Input className="mt-1.5" value={perfil.inscricao_estadual || ""} onChange={e => setPerfil(p => ({...p, inscricao_estadual: e.target.value}))} /></div>
+              <div><Label>Regime Tributário</Label><Input className="mt-1.5" value={perfil.regime_tributario || ""} onChange={e => setPerfil(p => ({...p, regime_tributario: e.target.value}))} /></div>
+              <div className="md:col-span-2"><Label>Endereço</Label><Input className="mt-1.5" value={perfil.endereco || ""} onChange={e => setPerfil(p => ({...p, endereco: e.target.value}))} /></div>
+              <div><Label>Telefone</Label><Input className="mt-1.5" value={perfil.telefone || ""} onChange={e => setPerfil(p => ({...p, telefone: e.target.value}))} /></div>
+              <div><Label>E-mail de Contato</Label><Input className="mt-1.5" value={perfil.email_contato || ""} onChange={e => setPerfil(p => ({...p, email_contato: e.target.value}))} /></div>
               <div className="md:col-span-2 flex justify-end">
                 <Button onClick={handleSaveSettings} disabled={savingProfile} className="bg-gradient-brand text-primary-foreground">
                   {savingProfile ? "Salvando..." : "Salvar alterações"}
@@ -207,11 +207,11 @@ function Configuracoes() {
                 <div key={u.id} className="flex items-center justify-between rounded-xl border p-4 hover:bg-accent/50 transition-colors">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="h-10 w-10 rounded-full bg-gradient-brand grid place-items-center text-sm font-bold text-primary-foreground shrink-0">
-                      {u.nome?.split(" ").map((x: string) => x[0]).join("").substring(0,2).toUpperCase()}
+                      {u.nome ? u.nome.split(" ").map((x: string) => x[0]).join("").substring(0,2).toUpperCase() : "US"}
                     </div>
                     <div className="min-w-0">
-                      <p className="font-semibold truncate">{u.nome}</p>
-                      <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                      <p className="font-semibold truncate">{u.nome || "Sem Nome"}</p>
+                      <p className="text-xs text-muted-foreground truncate">{u.email || "Sem E-mail"}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
