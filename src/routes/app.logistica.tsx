@@ -142,7 +142,8 @@ function Logistica() {
   };
 
   const pendingVendas = vendas.filter(v => v.status !== 'Entregue');
-  const pending = pendingVendas.length;
+  const pending = vendas.filter(v => v.status === 'Pendente' || v.status === 'PENDENTE').length;
+  const inTransit = vendas.filter(v => v.status === 'Em Transporte' || v.status === 'EM_ROTA').length;
   const delivered = vendas.filter(v => v.status === 'Entregue').length;
 
   const cityCounts: Record<string, number> = {};
@@ -351,7 +352,7 @@ function Logistica() {
         {[
           { l: "Entregas do dia", v: String(vendas.length), i: Truck, c: "text-primary" },
           { l: "Concluídas", v: String(delivered), i: CheckCircle2, c: "text-success" },
-          { l: "Em rota", v: "8", i: Clock, c: "text-info" },
+          { l: "Em rota", v: String(inTransit), i: Clock, c: "text-info" },
           { l: "Pendentes", v: String(pending), i: MapPin, c: "text-warning" },
         ].map((k) => (
           <Card key={k.l} className="shadow-card"><CardContent className="p-5 flex items-center gap-4">
