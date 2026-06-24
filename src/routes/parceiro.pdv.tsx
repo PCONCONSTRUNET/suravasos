@@ -41,7 +41,7 @@ function ParceiroPDV() {
       if (data) {
         setProdutos(data);
         
-        // Verifica se veio um produto mágico pela URL
+        // Verifica se veio um produto mágico pela URL (formato antigo)
         const params = new URLSearchParams(window.location.search);
         const produtoIdMagic = params.get('produto');
         if (produtoIdMagic) {
@@ -49,6 +49,25 @@ function ParceiroPDV() {
           if (magicProduct) {
             setCart([{ id: magicProduct.id, p: magicProduct.nome, q: 1, u: Number(magicProduct.valor), t: Number(magicProduct.valor), emoji: magicProduct.emoji }]);
             // Limpa a URL para não adicionar de novo num refresh
+            window.history.replaceState({}, '', '/parceiro/pdv');
+          }
+        }
+
+        // Novo formato do Carrinho via Catálogo
+        const cartMagic = params.get('c');
+        if (cartMagic) {
+          const parsedCart: any[] = [];
+          const items = cartMagic.split(',');
+          items.forEach(item => {
+            const [id, qStr] = item.split(':');
+            const qty = parseInt(qStr) || 1;
+            const prod = data.find(p => p.id === id);
+            if (prod) {
+              parsedCart.push({ id: prod.id, p: prod.nome, q: qty, u: Number(prod.valor), t: qty * Number(prod.valor), emoji: prod.emoji });
+            }
+          });
+          if (parsedCart.length > 0) {
+            setCart(parsedCart);
             window.history.replaceState({}, '', '/parceiro/pdv');
           }
         }

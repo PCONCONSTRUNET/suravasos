@@ -37,7 +37,29 @@ function PDV() {
   useEffect(() => {
     const fetchProdutos = async () => {
       const { data } = await supabase.from('produtos').select('*').eq('status', 'Ativo');
-      if (data) setProdutos(data);
+      if (data) {
+        setProdutos(data);
+        
+        // Novo formato do Carrinho via Catálogo
+        const params = new URLSearchParams(window.location.search);
+        const cartMagic = params.get('c');
+        if (cartMagic) {
+          const parsedCart: any[] = [];
+          const items = cartMagic.split(',');
+          items.forEach(item => {
+            const [id, qStr] = item.split(':');
+            const qty = parseInt(qStr) || 1;
+            const prod = data.find(p => p.id === id);
+            if (prod) {
+              parsedCart.push({ id: prod.id, p: prod.nome, q: qty, u: Number(prod.valor), t: qty * Number(prod.valor), emoji: prod.emoji, max: prod.estoque });
+            }
+          });
+          if (parsedCart.length > 0) {
+            setCart(parsedCart);
+            window.history.replaceState({}, '', '/app/pdv');
+          }
+        }
+      }
     };
     fetchProdutos();
     fetchOrcamentos();

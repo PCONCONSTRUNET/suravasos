@@ -3,13 +3,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, Check, ChevronsUpDown } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { VivaverdeLogo } from "@/components/vivaverde-logo";
-import { ColorDock } from "@/components/color-dock";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { ShoppingCart, Trash2, Search, Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/catalogo")({
@@ -34,7 +29,43 @@ function PublicCatalogo() {
   const [busca, setBusca] = useState("");
   const [categoriaAtiva, setCategoriaAtiva] = useState<string>("Todas");
   const [openCategoria, setOpenCategoria] = useState(false);
+  const [cart, setCart] = useState<{produto: any, qtd: number}[]>([]);
   const [partner, setPartner] = useState<any>(null);
+
+  const addToCart = (produto: any) => {
+    setCart(prev => {
+      const exists = prev.find(i => i.produto.id === produto.id);
+      if (exists) {
+        return prev.map(i => i.produto.id === produto.id ? { ...i, qtd: i.qtd + 1 } : i);
+      }
+      return [...prev, { produto, qtd: 1 }];
+    });
+  };
+
+  const updateQuantity = (produtoId: string, delta: number) => {
+    setCart(prev => prev.map(i => {
+      if (i.produto.id === produtoId) {
+        const newQtd = i.qtd + delta;
+        if (newQtd <= 0) return i;
+        return { ...i, qtd: newQtd };
+      }
+      return i;
+    }));
+  };
+
+  const setQuantity = (produtoId: string, newQ: number) => {
+    setCart(prev => prev.map(i => {
+      if (i.produto.id === produtoId) {
+        if (newQ <= 0) return i;
+        return { ...i, qtd: newQ };
+      }
+      return i;
+    }));
+  };
+
+  const removeFromCart = (produtoId: string) => {
+    setCart(prev => prev.filter(i => i.produto.id !== produtoId));
+  };
 
   useEffect(() => {
     const fetchProdutos = async () => {
@@ -88,34 +119,35 @@ function PublicCatalogo() {
     return gradients[index % gradients.length];
   };
 
-  const handleBuy = (produto: any) => {
-    const valorFormatado = Number(produto.valor).toFixed(2).replace('.', ',');
+  const finalizeOrder = () => {
+    if (cart.length === 0) return;
     
-    let mensagem = `Olá! Tenho interesse no produto: *${produto.nome}*\n\n`;
+    let mensagem = `Olá! Gostaria de fazer o pedido dos seguintes itens do catálogo:\n\n`;
     
-    if (produto.codigo) mensagem += `*Referência/Código:* ${produto.codigo}\n`;
-    mensagem += `*Valor:* R$ ${valorFormatado}\n`;
-    if (produto.categoria) mensagem += `*Categoria:* ${produto.categoria}\n`;
-    if (produto.numero) mensagem += `*Número:* ${produto.numero}\n`;
-    if (produto.dimensao) mensagem += `*Dimensões:* ${produto.dimensao}\n`;
-    if (produto.volume) mensagem += `*Volume:* ${produto.volume} L\n`;
-    if (produto.comprimento) mensagem += `*Comprimento:* ${produto.comprimento} cm\n`;
-    if (produto.cores && produto.cores.length > 0) {
-      mensagem += `*Cores:* ${produto.cores.join(', ')}\n`;
-    }
-    
-    mensagem += `\nQual o procedimento para compra?`;
+    cart.forEach((item) => {
+      const p = item.produto;
+      const totalItem = item.qtd * Number(p.valor);
+      mensagem += `*${item.qtd}x ${p.nome}*\n`;
+      mensagem += `Valor Un: R$ ${Number(p.valor).toFixed(2).replace('.', ',')} | Total: R$ ${totalItem.toFixed(2).replace('.', ',')}\n`;
+      if (p.codigo) mensagem += `Ref: ${p.codigo}\n`;
+      if (p.cores && p.cores.length > 0) mensagem += `Cores sugeridas: ${p.cores.join(', ')}\n`;
+      mensagem += `\n`;
+    });
+
+    const total = cart.reduce((acc, item) => acc + (item.qtd * Number(item.produto.valor)), 0);
+    mensagem += `*VALOR TOTAL: R$ ${total.toFixed(2).replace('.', ',')}*\n\n`;
+    mensagem += `Qual o procedimento para finalização e pagamento?`;
 
     let telefoneDestino = '5519997331112'; // Telefone padrão do dono
     if (partner && partner.telefone) {
-      // Limpa caracteres especiais do telefone do parceiro
       const numLimpo = partner.telefone.replace(/\D/g, '');
-      if (numLimpo.length >= 10) {
-        telefoneDestino = `55${numLimpo}`;
-      }
+      if (numLimpo.length >= 10) telefoneDestino = `55${numLimpo}`;
       
-      // Adiciona o link mágico para o parceiro gerar o pedido rápido
-      mensagem += `\n\n_Link do Pedido (Para o Vendedor):_\n${window.location.origin}/parceiro/pdv?produto=${produto.id}`;
+      const magicParams = cart.map(c => `${c.produto.id}:${c.qtd}`).join(',');
+      mensagem += `\n\n_Link do Pedido (Apenas Vendedor):_\n${window.location.origin}/parceiro/pdv?c=${magicParams}`;
+    } else {
+      const magicParams = cart.map(c => `${c.produto.id}:${c.qtd}`).join(',');
+      mensagem += `\n\n_Link do Pedido (Administrador):_\n${window.location.origin}/app/pdv?c=${magicParams}`;
     }
     
     const text = encodeURIComponent(mensagem);
@@ -212,16 +244,95 @@ function PublicCatalogo() {
                 </div>
                 
                 <div className="mt-auto">
-                  <Button onClick={() => handleBuy(p)} className="w-full bg-success text-success-foreground hover:bg-success/90 h-11 text-base font-semibold shadow-sm">
-                    <WhatsAppIcon className="mr-2 h-5 w-5" /> 
-                    Comprar
-                  </Button>
+                  {cart.find(c => c.produto.id === p.id) ? (
+                    <div className="flex items-center justify-between bg-slate-100 rounded-lg p-1.5 h-11 border border-slate-200">
+                      <Button onClick={() => updateQuantity(p.id, -1)} size="icon" variant="ghost" className="h-8 w-8 bg-white shadow-sm shrink-0 hover:bg-white text-lg font-medium">−</Button>
+                      <input 
+                        type="number" 
+                        min="1" 
+                        value={cart.find(c => c.produto.id === p.id)?.qtd || ''} 
+                        onChange={(e) => setQuantity(p.id, parseInt(e.target.value) || 1)}
+                        className="w-full text-center font-bold bg-transparent border-0 outline-none p-0 focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                      <Button onClick={() => updateQuantity(p.id, 1)} size="icon" variant="ghost" className="h-8 w-8 bg-white shadow-sm shrink-0 hover:bg-white text-lg font-medium">+</Button>
+                    </div>
+                  ) : (
+                    <Button onClick={() => addToCart(p)} className="w-full bg-brand text-primary-foreground hover:bg-brand/90 h-11 text-base font-semibold shadow-sm">
+                      <ShoppingCart className="mr-2 h-5 w-5" /> 
+                      Adicionar
+                    </Button>
+                  )}
                 </div>
               </div>
             </Card>
           ))}
         </div>
       </main>
+
+      {cart.length > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 shadow-[0_-10px_40px_rgba(0,0,0,0.08)] z-40 flex items-center justify-between lg:px-12 animate-in slide-in-from-bottom-8">
+          <div>
+            <p className="text-sm text-muted-foreground font-medium">{cart.reduce((a,c) => a + c.qtd, 0)} itens no carrinho</p>
+            <p className="text-xl font-bold text-slate-800">R$ {cart.reduce((a,c) => a + (c.qtd * Number(c.produto.valor)), 0).toFixed(2).replace('.', ',')}</p>
+          </div>
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button className="bg-success text-success-foreground hover:bg-success/90 h-12 px-6 shadow-md font-bold text-base rounded-full">
+                <ShoppingCart className="mr-2 h-5 w-5" /> Ver Carrinho
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-full sm:max-w-md flex flex-col p-0 border-l">
+              <SheetHeader className="p-6 border-b bg-slate-50/50">
+                <SheetTitle className="flex items-center gap-2 text-2xl font-display font-bold">
+                  <ShoppingCart className="h-6 w-6 text-brand" /> Seu Carrinho
+                </SheetTitle>
+              </SheetHeader>
+              
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {cart.map((item) => (
+                  <div key={item.produto.id} className="flex gap-4 p-4 bg-white rounded-xl border border-slate-100 shadow-sm relative group">
+                    <button onClick={() => removeFromCart(item.produto.id)} className="absolute -top-2 -right-2 bg-destructive/10 text-destructive p-1.5 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                    <div className="w-16 h-16 bg-slate-50 rounded-lg flex items-center justify-center text-3xl shrink-0">
+                      {item.produto.emoji || "🪴"}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-slate-800 text-sm leading-tight mb-1">{item.produto.nome}</h4>
+                      <p className="text-brand font-bold text-sm mb-3">R$ {Number(item.produto.valor).toFixed(2).replace('.', ',')}</p>
+                      
+                      <div className="flex items-center bg-slate-100 rounded-lg p-1 w-max border border-slate-200">
+                        <button onClick={() => updateQuantity(item.produto.id, -1)} className="h-7 w-7 bg-white rounded shadow-sm flex items-center justify-center font-medium hover:bg-slate-50">−</button>
+                        <input 
+                          type="number" 
+                          min="1" 
+                          value={item.qtd || ''} 
+                          onChange={(e) => setQuantity(item.produto.id, parseInt(e.target.value) || 1)}
+                          className="w-10 text-center text-sm font-bold bg-transparent border-0 outline-none p-0 focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                        <button onClick={() => updateQuantity(item.produto.id, 1)} className="h-7 w-7 bg-white rounded shadow-sm flex items-center justify-center font-medium hover:bg-slate-50">+</button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="p-6 border-t bg-white shadow-[0_-10px_20px_rgba(0,0,0,0.03)] z-10">
+                <div className="flex justify-between items-center mb-6">
+                  <span className="text-slate-500 font-medium text-lg">Total do Pedido</span>
+                  <span className="text-2xl font-bold text-slate-900">
+                    R$ {cart.reduce((a,c) => a + (c.qtd * Number(c.produto.valor)), 0).toFixed(2).replace('.', ',')}
+                  </span>
+                </div>
+                <Button onClick={finalizeOrder} className="w-full h-14 bg-success hover:bg-success/90 text-success-foreground text-lg shadow-md rounded-xl font-bold">
+                  <WhatsAppIcon className="mr-2 h-6 w-6" />
+                  Enviar Pedido
+                </Button>
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+      )}
     </div>
   );
 }
