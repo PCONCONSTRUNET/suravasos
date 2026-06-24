@@ -4,10 +4,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, FileText, Printer, Trash2 } from "lucide-react";
+import { Plus, Search, FileText, Download, Printer, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useConfirm } from "@/contexts/ConfirmContext";
+import { FaWhatsapp } from "react-icons/fa";
 
 export const Route = createFileRoute("/app/dav")({
   head: () => ({ meta: [{ title: "Orçamentos (DAV) — VIVAVERDE ERP" }] }),
@@ -52,6 +53,35 @@ function DAVList() {
     }
   };
 
+  const handleShareWhatsApp = async (venda: any) => {
+    try {
+      const { data: itens } = await supabase.from('vendas_itens').select('*, produtos(nome)').eq('venda_id', venda.id);
+      
+      let msg = `*ORÇAMENTO - VIVAVERDE VASOS*\n`;
+      msg += `Nº: ${venda.id.substring(0, 8).toUpperCase()}\n`;
+      msg += `Data: ${new Date(venda.created_at).toLocaleDateString()}\n\n`;
+      msg += `*ITENS DO ORÇAMENTO:*\n`;
+      
+      if (itens) {
+        itens.forEach(item => {
+           msg += `• ${item.quantidade}x ${item.produtos?.nome || 'Produto'} - R$ ${Number(item.subtotal).toFixed(2).replace('.', ',')}\n`;
+        });
+      }
+      
+      msg += `\n*TOTAL: R$ ${Number(venda.valor_total).toFixed(2).replace('.', ',')}*\n\n`;
+      
+      // Adiciona o link para visualização/PDF online (se estiver publicado, o cliente pode abrir)
+      const linkPdf = `${window.location.origin}/app/imprimir-dav/${venda.id}`;
+      msg += `📄 *Acesse o documento formal em PDF aqui:*\n${linkPdf}`;
+
+      const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+      window.open(url, '_blank');
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao gerar mensagem do WhatsApp");
+    }
+  };
+
   const getTone = (status: string) => {
     if (status === 'Aprovado') return "bg-success/15 text-success border-0";
     if (status === 'Rejeitado') return "bg-destructive/10 text-destructive border-0";
@@ -85,7 +115,12 @@ function DAVList() {
                 <TableCell className="text-right font-semibold">R$ {Number(v.valor_total).toFixed(2).replace('.', ',')}</TableCell>
                 <TableCell><Badge className={getTone(v.status)}>{v.status}</Badge></TableCell>
                 <TableCell className="text-right space-x-2">
-                   <Button variant="ghost" size="icon" className="h-8 w-8 text-primary"><Printer className="h-4 w-4" /></Button>
+                   <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => handleShareWhatsApp(v)}>
+                     <FaWhatsapp className="h-4 w-4 text-green-500" />
+                   </Button>
+                   <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" asChild>
+                     <Link to={`/app/imprimir-dav/${v.id}`} target="_blank"><Printer className="h-4 w-4" /></Link>
+                   </Button>
                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(v.id)}>
                      <Trash2 className="h-4 w-4" />
                    </Button>
