@@ -17,6 +17,16 @@ export const Route = createFileRoute("/parceiro")({
         throw redirect({ to: "/parceiro/login" });
       }
 
+      // Bloqueia o acesso de Administradores (Dono) ao portal de Parceiros
+      const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'douglasalmeida156@hotmail.com';
+      const ADMIN_EMAILS = adminEmail.split(',').map((e: string) => e.trim().toLowerCase()).filter(Boolean);
+      
+      if (session.user.email && ADMIN_EMAILS.includes(session.user.email.toLowerCase())) {
+        // Desloga o admin do cliente do parceiro para limpar o storage fantasma
+        await supabase.auth.signOut();
+        throw redirect({ to: "/app/dashboard" });
+      }
+
       // Verifica se o parceiro está aprovado no sistema
       const { data: vendedor } = await supabase
         .from('vendedores')
