@@ -96,12 +96,14 @@ function ParceiroDashboard() {
             }]);
           } else if (insertError) {
             // Se falhou por conflito (ex: email já existe), significa que o registro já estava lá.
-            // Vamos tentar buscar novamente.
-            const { data: retryData } = await supabase.from('vendedores').select('*').eq('user_id', session.user.id).single();
+            // Isso acontece se o usuário foi deletado do auth mas não da tabela vendedores.
+            // Vamos buscar pelo E-MAIL em vez do user_id, e atualizar o user_id!
+            const { data: retryData } = await supabase.from('vendedores').select('*').eq('email', session.user.email).maybeSingle();
             if (retryData) {
+              await supabase.from('vendedores').update({ user_id: session.user.id }).eq('id', retryData.id);
               setVendedorId(retryData.id);
               setNome(retryData.nome);
-              setStatus(retryData.status || 'Ativo');
+              setStatus(retryData.status || 'Aguardando Aprovação');
             } else {
                // Se falhou mesmo assim, vamos preencher o formulário manual com os metadados
                setNome(newNome);
@@ -130,6 +132,45 @@ function ParceiroDashboard() {
   const aprovadas = vendas.filter(v => v.status_aprovacao === 'Aprovada').length;
 
   if (loading) return <div className="text-center py-10 text-muted-foreground">Carregando painel...</div>;
+
+  if (vendedorId && status === 'Aguardando Aprovação') {
+    return (
+      <div className="flex justify-center py-10 px-4">
+        <Card className="w-full max-w-md border-0 shadow-lg ring-1 ring-slate-900/5">
+          <CardContent className="p-8 text-center space-y-4">
+            <div className="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Clock className="w-10 h-10" />
+            </div>
+            <h2 className="text-2xl font-bold font-display text-slate-800">Conta em Análise</h2>
+            <p className="text-sm text-slate-600">
+              Olá, <strong>{nome}</strong>! Seu cadastro foi recebido com sucesso. Nossa equipe está avaliando sua solicitação de parceria.
+            </p>
+            <p className="text-sm text-muted-foreground pt-4 border-t">
+              Por favor, aguarde nosso contato ou retorne mais tarde para verificar se sua conta foi aprovada.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (vendedorId && status === 'Rejeitado') {
+    return (
+      <div className="flex justify-center py-10 px-4">
+        <Card className="w-full max-w-md border-0 shadow-lg ring-1 ring-slate-900/5">
+          <CardContent className="p-8 text-center space-y-4">
+            <div className="w-20 h-20 bg-destructive/10 text-destructive rounded-full flex items-center justify-center mx-auto mb-4">
+              <XCircle className="w-10 h-10" />
+            </div>
+            <h2 className="text-2xl font-bold font-display text-slate-800">Solicitação Recusada</h2>
+            <p className="text-sm text-slate-600">
+              Olá, <strong>{nome}</strong>. Infelizmente sua solicitação de parceria não foi aprovada neste momento.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const handleCompletarCadastro = async (e: React.FormEvent) => {
     e.preventDefault();

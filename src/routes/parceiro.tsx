@@ -27,22 +27,9 @@ export const Route = createFileRoute("/parceiro")({
         throw redirect({ to: "/app/dashboard" });
       }
 
-      // Verifica se o parceiro está aprovado no sistema
-      const { data: vendedor } = await supabase
-        .from('vendedores')
-        .select('status')
-        .eq('user_id', session.user.id)
-        .maybeSingle();
-
-      if (vendedor && vendedor.status !== 'Ativo') {
-        // Usa sessionStorage para comunicar o bloqueio sem search params
-        sessionStorage.setItem('parceiro_blocked', '1');
-        await supabase.auth.signOut();
-        throw redirect({ to: "/parceiro/login" });
-      }
-
-      // Parceiro está OK — limpa flag de bloqueio se existir
-      sessionStorage.removeItem('parceiro_blocked');
+      // Não bloqueia o acesso globalmente aqui para não deslogar o usuário.
+      // O parceiro.dashboard.tsx vai exibir a tela de "Aguardando Aprovação"
+      // e o parceiro.pdv.tsx vai impedir vendas se não estiver Ativo.
 
     } catch (err: any) {
       // Se o erro é um redirect do TanStack Router, repassa normalmente
