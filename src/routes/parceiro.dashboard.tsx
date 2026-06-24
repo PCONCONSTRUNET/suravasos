@@ -269,7 +269,8 @@ function ParceiroDashboard() {
           variant="outline" 
           className="border-brand/30 text-brand hover:bg-brand/10 shrink-0"
           onClick={() => {
-            const link = `${window.location.origin}/catalogo?p=${vendedorId.substring(0,8)}`;
+            const primeiroNome = nome.split(' ')[0].replace(/[^a-zA-ZÀ-ÿ]/g, '');
+            const link = `${window.location.origin}/catalogo?v=${primeiroNome}`;
             navigator.clipboard.writeText(link);
             alert("Link do catálogo copiado!\n\n" + link);
           }}

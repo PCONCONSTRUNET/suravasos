@@ -43,11 +43,22 @@ function PublicCatalogo() {
       
       const params = new URLSearchParams(window.location.search);
       const p = params.get('p');
-      if (p) {
-        // Busca o parceiro pelo começo do ID
-        const { data: parceiroData } = await supabase.from('vendedores').select('id, nome, telefone').ilike('id', `${p}%`).single();
-        if (parceiroData) {
-          setPartner(parceiroData);
+      const v = params.get('v');
+      const identifier = v || p;
+      
+      if (identifier) {
+        // Busca o parceiro pelo ID (formato antigo) ou pelo Nome (novo formato)
+        let query = supabase.from('vendedores').select('id, nome, telefone').eq('status', 'Ativo');
+        
+        if (identifier.length === 8 && /^[0-9a-fA-F-]+$/.test(identifier)) {
+          query = query.ilike('id', `${identifier}%`);
+        } else {
+          query = query.ilike('nome', `${identifier}%`);
+        }
+
+        const { data: parceiros } = await query.limit(1);
+        if (parceiros && parceiros.length > 0) {
+          setPartner(parceiros[0]);
         }
       }
 
