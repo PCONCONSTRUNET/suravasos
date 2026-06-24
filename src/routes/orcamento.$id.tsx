@@ -12,9 +12,14 @@ function ImprimirDAV() {
   const { id } = Route.useParams();
   const [venda, setVenda] = useState<any>(null);
   const [itens, setItens] = useState<any[]>([]);
+  const [config, setConfig] = useState<any>(null);
 
   useEffect(() => {
     async function loadData() {
+      // Carregar configurações
+      const { data: conf } = await supabase.from("configuracoes").select("*").eq("id", 1).single();
+      if (conf) setConfig(conf);
+
       const { data: v } = await supabase.from("vendas").select("*, clientes(*), vendedor:vendedores(nome)").eq("id", id).single();
       if (v) setVenda(v);
 
@@ -51,10 +56,18 @@ function ImprimirDAV() {
         <div>
           <VivaverdeLogo size="small" />
           <div className="mt-4 text-sm text-slate-600">
-            <p className="font-bold text-slate-900">VIVAVERDE VASOS E SUPORTES</p>
-            <p>CNPJ: 63.874.628/0001-36</p>
-            <p>Rua Bom Jesus, 267 - Paraisolandia</p>
-            <p>Charqueada - SP, 13.519-008</p>
+            <p className="font-bold text-slate-900">{config?.razao_social || "VIVAVERDE VASOS E SUPORTES"}</p>
+            {config?.cnpj && <p>CNPJ: {config.cnpj}</p>}
+            {config?.endereco && <p>{config.endereco}</p>}
+            {config?.telefone && <p>Tel: {config.telefone}</p>}
+            {config?.email_contato && <p>{config.email_contato}</p>}
+            {!config && (
+              <>
+                <p>CNPJ: 63.874.628/0001-36</p>
+                <p>Rua Bom Jesus, 267 - Paraisolandia</p>
+                <p>Charqueada - SP, 13.519-008</p>
+              </>
+            )}
           </div>
         </div>
         <div className="text-right">

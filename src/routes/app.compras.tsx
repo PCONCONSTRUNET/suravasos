@@ -117,7 +117,7 @@ function Compras() {
             ) : compras.map((o) => (
               <TableRow key={o.id} className="cursor-pointer hover:bg-muted/50" onClick={() => handleOpenDetails(o)}>
                 <TableCell className="font-mono text-xs">{o.id.substring(0,8).toUpperCase()}</TableCell>
-                <TableCell className="font-semibold">{o.fornecedores?.empresa || "Fornecedor Removido"}</TableCell>
+                <TableCell className="font-semibold">{o.fornecedores?.empresa || (o.fornecedor_id ? "Fornecedor Removido" : "Sem Fornecedor")}</TableCell>
                 <TableCell>{new Date(o.created_at).toLocaleDateString()}</TableCell>
                 <TableCell className="text-right font-semibold">R$ {Number(o.valor_total).toFixed(2).replace('.', ',')}</TableCell>
                 <TableCell><Badge className={getTone(o.status)}>{o.status}</Badge></TableCell>
@@ -145,7 +145,7 @@ function Compras() {
             <div className="grid grid-cols-2 gap-4 text-sm bg-muted/30 p-4 rounded-lg">
               <div>
                 <span className="text-muted-foreground block text-xs uppercase tracking-wider">Fornecedor</span>
-                <span className="font-medium">{selectedCompra?.fornecedores?.empresa || "Fornecedor Removido"}</span>
+                <span className="font-medium">{selectedCompra?.fornecedores?.empresa || (selectedCompra?.fornecedor_id ? "Fornecedor Removido" : "Sem Fornecedor")}</span>
               </div>
               <div>
                 <span className="text-muted-foreground block text-xs uppercase tracking-wider">Data</span>

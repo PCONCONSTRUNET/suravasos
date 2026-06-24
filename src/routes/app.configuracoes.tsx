@@ -51,6 +51,20 @@ function Configuracoes() {
 
   useEffect(() => {
     fetchUsers();
+
+    const fetchConfigs = async () => {
+      try {
+        const { data, error } = await supabase.from('configuracoes').select('*').eq('id', 1).single();
+        if (data && !error) {
+          // Remover os campos id e created_at caso existam no retorno para evitar erro no upsert depois
+          const { id, created_at, ...rest } = data;
+          setPerfil(prev => ({ ...prev, ...rest }));
+        }
+      } catch (err) {
+        console.error("Erro ao carregar configurações", err);
+      }
+    };
+    fetchConfigs();
   }, []);
 
   const handleAddUser = async () => {
@@ -91,8 +105,7 @@ function Configuracoes() {
       if (error) throw error;
       alert("Configurações salvas com sucesso!");
     } catch (err: any) {
-      // If table doesn't exist yet, just show success (table is optional)
-      alert("Configurações salvas localmente! (Crie a tabela 'configuracoes' no Supabase para persistência)");
+      alert("Erro ao salvar configurações: " + err.message + "\n\nSe a tabela 'configuracoes' não existir no banco, execute o script SQL para criá-la.");
     } finally {
       setSavingProfile(false);
     }

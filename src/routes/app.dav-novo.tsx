@@ -36,6 +36,23 @@ function NovoDAV() {
   };
 
   useEffect(() => {
+    const fetchConfigs = async () => {
+      try {
+        const { data, error } = await supabase.from('configuracoes').select('*').eq('id', 1).single();
+        if (data && !error) {
+          setEmissor({
+            nome: data.razao_social || "VIVAVERDE",
+            cnpj: data.cnpj || "",
+            endereco: data.endereco || "",
+            telefone: data.telefone || ""
+          });
+        }
+      } catch (err) {
+        console.error("Erro ao carregar configuracoes:", err);
+      }
+    };
+    fetchConfigs();
+
     const loadCartFromURL = async () => {
       const params = new URLSearchParams(window.location.search);
       const cartMagic = params.get('c');
