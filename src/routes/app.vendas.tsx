@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const Route = createFileRoute("/app/vendas")({
   head: () => ({ meta: [{ title: "Vendas — VIVAVERDE ERP" }] }),
@@ -117,8 +118,21 @@ function Vendas() {
   const getTone = (status: string) => {
     if (status === 'Pago' || status === 'Faturado') return "bg-success/15 text-success border-0";
     if (status === 'Aguardando Pagamento' || status === 'Aprovado') return "bg-warning/15 text-warning border-0";
-    if (status === 'Rejeitado' || status === 'Cancelado') return "bg-destructive/10 text-destructive border-0";
-    return "bg-info/15 text-info border-0"; // Orçamento ou Em separação
+    if (status === 'Rejeitado' || status === 'Cancelado') return "bg-destructive/10 text-destructive border-0 font-semibold";
+    return "bg-info/15 text-info border-0 font-semibold"; // Orçamento ou Em separação
+  };
+
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    try {
+      const { error } = await supabase.from('vendas').update({ status: newStatus }).eq('id', id);
+      if (error) throw error;
+      
+      setSelectedVenda((prev: any) => ({ ...prev, status: newStatus }));
+      setVendas((prev) => prev.map(v => v.id === id ? { ...v, status: newStatus } : v));
+      
+    } catch (err: any) {
+      alert("Erro ao atualizar status: " + err.message);
+    }
   };
 
   return (
@@ -178,8 +192,23 @@ function Vendas() {
                 <span className="font-medium">{selectedVenda ? new Date(selectedVenda.created_at).toLocaleDateString() : "-"}</span>
               </div>
               <div>
-                <span className="text-muted-foreground block text-xs uppercase tracking-wider">Status</span>
-                <Badge className={selectedVenda ? getTone(selectedVenda.status) : ""}>{selectedVenda?.status}</Badge>
+                <span className="text-muted-foreground block text-xs uppercase tracking-wider mb-1">Status</span>
+                <Select 
+                  value={selectedVenda?.status || ""} 
+                  onValueChange={(val) => handleStatusChange(selectedVenda.id, val)}
+                >
+                  <SelectTrigger className={`h-8 border-0 ${selectedVenda ? getTone(selectedVenda.status) : ""}`}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Pendente">Pendente</SelectItem>
+                    <SelectItem value="Aguardando Pagamento">Aguardando Pagamento</SelectItem>
+                    <SelectItem value="Pago">Pago</SelectItem>
+                    <SelectItem value="Faturado">Faturado</SelectItem>
+                    <SelectItem value="Entregue">Entregue</SelectItem>
+                    <SelectItem value="Cancelado">Cancelado</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <span className="text-muted-foreground block text-xs uppercase tracking-wider">Total</span>

@@ -15,7 +15,7 @@ function ImprimirDAV() {
 
   useEffect(() => {
     async function loadData() {
-      const { data: v } = await supabase.from("vendas").select("*, clientes(*)").eq("id", id).single();
+      const { data: v } = await supabase.from("vendas").select("*, clientes(*), vendedor:vendedores(nome)").eq("id", id).single();
       if (v) setVenda(v);
 
       const { data: i } = await supabase.from("vendas_itens").select("*, produtos(nome)").eq("venda_id", id);
@@ -31,7 +31,9 @@ function ImprimirDAV() {
   if (!venda) return <div className="p-8 text-center font-sans">Carregando Orçamento...</div>;
 
   const cliente = venda.clientes || {};
-  const dataDAV = new Date(venda.created_at).toLocaleDateString();
+  const dataDAV = new Date(venda.created_at).toLocaleDateString('pt-BR');
+  const horaDAV = new Date(venda.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const tituloDocumento = venda.tipo === 'DAV' ? 'Orçamento' : 'Comprovante de Venda';
 
   return (
     <div className="bg-white min-h-screen text-black p-8 font-sans" style={{ maxWidth: '800px', margin: '0 auto' }}>
@@ -56,10 +58,11 @@ function ImprimirDAV() {
           </div>
         </div>
         <div className="text-right">
-          <h1 className="text-3xl font-bold text-slate-900 uppercase tracking-wider">Orçamento</h1>
-          <p className="text-sm font-medium mt-1">DAV Nº: {venda.id.substring(0, 8).toUpperCase()}</p>
-          <p className="text-sm">Data: {dataDAV}</p>
-          <p className="text-sm font-medium mt-1 text-slate-600">Validade: 7 dias</p>
+          <h1 className="text-3xl font-bold text-slate-900 uppercase tracking-wider">{tituloDocumento}</h1>
+          <p className="text-sm font-medium mt-1">{venda.tipo === 'DAV' ? 'DAV' : 'Pedido'} Nº: {venda.id.substring(0, 8).toUpperCase()}</p>
+          <p className="text-sm">Emissão: {dataDAV} às {horaDAV}</p>
+          {venda.vendedor?.nome && <p className="text-sm mt-1">Vendedor: <span className="font-medium">{venda.vendedor.nome}</span></p>}
+          {venda.tipo === 'DAV' && <p className="text-sm font-medium mt-1 text-slate-600">Validade: 7 dias</p>}
         </div>
       </div>
 
