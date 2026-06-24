@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/lib/supabase";
 import { Toaster } from "@/components/ui/sonner";
+import { ConfirmProvider } from "@/contexts/ConfirmContext";
 
 function NotFoundComponent() {
   return (
@@ -119,8 +120,6 @@ function RootShell({ children }: { children: ReactNode }) {
     </html>
   );
 }
-
-import { ConfirmProvider } from "@/contexts/ConfirmContext";
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
