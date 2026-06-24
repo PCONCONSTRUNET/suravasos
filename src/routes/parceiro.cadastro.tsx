@@ -30,6 +30,12 @@ function CadastroParceiro() {
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            nome,
+            telefone,
+          }
+        }
       });
 
       if (authError) throw authError;
@@ -55,8 +61,10 @@ function CadastroParceiro() {
         }]);
       }
 
-      // Sucesso! Redireciona para o dashboard
-      navigate({ to: "/parceiro/dashboard" });
+      // Sucesso! Aguarda meio segundo para o banco sincronizar e redireciona para o dashboard
+      setTimeout(() => {
+        navigate({ to: "/parceiro/dashboard" });
+      }, 500);
     } catch (err: any) {
       setError(err.message || "Erro ao criar conta. Verifique os dados e tente novamente.");
     } finally {

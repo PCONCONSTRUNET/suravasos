@@ -53,7 +53,7 @@ function ParceiroDashboard() {
         if (!session) return;
 
         // Tenta achar o vendedor atrelado a este usuário
-        const { data: vData } = await supabase.from('vendedores').select('*').eq('user_id', session.user.id).single();
+        const { data: vData, error: fetchError } = await supabase.from('vendedores').select('*').eq('user_id', session.user.id).single();
         
         if (vData) {
           setVendedorId(vData.id);
@@ -68,9 +68,48 @@ function ParceiroDashboard() {
             .order('created_at', { ascending: false });
             
           if (vendasData) setVendas(vendasData);
+        } else {
+          // Se não achou (falha de sincronia ou RLS no insert inicial), recria usando os metadados da sessão
+          const meta = session.user.user_metadata || {};
+          const newNome = meta.nome || "Parceiro";
+          const newTelefone = meta.telefone || "";
+          
+          const { data: newVData, error: insertError } = await supabase.from('vendedores').insert([{
+            user_id: session.user.id,
+            nome: newNome,
+            email: session.user.email,
+            telefone: newTelefone,
+            status: 'Aguardando Aprovação',
+            valor_comissao: 0
+          }]).select().single();
+
+          if (newVData && !insertError) {
+            setVendedorId(newVData.id);
+            setNome(newVData.nome);
+            setStatus(newVData.status);
+            
+            // Tenta notificar o dono caso não tenha ido na primeira vez
+            await supabase.from('notificacoes').insert([{
+              tipo: 'parceiro',
+              titulo: `Nova solicitação de parceria`,
+              mensagem: `${newNome} (${session.user.email}) se cadastrou e está aguardando aprovação.`
+            }]);
+          } else if (insertError) {
+            // Se falhou por conflito (ex: email já existe), significa que o registro já estava lá.
+            // Vamos tentar buscar novamente.
+            const { data: retryData } = await supabase.from('vendedores').select('*').eq('user_id', session.user.id).single();
+            if (retryData) {
+              setVendedorId(retryData.id);
+              setNome(retryData.nome);
+              setStatus(retryData.status || 'Ativo');
+            } else {
+               // Se falhou mesmo assim, vamos preencher o formulário manual com os metadados
+               setNome(newNome);
+            }
+          }
         }
       } catch (err) {
-        console.error(err);
+        console.error("Erro ao carregar dados do dashboard do parceiro:", err);
       } finally {
         setLoading(false);
       }
