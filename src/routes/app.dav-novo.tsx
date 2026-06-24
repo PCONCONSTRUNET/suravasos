@@ -19,10 +19,11 @@ function NovoDAV() {
   const [loading, setLoading] = useState(false);
   
   const [cliente, setCliente] = useState({ nome: "", cnpj: "", endereco: "", telefone: "" });
-  const [condicoes, setCondicoes] = useState({ vendedor: "", pagamento: "30/60/90 dias — Boleto", frete: "CIF", prazo: "3 dias úteis" });
+  const [emissor, setEmissor] = useState({ nome: "VIVAVERDE", cnpj: "", endereco: "", telefone: "" });
+  const [condicoes, setCondicoes] = useState({ vendedor: "", pagamento: "Dinheiro / Pix", frete: "Retirada", prazo: "Imediato" });
   const [observacoes, setObservacoes] = useState("");
   
-  const [itens, setItens] = useState([{ id: Date.now(), codigo: "", produto: "", qtd: 1, vlrUnit: 0 }]);
+  const [itens, setItens] = useState<{id: number, codigo: string, produto: string, qtd: number, vlrUnit: number}[]>([]);
   const [descontoPerc, setDescontoPerc] = useState(0);
   const [freteValor, setFreteValor] = useState(0);
 
@@ -33,6 +34,46 @@ function NovoDAV() {
   const updateItem = (id: number, field: string, value: string | number) => {
     setItens(itens.map(i => i.id === id ? { ...i, [field]: value } : i));
   };
+
+  useEffect(() => {
+    const loadCartFromURL = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const cartMagic = params.get('c');
+      if (!cartMagic) {
+        if (itens.length === 0) {
+          setItens([{ id: Date.now(), codigo: "", produto: "", qtd: 1, vlrUnit: 0 }]);
+        }
+        return;
+      }
+      
+      const { data: produtos } = await supabase.from('produtos').select('*').eq('status', 'Ativo');
+      if (produtos) {
+        const parsedItens: any[] = [];
+        const items = cartMagic.split(',');
+        items.forEach((item, index) => {
+          const [id, qStr] = item.split(':');
+          const qty = parseInt(qStr) || 1;
+          const prod = produtos.find(p => p.id === id);
+          if (prod) {
+            parsedItens.push({
+              id: Date.now() + index,
+              codigo: prod.codigo || "",
+              produto: prod.nome,
+              qtd: qty,
+              vlrUnit: Number(prod.valor)
+            });
+          }
+        });
+        if (parsedItens.length > 0) {
+          setItens(parsedItens);
+          window.history.replaceState({}, '', '/app/dav-novo');
+        } else if (itens.length === 0) {
+          setItens([{ id: Date.now(), codigo: "", produto: "", qtd: 1, vlrUnit: 0 }]);
+        }
+      }
+    };
+    loadCartFromURL();
+  }, []);
 
   const subtotal = itens.reduce((acc, item) => acc + (item.qtd * item.vlrUnit), 0);
   const descontoValor = subtotal * (descontoPerc / 100);
@@ -56,6 +97,10 @@ function NovoDAV() {
         cliente_cnpj: cliente.cnpj,
         cliente_endereco: cliente.endereco,
         cliente_telefone: cliente.telefone,
+        emissor_nome: emissor.nome,
+        emissor_cnpj: emissor.cnpj,
+        emissor_endereco: emissor.endereco,
+        emissor_telefone: emissor.telefone,
         vendedor: condicoes.vendedor,
         condicao_pagamento: condicoes.pagamento,
         frete_tipo: condicoes.frete,
@@ -104,9 +149,9 @@ function NovoDAV() {
       } />
 
       <Card className="shadow-card p-6 max-w-5xl mx-auto space-y-8">
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div className="space-y-4">
-            <h3 className="font-semibold border-b pb-2">Dados do Cliente</h3>
+            <h3 className="font-semibold border-b pb-2">Dados do Cliente (Comprador)</h3>
             <div className="space-y-2">
               <Label>Nome / Razão Social</Label>
               <Input value={cliente.nome} onChange={e => setCliente({...cliente, nome: e.target.value})} placeholder="Ex: Jardim Verde Ltda" />
@@ -126,6 +171,26 @@ function NovoDAV() {
           </div>
 
           <div className="space-y-4">
+            <h3 className="font-semibold border-b pb-2">Dados do Emissor (Fornecedor)</h3>
+            <div className="space-y-2">
+              <Label>Nome / Razão Social</Label>
+              <Input value={emissor.nome} onChange={e => setEmissor({...emissor, nome: e.target.value})} placeholder="Ex: VivaVerde Vasos" />
+            </div>
+            <div className="space-y-2">
+              <Label>CNPJ / CPF</Label>
+              <Input value={emissor.cnpj} onChange={e => setEmissor({...emissor, cnpj: e.target.value})} placeholder="00.000.000/0000-00" />
+            </div>
+            <div className="space-y-2">
+              <Label>Endereço Completo</Label>
+              <Input value={emissor.endereco} onChange={e => setEmissor({...emissor, endereco: e.target.value})} placeholder="Endereço da Empresa" />
+            </div>
+            <div className="space-y-2">
+              <Label>Telefone</Label>
+              <Input value={emissor.telefone} onChange={e => setEmissor({...emissor, telefone: e.target.value})} placeholder="(00) 00000-0000" />
+            </div>
+          </div>
+
+          <div className="space-y-4">
             <h3 className="font-semibold border-b pb-2">Condições Comerciais</h3>
             <div className="space-y-2">
               <Label>Vendedor</Label>
@@ -133,15 +198,15 @@ function NovoDAV() {
             </div>
             <div className="space-y-2">
               <Label>Condição de Pagamento</Label>
-              <Input value={condicoes.pagamento} onChange={e => setCondicoes({...condicoes, pagamento: e.target.value})} />
+              <Input value={condicoes.pagamento} onChange={e => setCondicoes({...condicoes, pagamento: e.target.value})} placeholder="Ex: Pix, Dinheiro, Cartão" />
             </div>
             <div className="space-y-2">
               <Label>Tipo de Frete</Label>
-              <Input value={condicoes.frete} onChange={e => setCondicoes({...condicoes, frete: e.target.value})} />
+              <Input value={condicoes.frete} onChange={e => setCondicoes({...condicoes, frete: e.target.value})} placeholder="Ex: Retirada, Entrega" />
             </div>
             <div className="space-y-2">
               <Label>Prazo de Entrega</Label>
-              <Input value={condicoes.prazo} onChange={e => setCondicoes({...condicoes, prazo: e.target.value})} />
+              <Input value={condicoes.prazo} onChange={e => setCondicoes({...condicoes, prazo: e.target.value})} placeholder="Ex: Imediato" />
             </div>
           </div>
         </div>

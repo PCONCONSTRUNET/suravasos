@@ -153,7 +153,7 @@ function PublicCatalogo() {
       mensagem += `\n\n_Link do Pedido (Apenas Vendedor):_\n${window.location.origin}/parceiro/pdv?c=${magicParams}`;
     } else {
       const magicParams = cart.map(c => `${c.produto.id}:${c.qtd}`).join(',');
-      mensagem += `\n\n_Link do Pedido (Administrador):_\n${window.location.origin}/app/pdv?c=${magicParams}`;
+      mensagem += `\n\n_Link do Pedido (Administrador):_\n${window.location.origin}/app/dav-novo?c=${magicParams}`;
     }
     
     const text = encodeURIComponent(mensagem);
