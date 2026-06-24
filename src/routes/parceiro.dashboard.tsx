@@ -118,8 +118,12 @@ function ParceiroDashboard() {
     carregarDados();
   }, []);
 
-  const totalComissoes = vendas
-    .filter(v => v.status_aprovacao === 'Aprovada')
+  const comissoesAReceber = vendas
+    .filter(v => v.status_aprovacao === 'Aprovada' && v.status_pagamento_comissao !== 'Paga')
+    .reduce((acc, v) => acc + (Number(v.valor_comissao) || 0), 0);
+
+  const comissoesPagas = vendas
+    .filter(v => v.status_pagamento_comissao === 'Paga')
     .reduce((acc, v) => acc + (Number(v.valor_comissao) || 0), 0);
 
   const aguardandoAprovacao = vendas.filter(v => v.status_aprovacao === 'Pendente').length;
@@ -234,15 +238,28 @@ function ParceiroDashboard() {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <Card className="col-span-2 bg-gradient-brand text-primary-foreground border-0 shadow-lg shadow-primary/20">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2 mb-2 opacity-90">
+        <Card className="shadow-sm border-0 ring-1 ring-amber-500/20 bg-amber-50/50">
+          <CardContent className="p-4 flex flex-col justify-center">
+            <div className="flex items-center gap-2 mb-2 opacity-90 text-amber-700">
               <Wallet className="h-5 w-5" />
-              <h3 className="font-medium text-sm">Comissões a Receber</h3>
+              <h3 className="font-medium text-sm">A Receber</h3>
             </div>
-            <p className="text-4xl font-extrabold font-display">
-              <span className="text-2xl font-bold mr-1 opacity-80">R$</span>
-              {totalComissoes.toFixed(2).replace('.', ',')}
+            <p className="text-3xl font-extrabold font-display text-amber-600">
+              <span className="text-lg font-bold mr-1 opacity-80">R$</span>
+              {comissoesAReceber.toFixed(2).replace('.', ',')}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm border-0 ring-1 ring-emerald-500/20 bg-emerald-50/50">
+          <CardContent className="p-4 flex flex-col justify-center">
+            <div className="flex items-center gap-2 mb-2 opacity-90 text-emerald-700">
+              <CheckCircle2 className="h-5 w-5" />
+              <h3 className="font-medium text-sm">Pagas</h3>
+            </div>
+            <p className="text-3xl font-extrabold font-display text-emerald-600">
+              <span className="text-lg font-bold mr-1 opacity-80">R$</span>
+              {comissoesPagas.toFixed(2).replace('.', ',')}
             </p>
           </CardContent>
         </Card>

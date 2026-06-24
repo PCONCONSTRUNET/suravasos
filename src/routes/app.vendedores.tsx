@@ -115,7 +115,7 @@ function VendedoresAdmin() {
 
       const { error } = await supabase.from('vendas').update({ 
         status_aprovacao: 'Aprovada',
-        status: 'Pago',
+        status: 'Faturado',
         valor_comissao: valorComissao,
         status_pagamento_comissao: 'Pendente'
       }).eq('id', venda.id);
@@ -128,8 +128,8 @@ function VendedoresAdmin() {
          descricao: `Venda Parceiro #${venda.id.substring(0,8).toUpperCase()} - ${vendedor?.nome || ''}`,
          valor: valorVenda,
          vencimento: dataAtual,
-         status: "Recebido",
-         data_pagamento: dataAtual
+         status: "Pendente",
+         data_pagamento: null
       }]);
 
       alert("Venda aprovada com sucesso! Financeiro e Comissão gerados.");
