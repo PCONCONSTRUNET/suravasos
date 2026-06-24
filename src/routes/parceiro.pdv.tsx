@@ -160,6 +160,8 @@ function ParceiroPDV() {
         if (clientForm.endereco && clientForm.endereco.trim() !== '') {
           payload.endereco = clientForm.endereco.trim();
         }
+        payload.status = "Ativo";
+        payload.cidade = "Indefinida";
 
         const { data: clienteData, error: clienteError } = await supabase
           .from('clientes')
@@ -171,6 +173,9 @@ function ParceiroPDV() {
           finalClienteId = clienteData.id;
         } else if (clienteError) {
           console.error("Erro ao criar cliente pelo parceiro:", clienteError);
+          alert("Não foi possível salvar o cliente: " + clienteError.message);
+          setLoading(false);
+          return;
         }
       }
 
@@ -198,42 +203,31 @@ function ParceiroPDV() {
       const { error: itensError } = await supabase.from('vendas_itens').insert(itensToInsert);
       if (itensError) throw itensError;
 
-      // 3. Gera o DAV Oficial (Orçamento)
-      const { data: dav, error: davError } = await supabase.from('davs').insert({
-        cliente_nome: clientForm.nome,
-        cliente_cnpj: clientForm.documento,
-        cliente_endereco: clientForm.endereco,
-        cliente_telefone: clientForm.telefone,
-        emissor_nome: "VIVAVERDE VASOS",
-        emissor_cnpj: "63.874.628/0001-36",
-        emissor_endereco: "Rua Bom Jesus, 267 - Charqueada/SP",
-        emissor_telefone: "",
-        vendedor: vendedorInfo?.nome || "Parceiro",
-        condicao_pagamento: clientForm.pagamento,
-        frete_tipo: clientForm.frete,
-        prazo_entrega: "A Combinar",
-        subtotal: subtotal,
-        desconto_percentual: 0,
-        desconto_valor: 0,
-        frete_valor: 0,
-        total: subtotal,
-        observacoes: clientForm.observacoes,
-        validade: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-      }).select('id').single();
+      // 3. Gera o DAV Oficial (Orçamento) na tabela VENDAS
+      const { data: dav, error: davError } = await supabase.from('vendas').insert([{
+        tipo: 'DAV',
+        status: 'Pendente',
+        status_aprovacao: 'Pendente',
+        valor_total: subtotal,
+        vendedor_id: vendedorInfo?.id,
+        cliente_id: finalClienteId
+      }]).select().single();
 
       if (!davError && dav) {
         setDavGeradoId(dav.id);
         
         // Salvar itens do DAV
-        const davItensToInsert = cart.map((i, index) => ({
-          dav_id: dav.id,
-          codigo: "", // Você pode ajustar se tiver código
-          produto: i.p,
-          qtd: i.q,
+        const davItensToInsert = cart.map(i => ({
+          venda_id: dav.id,
+          produto_id: i.id,
+          quantidade: i.q,
           valor_unitario: i.u,
-          total: i.t
+          subtotal: i.t
         }));
-        await supabase.from('dav_items').insert(davItensToInsert);
+        await supabase.from('vendas_itens').insert(davItensToInsert);
+      } else if (davError) {
+        console.error("Erro ao gerar DAV:", davError);
+        alert("Aviso: O pedido foi enviado, mas o Orçamento (DAV) não pôde ser gerado: " + davError.message);
       }
 
       // 4. Dispara a notificação para o dono
