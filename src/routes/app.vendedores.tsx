@@ -72,12 +72,15 @@ function VendedoresAdmin() {
 
       const { data: vendasData, error } = await supabase
         .from('vendas')
-        .select('*, vendedor:vendedores(nome), cliente:clientes(nome, cpf_cnpj, telefone, endereco)')
+        .select('*, vendedor:vendedores(*), cliente:clientes(*)')
         .not('vendedor_id', 'is', null)
         .order('created_at', { ascending: false });
       
       if (!error && vendasData) {
         setTodasVendas(vendasData);
+      } else if (error) {
+        console.error("Erro ao buscar vendas:", error);
+        alert("Erro ao buscar vendas dos parceiros: " + error.message);
       }
     } catch (e) {
       console.warn("Erro:", e);
@@ -90,8 +93,8 @@ function VendedoresAdmin() {
     fetchData();
   }, []);
 
-  const vendasPendentes = todasVendas.filter(v => v.status_aprovacao === 'Pendente');
-  const vendasAprovadas = todasVendas.filter(v => v.status_aprovacao === 'Aprovada');
+  const vendasPendentes = todasVendas.filter(v => v.status_aprovacao === 'Pendente' && v.tipo !== 'DAV');
+  const vendasAprovadas = todasVendas.filter(v => v.status_aprovacao === 'Aprovada' && v.tipo !== 'DAV');
 
   const totalFaturadoParceiros = vendasAprovadas.reduce((acc, v) => acc + (Number(v.valor_total) || 0), 0);
   const totalComissoesDevidas = vendasAprovadas.filter(v => v.status_pagamento_comissao !== 'Paga').reduce((acc, v) => acc + (Number(v.valor_comissao) || 0), 0);
