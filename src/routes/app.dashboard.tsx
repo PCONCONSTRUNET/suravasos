@@ -6,12 +6,30 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer,
-  Tooltip, XAxis, YAxis,
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from "recharts";
 import {
-  ArrowDownRight, ArrowUpRight, DollarSign, Package, ShoppingCart, AlertTriangle,
-  Users, Truck, TrendingUp, MoreHorizontal,
+  ArrowDownRight,
+  ArrowUpRight,
+  DollarSign,
+  Package,
+  ShoppingCart,
+  AlertTriangle,
+  Users,
+  Truck,
+  TrendingUp,
+  MoreHorizontal,
 } from "lucide-react";
 
 export const Route = createFileRoute("/app/dashboard")({
@@ -37,13 +55,21 @@ function KPI({ icon: Icon, label, value, delta, up = true, tone = "primary" }: a
           <div className={`grid h-10 w-10 place-items-center rounded-lg ${tones[tone]}`}>
             <Icon className="h-5 w-5" />
           </div>
-          <Button size="icon" variant="ghost" className="h-7 w-7"><MoreHorizontal className="h-4 w-4" /></Button>
+          <Button size="icon" variant="ghost" className="h-7 w-7">
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
         </div>
         <p className="mt-4 text-sm text-muted-foreground">{label}</p>
         <p className="mt-1 font-display text-2xl font-bold tracking-tight">{value}</p>
         {delta && (
-          <p className={`mt-2 flex items-center gap-1 text-xs font-medium ${up ? "text-success" : "text-destructive"}`}>
-            {up ? <ArrowUpRight className="h-3.5 w-3.5" /> : <ArrowDownRight className="h-3.5 w-3.5" />}
+          <p
+            className={`mt-2 flex items-center gap-1 text-xs font-medium ${up ? "text-success" : "text-destructive"}`}
+          >
+            {up ? (
+              <ArrowUpRight className="h-3.5 w-3.5" />
+            ) : (
+              <ArrowDownRight className="h-3.5 w-3.5" />
+            )}
             {delta} <span className="text-muted-foreground font-normal">vs mês anterior</span>
           </p>
         )}
@@ -64,26 +90,39 @@ function Dashboard() {
 
   useEffect(() => {
     async function loadData() {
-      const { data: vendasData } = await supabase.from('vendas').select('*').in('tipo', ['VENDA', 'PDV', 'Afiliado']);
-      const { count: produtosCount } = await supabase.from('produtos').select('*', { count: 'exact', head: true }).eq('status', 'Ativo');
-      const { count: clientesCount } = await supabase.from('clientes').select('*', { count: 'exact', head: true });
-      const { data: vendasRecentes } = await supabase.from('vendas')
-        .select('*, clientes(nome)')
-        .in('tipo', ['VENDA', 'PDV', 'Afiliado'])
-        .order('created_at', { ascending: false })
+      const { data: vendasData } = await supabase
+        .from("vendas")
+        .select("*")
+        .in("tipo", ["VENDA", "PDV", "Afiliado"]);
+      const { count: produtosCount } = await supabase
+        .from("produtos")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "Ativo");
+      const { count: clientesCount } = await supabase
+        .from("clientes")
+        .select("*", { count: "exact", head: true });
+      const { data: vendasRecentes } = await supabase
+        .from("vendas")
+        .select("*, clientes(nome)")
+        .in("tipo", ["VENDA", "PDV", "Afiliado"])
+        .order("created_at", { ascending: false })
         .limit(5);
 
       let fat = 0;
       let pedHoje = 0;
       let entPend = 0;
-      const hoje = new Date().toISOString().split('T')[0];
+      const hoje = new Date().toISOString().split("T")[0];
 
-      vendasData?.forEach(v => {
-        if (v.status !== 'Cancelada' && v.status !== 'Rejeitada' && v.status_aprovacao !== 'Rejeitada') {
+      vendasData?.forEach((v) => {
+        if (
+          v.status !== "Cancelada" &&
+          v.status !== "Rejeitada" &&
+          v.status_aprovacao !== "Rejeitada"
+        ) {
           fat += Number(v.valor_total || v.total || 0);
         }
         if (v.created_at?.startsWith(hoje)) pedHoje++;
-        if (v.status === 'PENDENTE' || v.status === 'Pendente' || v.status === 'EM_ROTA') entPend++;
+        if (v.status === "PENDENTE" || v.status === "Pendente" || v.status === "EM_ROTA") entPend++;
       });
 
       setStats({
@@ -92,7 +131,7 @@ function Dashboard() {
         produtosEstoque: produtosCount || 0,
         clientesAtivos: clientesCount || 0,
         entregasPendentes: entPend,
-        recent: vendasRecentes || []
+        recent: vendasRecentes || [],
       });
     }
     loadData();
@@ -102,30 +141,46 @@ function Dashboard() {
     <>
       <PageHeader
         title="Visão Geral"
-        subtitle={`${new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date())} — bom dia, Douglas 👋`}
+        subtitle={`${new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date())} — bom dia, Douglas 👋`}
         actions={
           <>
-            <Button variant="outline" onClick={async () => {
-              const { data } = await supabase.from('vendas').select('*, clientes(nome)').order('created_at', { ascending: false }).limit(100);
-              if (!data || data.length === 0) { alert("Nenhuma venda encontrada para exportar."); return; }
-              const rows = [
-                ["ID", "Cliente", "Tipo", "Status", "Valor Total", "Data"],
-                ...data.map(v => [
-                  v.id.slice(0,8).toUpperCase(),
-                  v.clientes?.nome || "Consumidor Final",
-                  v.tipo || "",
-                  v.status || "",
-                  `R$ ${Number(v.valor_total || 0).toFixed(2)}`,
-                  new Date(v.created_at).toLocaleDateString('pt-BR')
-                ])
-              ];
-              const csv = rows.map(r => r.map(c => `"${c}"`).join(";")).join("\n");
-              const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url; a.download = `relatorio_vendas_${new Date().toISOString().split('T')[0]}.csv`;
-              document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-            }}>Exportar CSV</Button>
+            <Button
+              variant="outline"
+              onClick={async () => {
+                const { data } = await supabase
+                  .from("vendas")
+                  .select("*, clientes(nome)")
+                  .order("created_at", { ascending: false })
+                  .limit(100);
+                if (!data || data.length === 0) {
+                  alert("Nenhuma venda encontrada para exportar.");
+                  return;
+                }
+                const rows = [
+                  ["ID", "Cliente", "Tipo", "Status", "Valor Total", "Data"],
+                  ...data.map((v) => [
+                    v.id.slice(0, 8).toUpperCase(),
+                    v.clientes?.nome || "Consumidor Final",
+                    v.tipo || "",
+                    v.status || "",
+                    `R$ ${Number(v.valor_total || 0).toFixed(2)}`,
+                    new Date(v.created_at).toLocaleDateString("pt-BR"),
+                  ]),
+                ];
+                const csv = rows.map((r) => r.map((c) => `"${c}"`).join(";")).join("\n");
+                const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `relatorio_vendas_${new Date().toISOString().split("T")[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+              }}
+            >
+              Exportar CSV
+            </Button>
             <Button asChild className="bg-gradient-brand text-primary-foreground">
               <Link to="/app/vendas">Novo Pedido</Link>
             </Button>
@@ -134,12 +189,43 @@ function Dashboard() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
-        <KPI icon={DollarSign} label="Faturamento" value={`R$ ${stats.faturamento.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} delta="" tone="primary" />
-        <KPI icon={ShoppingCart} label="Pedidos do dia" value={stats.pedidosHoje.toString()} delta="" tone="info" />
-        <KPI icon={Package} label="Produtos ativos" value={stats.produtosEstoque.toString()} delta="" tone="success" />
+        <KPI
+          icon={DollarSign}
+          label="Faturamento"
+          value={`R$ ${stats.faturamento.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}
+          delta=""
+          tone="primary"
+        />
+        <KPI
+          icon={ShoppingCart}
+          label="Pedidos do dia"
+          value={stats.pedidosHoje.toString()}
+          delta=""
+          tone="info"
+        />
+        <KPI
+          icon={Package}
+          label="Produtos ativos"
+          value={stats.produtosEstoque.toString()}
+          delta=""
+          tone="success"
+        />
         <KPI icon={AlertTriangle} label="Produtos críticos" value="0" delta="" tone="warning" />
-        <KPI icon={Users} label="Clientes ativos" value={stats.clientesAtivos.toString()} delta="" tone="terra" />
-        <KPI icon={Truck} label="Entregas pendentes" value={stats.entregasPendentes.toString()} delta="" up={false} tone="destructive" />
+        <KPI
+          icon={Users}
+          label="Clientes ativos"
+          value={stats.clientesAtivos.toString()}
+          delta=""
+          tone="terra"
+        />
+        <KPI
+          icon={Truck}
+          label="Entregas pendentes"
+          value={stats.entregasPendentes.toString()}
+          delta=""
+          up={false}
+          tone="destructive"
+        />
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
@@ -150,8 +236,14 @@ function Dashboard() {
               <CardDescription>Últimos 12 meses — em reais (R$)</CardDescription>
             </div>
             <div className="flex gap-2 text-xs">
-              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-primary" />Vendas</span>
-              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-terra" />Compras</span>
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-primary" />
+                Vendas
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-terra" />
+                Compras
+              </span>
             </div>
           </CardHeader>
           <CardContent>
@@ -168,11 +260,35 @@ function Dashboard() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                <XAxis dataKey="m" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `${v / 1000}k`} />
+                <XAxis
+                  dataKey="m"
+                  stroke="#64748b"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  stroke="#64748b"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(v) => `${v / 1000}k`}
+                />
                 <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #e2e8f0" }} />
-                <Area type="monotone" dataKey="v" stroke="#166534" strokeWidth={2.5} fill="url(#gv)" />
-                <Area type="monotone" dataKey="c" stroke="#92400E" strokeWidth={2} fill="url(#gc)" />
+                <Area
+                  type="monotone"
+                  dataKey="v"
+                  stroke="#166534"
+                  strokeWidth={2.5}
+                  fill="url(#gv)"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="c"
+                  stroke="#92400E"
+                  strokeWidth={2}
+                  fill="url(#gc)"
+                />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
@@ -186,8 +302,13 @@ function Dashboard() {
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
-                <Pie data={[]} dataKey="value" innerRadius={55} outerRadius={85} paddingAngle={2}>
-                </Pie>
+                <Pie
+                  data={[]}
+                  dataKey="value"
+                  innerRadius={55}
+                  outerRadius={85}
+                  paddingAngle={2}
+                ></Pie>
                 <Tooltip />
               </PieChart>
             </ResponsiveContainer>
@@ -205,24 +326,37 @@ function Dashboard() {
               <CardTitle>Últimos pedidos</CardTitle>
               <CardDescription>5 mais recentes</CardDescription>
             </div>
-            <Button variant="ghost" size="sm" asChild><Link to="/app/vendas">Ver tudo</Link></Button>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/app/vendas">Ver tudo</Link>
+            </Button>
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y">
               {stats.recent.length === 0 ? (
-                <div className="p-6 text-center text-sm text-muted-foreground">Nenhum pedido recente.</div>
-              ) : stats.recent.map((r: any) => (
-                <div key={r.id} className="flex items-center justify-between px-6 py-3">
-                  <div className="min-w-0">
-                    <p className="font-semibold text-sm">#{r.id?.toString().slice(0, 5)}</p>
-                    <p className="text-xs text-muted-foreground truncate">{r.clientes?.nome || "Consumidor Final"}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-semibold">R$ {Number(r.total || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                    <Badge variant="secondary" className="mt-0.5 text-[10px]">{r.status}</Badge>
-                  </div>
+                <div className="p-6 text-center text-sm text-muted-foreground">
+                  Nenhum pedido recente.
                 </div>
-              ))}
+              ) : (
+                stats.recent.map((r: any) => (
+                  <div key={r.id} className="flex items-center justify-between px-6 py-3">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm">#{r.id?.toString().slice(0, 5)}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {r.clientes?.nome || "Consumidor Final"}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold">
+                        R${" "}
+                        {Number(r.total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </p>
+                      <Badge variant="secondary" className="mt-0.5 text-[10px]">
+                        {r.status}
+                      </Badge>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
@@ -236,8 +370,22 @@ function Dashboard() {
             <ResponsiveContainer width="100%" height={230}>
               <BarChart data={[]} layout="vertical" margin={{ left: 10 }}>
                 <CartesianGrid horizontal={false} stroke="#e2e8f0" />
-                <XAxis type="number" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
-                <YAxis dataKey="name" type="category" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} width={110} />
+                <XAxis
+                  type="number"
+                  stroke="#64748b"
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  dataKey="name"
+                  type="category"
+                  stroke="#64748b"
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={false}
+                  width={110}
+                />
                 <Tooltip contentStyle={{ borderRadius: 12 }} />
                 <Bar dataKey="v" fill="#22C55E" radius={[0, 6, 6, 0]} />
               </BarChart>

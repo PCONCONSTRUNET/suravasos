@@ -8,7 +8,7 @@ import { VivaverdeLogo } from "@/components/vivaverde-logo";
 
 export const Route = createFileRoute("/parceiro/login")({
   beforeLoad: async () => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       await supabase.auth.signOut();
     }
   },
@@ -27,9 +27,9 @@ function LoginParceiro() {
 
   // Verifica se o parceiro foi bloqueado via sessionStorage
   useEffect(() => {
-    if (sessionStorage.getItem('parceiro_blocked') === '1') {
+    if (sessionStorage.getItem("parceiro_blocked") === "1") {
       setError("⚠️ Sua conta ainda está aguardando aprovação. Aguarde o contato do administrador.");
-      sessionStorage.removeItem('parceiro_blocked');
+      sessionStorage.removeItem("parceiro_blocked");
     }
   }, []);
 
@@ -80,20 +80,25 @@ function LoginParceiro() {
         <CardContent className="p-6">
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold font-display text-slate-800">Portal do Parceiro</h1>
-            <p className="text-sm text-muted-foreground mt-1">Faça login para registrar suas vendas e acompanhar suas comissões.</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Faça login para registrar suas vendas e acompanhar suas comissões.
+            </p>
           </div>
 
           {resetSent ? (
             <div className="text-center p-4 rounded-lg bg-green-50 border border-green-200">
-              <p className="text-sm text-green-700 font-medium">✅ Link de redefinição enviado para <strong>{email}</strong>. Verifique sua caixa de entrada.</p>
+              <p className="text-sm text-green-700 font-medium">
+                ✅ Link de redefinição enviado para <strong>{email}</strong>. Verifique sua caixa de
+                entrada.
+              </p>
             </div>
           ) : (
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-1">
                 <label className="text-sm font-medium">E-mail</label>
-                <Input 
-                  type="email" 
-                  placeholder="seuemail@exemplo.com" 
+                <Input
+                  type="email"
+                  placeholder="seuemail@exemplo.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -102,9 +107,9 @@ function LoginParceiro() {
               </div>
               <div className="space-y-1">
                 <label className="text-sm font-medium">Senha</label>
-                <Input 
-                  type="password" 
-                  placeholder="••••••••" 
+                <Input
+                  type="password"
+                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -112,9 +117,19 @@ function LoginParceiro() {
                 />
               </div>
 
-              {error && <p className={`text-sm text-center font-medium py-2 px-3 rounded-md ${error.startsWith('⚠') ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-destructive/10 text-destructive'}`}>{error}</p>}
+              {error && (
+                <p
+                  className={`text-sm text-center font-medium py-2 px-3 rounded-md ${error.startsWith("⚠") ? "bg-amber-50 text-amber-700 border border-amber-200" : "bg-destructive/10 text-destructive"}`}
+                >
+                  {error}
+                </p>
+              )}
 
-              <Button type="submit" className="w-full h-12 text-base font-bold bg-gradient-brand text-primary-foreground" disabled={loading}>
+              <Button
+                type="submit"
+                className="w-full h-12 text-base font-bold bg-gradient-brand text-primary-foreground"
+                disabled={loading}
+              >
                 {loading ? "Entrando..." : "Acessar Portal"}
               </Button>
 
@@ -130,7 +145,7 @@ function LoginParceiro() {
           )}
 
           <div className="mt-6 text-center text-sm">
-            Ainda não é parceiro?{' '}
+            Ainda não é parceiro?{" "}
             <Link to="/parceiro/cadastro" className="font-semibold text-brand hover:underline">
               Crie sua conta
             </Link>

@@ -20,12 +20,19 @@ function ImprimirDAV() {
       const { data: conf } = await supabase.from("configuracoes").select("*").eq("id", 1).single();
       if (conf) setConfig(conf);
 
-      const { data: v } = await supabase.from("vendas").select("*, clientes(*), vendedor:vendedores(nome)").eq("id", id).single();
+      const { data: v } = await supabase
+        .from("vendas")
+        .select("*, clientes(*), vendedor:vendedores(nome)")
+        .eq("id", id)
+        .single();
       if (v) setVenda(v);
 
-      const { data: i } = await supabase.from("vendas_itens").select("*, produtos(nome)").eq("venda_id", id);
+      const { data: i } = await supabase
+        .from("vendas_itens")
+        .select("*, produtos(nome)")
+        .eq("venda_id", id);
       if (i) setItens(i);
-      
+
       if (v) {
         setTimeout(() => window.print(), 800);
       }
@@ -36,12 +43,18 @@ function ImprimirDAV() {
   if (!venda) return <div className="p-8 text-center font-sans">Carregando Orçamento...</div>;
 
   const cliente = venda.clientes || {};
-  const dataDAV = new Date(venda.created_at).toLocaleDateString('pt-BR');
-  const horaDAV = new Date(venda.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-  const tituloDocumento = venda.tipo === 'DAV' ? 'Orçamento' : 'Comprovante de Venda';
+  const dataDAV = new Date(venda.created_at).toLocaleDateString("pt-BR");
+  const horaDAV = new Date(venda.created_at).toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const tituloDocumento = venda.tipo === "DAV" ? "Orçamento" : "Comprovante de Venda";
 
   return (
-    <div className="bg-white min-h-screen text-black p-8 font-sans" style={{ maxWidth: '800px', margin: '0 auto' }}>
+    <div
+      className="bg-white min-h-screen text-black p-8 font-sans"
+      style={{ maxWidth: "800px", margin: "0 auto" }}
+    >
       <style>{`
         @media print {
           @page { margin: 10mm; size: A4; }
@@ -56,7 +69,9 @@ function ImprimirDAV() {
         <div>
           <VivaverdeLogo size="small" />
           <div className="mt-4 text-sm text-slate-600">
-            <p className="font-bold text-slate-900">{config?.razao_social || "VIVAVERDE VASOS E SUPORTES"}</p>
+            <p className="font-bold text-slate-900">
+              {config?.razao_social || "VIVAVERDE VASOS E SUPORTES"}
+            </p>
             {config?.cnpj && <p>CNPJ: {config.cnpj}</p>}
             {config?.endereco && <p>{config.endereco}</p>}
             {config?.telefone && <p>Tel: {config.telefone}</p>}
@@ -71,26 +86,59 @@ function ImprimirDAV() {
           </div>
         </div>
         <div className="text-right">
-          <h1 className="text-3xl font-bold text-slate-900 uppercase tracking-wider">{tituloDocumento}</h1>
-          <p className="text-sm font-medium mt-1">{venda.tipo === 'DAV' ? 'DAV' : 'Pedido'} Nº: {venda.id.substring(0, 8).toUpperCase()}</p>
-          <p className="text-sm">Emissão: {dataDAV} às {horaDAV}</p>
-          {venda.vendedor?.nome && <p className="text-sm mt-1">Vendedor: <span className="font-medium">{venda.vendedor.nome}</span></p>}
-          {venda.tipo === 'DAV' && <p className="text-sm font-medium mt-1 text-slate-600">Validade: 7 dias</p>}
+          <h1 className="text-3xl font-bold text-slate-900 uppercase tracking-wider">
+            {tituloDocumento}
+          </h1>
+          <p className="text-sm font-medium mt-1">
+            {venda.tipo === "DAV" ? "DAV" : "Pedido"} Nº: {venda.id.substring(0, 8).toUpperCase()}
+          </p>
+          <p className="text-sm">
+            Emissão: {dataDAV} às {horaDAV}
+          </p>
+          {venda.vendedor?.nome && (
+            <p className="text-sm mt-1">
+              Vendedor: <span className="font-medium">{venda.vendedor.nome}</span>
+            </p>
+          )}
+          {venda.tipo === "DAV" && (
+            <p className="text-sm font-medium mt-1 text-slate-600">Validade: 7 dias</p>
+          )}
         </div>
       </div>
 
       {/* Dados do Cliente */}
       <div className="bg-slate-50 p-4 rounded-lg mb-6 border border-slate-200">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-3">Dados do Cliente</h2>
+        <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-3">
+          Dados do Cliente
+        </h2>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <p><span className="font-semibold">Nome:</span> {cliente.nome || "Consumidor Final"}</p>
-            {cliente.cpf_cnpj && <p><span className="font-semibold">CPF/CNPJ:</span> {cliente.cpf_cnpj}</p>}
-            {cliente.telefone && <p><span className="font-semibold">Telefone:</span> {cliente.telefone}</p>}
+            <p>
+              <span className="font-semibold">Nome:</span> {cliente.nome || "Consumidor Final"}
+            </p>
+            {cliente.cpf_cnpj && (
+              <p>
+                <span className="font-semibold">CPF/CNPJ:</span> {cliente.cpf_cnpj}
+              </p>
+            )}
+            {cliente.telefone && (
+              <p>
+                <span className="font-semibold">Telefone:</span> {cliente.telefone}
+              </p>
+            )}
           </div>
           <div>
-            {cliente.endereco && <p><span className="font-semibold">Endereço:</span> {cliente.endereco}</p>}
-            {cliente.cidade && <p><span className="font-semibold">Cidade/UF:</span> {cliente.cidade}{cliente.uf ? `/${cliente.uf}` : ''}</p>}
+            {cliente.endereco && (
+              <p>
+                <span className="font-semibold">Endereço:</span> {cliente.endereco}
+              </p>
+            )}
+            {cliente.cidade && (
+              <p>
+                <span className="font-semibold">Cidade/UF:</span> {cliente.cidade}
+                {cliente.uf ? `/${cliente.uf}` : ""}
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -112,8 +160,12 @@ function ImprimirDAV() {
               <tr key={i} className="border-b border-slate-200">
                 <td className="py-2 px-3">{item.produtos?.nome || "Produto Desconhecido"}</td>
                 <td className="py-2 px-3 text-center">{item.quantidade}</td>
-                <td className="py-2 px-3 text-right">R$ {Number(item.valor_unitario).toFixed(2).replace('.', ',')}</td>
-                <td className="py-2 px-3 text-right font-medium">R$ {Number(item.subtotal).toFixed(2).replace('.', ',')}</td>
+                <td className="py-2 px-3 text-right">
+                  R$ {Number(item.valor_unitario).toFixed(2).replace(".", ",")}
+                </td>
+                <td className="py-2 px-3 text-right font-medium">
+                  R$ {Number(item.subtotal).toFixed(2).replace(".", ",")}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -125,11 +177,11 @@ function ImprimirDAV() {
         <div className="w-64 bg-slate-50 p-4 rounded-lg border border-slate-200">
           <div className="flex justify-between items-center text-sm mb-2">
             <span className="text-slate-600">Subtotal:</span>
-            <span>R$ {Number(venda.valor_total).toFixed(2).replace('.', ',')}</span>
+            <span>R$ {Number(venda.valor_total).toFixed(2).replace(".", ",")}</span>
           </div>
           <div className="flex justify-between items-center text-lg font-bold border-t border-slate-200 pt-2 mt-2">
             <span>Total:</span>
-            <span>R$ {Number(venda.valor_total).toFixed(2).replace('.', ',')}</span>
+            <span>R$ {Number(venda.valor_total).toFixed(2).replace(".", ",")}</span>
           </div>
         </div>
       </div>
@@ -143,7 +195,7 @@ function ImprimirDAV() {
           <div className="border-t border-slate-400 pt-2">Assinatura do Cliente</div>
         </div>
       </div>
-      
+
       <div className="mt-8 text-center text-xs text-slate-400">
         Este documento não possui valor fiscal. É apenas um Documento Auxiliar de Venda.
       </div>

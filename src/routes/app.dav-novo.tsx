@@ -4,7 +4,14 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Save, Plus, Trash2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
@@ -17,34 +24,51 @@ export const Route = createFileRoute("/app/dav-novo")({
 function NovoDAV() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  
+
   const [cliente, setCliente] = useState({ nome: "", cnpj: "", endereco: "", telefone: "" });
-  const [emissor, setEmissor] = useState({ nome: "VIVAVERDE", cnpj: "", endereco: "", telefone: "" });
-  const [condicoes, setCondicoes] = useState({ vendedor: "", pagamento: "Dinheiro / Pix", frete: "Retirada", prazo: "Imediato" });
+  const [emissor, setEmissor] = useState({
+    nome: "VIVAVERDE",
+    cnpj: "",
+    endereco: "",
+    telefone: "",
+  });
+  const [condicoes, setCondicoes] = useState({
+    vendedor: "",
+    pagamento: "Dinheiro / Pix",
+    frete: "Retirada",
+    prazo: "Imediato",
+  });
   const [observacoes, setObservacoes] = useState("");
-  
-  const [itens, setItens] = useState<{id: number, codigo: string, produto: string, qtd: number, vlrUnit: number}[]>([]);
+
+  const [itens, setItens] = useState<
+    { id: number; codigo: string; produto: string; qtd: number; vlrUnit: number }[]
+  >([]);
   const [descontoPerc, setDescontoPerc] = useState(0);
   const [freteValor, setFreteValor] = useState(0);
 
-  const addItem = () => setItens([...itens, { id: Date.now(), codigo: "", produto: "", qtd: 1, vlrUnit: 0 }]);
-  
-  const removeItem = (id: number) => setItens(itens.filter(i => i.id !== id));
-  
+  const addItem = () =>
+    setItens([...itens, { id: Date.now(), codigo: "", produto: "", qtd: 1, vlrUnit: 0 }]);
+
+  const removeItem = (id: number) => setItens(itens.filter((i) => i.id !== id));
+
   const updateItem = (id: number, field: string, value: string | number) => {
-    setItens(itens.map(i => i.id === id ? { ...i, [field]: value } : i));
+    setItens(itens.map((i) => (i.id === id ? { ...i, [field]: value } : i)));
   };
 
   useEffect(() => {
     const fetchConfigs = async () => {
       try {
-        const { data, error } = await supabase.from('configuracoes').select('*').eq('id', 1).single();
+        const { data, error } = await supabase
+          .from("configuracoes")
+          .select("*")
+          .eq("id", 1)
+          .single();
         if (data && !error) {
           setEmissor({
             nome: data.razao_social || "VIVAVERDE",
             cnpj: data.cnpj || "",
             endereco: data.endereco || "",
-            telefone: data.telefone || ""
+            telefone: data.telefone || "",
           });
         }
       } catch (err) {
@@ -55,35 +79,35 @@ function NovoDAV() {
 
     const loadCartFromURL = async () => {
       const params = new URLSearchParams(window.location.search);
-      const cartMagic = params.get('c');
+      const cartMagic = params.get("c");
       if (!cartMagic) {
         if (itens.length === 0) {
           setItens([{ id: Date.now(), codigo: "", produto: "", qtd: 1, vlrUnit: 0 }]);
         }
         return;
       }
-      
-      const { data: produtos } = await supabase.from('produtos').select('*').eq('status', 'Ativo');
+
+      const { data: produtos } = await supabase.from("produtos").select("*").eq("status", "Ativo");
       if (produtos) {
         const parsedItens: any[] = [];
-        const items = cartMagic.split(',');
+        const items = cartMagic.split(",");
         items.forEach((item, index) => {
-          const [id, qStr] = item.split(':');
+          const [id, qStr] = item.split(":");
           const qty = parseInt(qStr) || 1;
-          const prod = produtos.find(p => p.id === id);
+          const prod = produtos.find((p) => p.id === id);
           if (prod) {
             parsedItens.push({
               id: Date.now() + index,
               codigo: prod.codigo || "",
               produto: prod.nome,
               qtd: qty,
-              vlrUnit: Number(prod.valor)
+              vlrUnit: Number(prod.valor),
             });
           }
         });
         if (parsedItens.length > 0) {
           setItens(parsedItens);
-          window.history.replaceState({}, '', '/app/dav-novo');
+          window.history.replaceState({}, "", "/app/dav-novo");
         } else if (itens.length === 0) {
           setItens([{ id: Date.now(), codigo: "", produto: "", qtd: 1, vlrUnit: 0 }]);
         }
@@ -92,7 +116,7 @@ function NovoDAV() {
     loadCartFromURL();
   }, []);
 
-  const subtotal = itens.reduce((acc, item) => acc + (item.qtd * item.vlrUnit), 0);
+  const subtotal = itens.reduce((acc, item) => acc + item.qtd * item.vlrUnit, 0);
   const descontoValor = subtotal * (descontoPerc / 100);
   const total = subtotal - descontoValor + freteValor;
 
@@ -109,46 +133,49 @@ function NovoDAV() {
     setLoading(true);
     try {
       // 1. Salvar o DAV principal
-      const { data: dav, error: davError } = await supabase.from('davs').insert({
-        cliente_nome: cliente.nome,
-        cliente_cnpj: cliente.cnpj,
-        cliente_endereco: cliente.endereco,
-        cliente_telefone: cliente.telefone,
-        emissor_nome: emissor.nome,
-        emissor_cnpj: emissor.cnpj,
-        emissor_endereco: emissor.endereco,
-        emissor_telefone: emissor.telefone,
-        vendedor: condicoes.vendedor,
-        condicao_pagamento: condicoes.pagamento,
-        frete_tipo: condicoes.frete,
-        prazo_entrega: condicoes.prazo,
-        subtotal: subtotal,
-        desconto_percentual: descontoPerc,
-        desconto_valor: descontoValor,
-        frete_valor: freteValor,
-        total: total,
-        observacoes: observacoes,
-        validade: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // +7 dias
-      }).select('id').single();
+      const { data: dav, error: davError } = await supabase
+        .from("davs")
+        .insert({
+          cliente_nome: cliente.nome,
+          cliente_cnpj: cliente.cnpj,
+          cliente_endereco: cliente.endereco,
+          cliente_telefone: cliente.telefone,
+          emissor_nome: emissor.nome,
+          emissor_cnpj: emissor.cnpj,
+          emissor_endereco: emissor.endereco,
+          emissor_telefone: emissor.telefone,
+          vendedor: condicoes.vendedor,
+          condicao_pagamento: condicoes.pagamento,
+          frete_tipo: condicoes.frete,
+          prazo_entrega: condicoes.prazo,
+          subtotal: subtotal,
+          desconto_percentual: descontoPerc,
+          desconto_valor: descontoValor,
+          frete_valor: freteValor,
+          total: total,
+          observacoes: observacoes,
+          validade: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // +7 dias
+        })
+        .select("id")
+        .single();
 
       if (davError) throw davError;
 
       // 2. Salvar os itens
-      const itensToInsert = itens.map(i => ({
+      const itensToInsert = itens.map((i) => ({
         dav_id: dav.id,
         codigo: i.codigo,
         produto: i.produto,
         qtd: i.qtd,
         valor_unitario: i.vlrUnit,
-        total: i.qtd * i.vlrUnit
+        total: i.qtd * i.vlrUnit,
       }));
 
-      const { error: itemsError } = await supabase.from('dav_items').insert(itensToInsert);
+      const { error: itemsError } = await supabase.from("dav_items").insert(itensToInsert);
       if (itemsError) throw itemsError;
 
       // Sucesso! Redirecionar para a visualização do DAV
       navigate({ to: "/app/dav", search: { id: dav.id } });
-
     } catch (err: any) {
       console.error(err);
       alert("Erro ao salvar o DAV: " + err.message);
@@ -159,11 +186,19 @@ function NovoDAV() {
 
   return (
     <>
-      <PageHeader title="Novo Orçamento (DAV)" subtitle="Preencha os dados para gerar um Documento Auxiliar de Venda" actions={
-        <Button className="bg-gradient-brand text-primary-foreground" onClick={handleSalvar} disabled={loading}>
-          <Save className="mr-2 h-4 w-4" /> {loading ? "Salvando..." : "Salvar DAV"}
-        </Button>
-      } />
+      <PageHeader
+        title="Novo Orçamento (DAV)"
+        subtitle="Preencha os dados para gerar um Documento Auxiliar de Venda"
+        actions={
+          <Button
+            className="bg-gradient-brand text-primary-foreground"
+            onClick={handleSalvar}
+            disabled={loading}
+          >
+            <Save className="mr-2 h-4 w-4" /> {loading ? "Salvando..." : "Salvar DAV"}
+          </Button>
+        }
+      />
 
       <Card className="shadow-card p-6 max-w-5xl mx-auto space-y-8">
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -171,19 +206,35 @@ function NovoDAV() {
             <h3 className="font-semibold border-b pb-2">Dados do Cliente (Comprador)</h3>
             <div className="space-y-2">
               <Label>Nome / Razão Social</Label>
-              <Input value={cliente.nome} onChange={e => setCliente({...cliente, nome: e.target.value})} placeholder="Ex: Jardim Verde Ltda" />
+              <Input
+                value={cliente.nome}
+                onChange={(e) => setCliente({ ...cliente, nome: e.target.value })}
+                placeholder="Ex: Jardim Verde Ltda"
+              />
             </div>
             <div className="space-y-2">
               <Label>CNPJ / CPF</Label>
-              <Input value={cliente.cnpj} onChange={e => setCliente({...cliente, cnpj: e.target.value})} placeholder="00.000.000/0000-00" />
+              <Input
+                value={cliente.cnpj}
+                onChange={(e) => setCliente({ ...cliente, cnpj: e.target.value })}
+                placeholder="00.000.000/0000-00"
+              />
             </div>
             <div className="space-y-2">
               <Label>Endereço Completo</Label>
-              <Input value={cliente.endereco} onChange={e => setCliente({...cliente, endereco: e.target.value})} placeholder="Rua, Número, Bairro, Cidade - UF" />
+              <Input
+                value={cliente.endereco}
+                onChange={(e) => setCliente({ ...cliente, endereco: e.target.value })}
+                placeholder="Rua, Número, Bairro, Cidade - UF"
+              />
             </div>
             <div className="space-y-2">
               <Label>Telefone</Label>
-              <Input value={cliente.telefone} onChange={e => setCliente({...cliente, telefone: e.target.value})} placeholder="(00) 00000-0000" />
+              <Input
+                value={cliente.telefone}
+                onChange={(e) => setCliente({ ...cliente, telefone: e.target.value })}
+                placeholder="(00) 00000-0000"
+              />
             </div>
           </div>
 
@@ -191,19 +242,35 @@ function NovoDAV() {
             <h3 className="font-semibold border-b pb-2">Dados do Emissor (Fornecedor)</h3>
             <div className="space-y-2">
               <Label>Nome / Razão Social</Label>
-              <Input value={emissor.nome} onChange={e => setEmissor({...emissor, nome: e.target.value})} placeholder="Ex: VivaVerde Vasos" />
+              <Input
+                value={emissor.nome}
+                onChange={(e) => setEmissor({ ...emissor, nome: e.target.value })}
+                placeholder="Ex: VivaVerde Vasos"
+              />
             </div>
             <div className="space-y-2">
               <Label>CNPJ / CPF</Label>
-              <Input value={emissor.cnpj} onChange={e => setEmissor({...emissor, cnpj: e.target.value})} placeholder="00.000.000/0000-00" />
+              <Input
+                value={emissor.cnpj}
+                onChange={(e) => setEmissor({ ...emissor, cnpj: e.target.value })}
+                placeholder="00.000.000/0000-00"
+              />
             </div>
             <div className="space-y-2">
               <Label>Endereço Completo</Label>
-              <Input value={emissor.endereco} onChange={e => setEmissor({...emissor, endereco: e.target.value})} placeholder="Endereço da Empresa" />
+              <Input
+                value={emissor.endereco}
+                onChange={(e) => setEmissor({ ...emissor, endereco: e.target.value })}
+                placeholder="Endereço da Empresa"
+              />
             </div>
             <div className="space-y-2">
               <Label>Telefone</Label>
-              <Input value={emissor.telefone} onChange={e => setEmissor({...emissor, telefone: e.target.value})} placeholder="(00) 00000-0000" />
+              <Input
+                value={emissor.telefone}
+                onChange={(e) => setEmissor({ ...emissor, telefone: e.target.value })}
+                placeholder="(00) 00000-0000"
+              />
             </div>
           </div>
 
@@ -211,19 +278,35 @@ function NovoDAV() {
             <h3 className="font-semibold border-b pb-2">Condições Comerciais</h3>
             <div className="space-y-2">
               <Label>Vendedor</Label>
-              <Input value={condicoes.vendedor} onChange={e => setCondicoes({...condicoes, vendedor: e.target.value})} placeholder="Nome do vendedor" />
+              <Input
+                value={condicoes.vendedor}
+                onChange={(e) => setCondicoes({ ...condicoes, vendedor: e.target.value })}
+                placeholder="Nome do vendedor"
+              />
             </div>
             <div className="space-y-2">
               <Label>Condição de Pagamento</Label>
-              <Input value={condicoes.pagamento} onChange={e => setCondicoes({...condicoes, pagamento: e.target.value})} placeholder="Ex: Pix, Dinheiro, Cartão" />
+              <Input
+                value={condicoes.pagamento}
+                onChange={(e) => setCondicoes({ ...condicoes, pagamento: e.target.value })}
+                placeholder="Ex: Pix, Dinheiro, Cartão"
+              />
             </div>
             <div className="space-y-2">
               <Label>Tipo de Frete</Label>
-              <Input value={condicoes.frete} onChange={e => setCondicoes({...condicoes, frete: e.target.value})} placeholder="Ex: Retirada, Entrega" />
+              <Input
+                value={condicoes.frete}
+                onChange={(e) => setCondicoes({ ...condicoes, frete: e.target.value })}
+                placeholder="Ex: Retirada, Entrega"
+              />
             </div>
             <div className="space-y-2">
               <Label>Prazo de Entrega</Label>
-              <Input value={condicoes.prazo} onChange={e => setCondicoes({...condicoes, prazo: e.target.value})} placeholder="Ex: Imediato" />
+              <Input
+                value={condicoes.prazo}
+                onChange={(e) => setCondicoes({ ...condicoes, prazo: e.target.value })}
+                placeholder="Ex: Imediato"
+              />
             </div>
           </div>
         </div>
@@ -231,9 +314,11 @@ function NovoDAV() {
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b pb-2">
             <h3 className="font-semibold">Produtos</h3>
-            <Button variant="outline" size="sm" onClick={addItem}><Plus className="mr-2 h-4 w-4" /> Adicionar Produto</Button>
+            <Button variant="outline" size="sm" onClick={addItem}>
+              <Plus className="mr-2 h-4 w-4" /> Adicionar Produto
+            </Button>
           </div>
-          
+
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -249,13 +334,49 @@ function NovoDAV() {
               <TableBody>
                 {itens.map((i) => (
                   <TableRow key={i.id}>
-                    <TableCell><Input className="h-8" value={i.codigo} onChange={e => updateItem(i.id, 'codigo', e.target.value)} /></TableCell>
-                    <TableCell><Input className="h-8" value={i.produto} onChange={e => updateItem(i.id, 'produto', e.target.value)} /></TableCell>
-                    <TableCell><Input className="h-8 text-right" type="number" min="1" value={i.qtd} onChange={e => updateItem(i.id, 'qtd', Number(e.target.value))} /></TableCell>
-                    <TableCell><Input className="h-8 text-right" type="number" step="0.01" min="0" value={i.vlrUnit} onChange={e => updateItem(i.id, 'vlrUnit', Number(e.target.value))} /></TableCell>
-                    <TableCell className="text-right font-medium pt-3">{(i.qtd * i.vlrUnit).toFixed(2)}</TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => removeItem(i.id)}>
+                      <Input
+                        className="h-8"
+                        value={i.codigo}
+                        onChange={(e) => updateItem(i.id, "codigo", e.target.value)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        className="h-8"
+                        value={i.produto}
+                        onChange={(e) => updateItem(i.id, "produto", e.target.value)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        className="h-8 text-right"
+                        type="number"
+                        min="1"
+                        value={i.qtd}
+                        onChange={(e) => updateItem(i.id, "qtd", Number(e.target.value))}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        className="h-8 text-right"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={i.vlrUnit}
+                        onChange={(e) => updateItem(i.id, "vlrUnit", Number(e.target.value))}
+                      />
+                    </TableCell>
+                    <TableCell className="text-right font-medium pt-3">
+                      {(i.qtd * i.vlrUnit).toFixed(2)}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive"
+                        onClick={() => removeItem(i.id)}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </TableCell>
@@ -269,7 +390,11 @@ function NovoDAV() {
         <div className="flex flex-col md:flex-row justify-between gap-6 pt-4 border-t">
           <div className="flex-1 space-y-2">
             <Label>Observações do Pedido</Label>
-            <Input value={observacoes} onChange={e => setObservacoes(e.target.value)} placeholder="Anotações para o cliente ou para a entrega..." />
+            <Input
+              value={observacoes}
+              onChange={(e) => setObservacoes(e.target.value)}
+              placeholder="Anotações para o cliente ou para a entrega..."
+            />
           </div>
 
           <div className="w-full md:w-64 space-y-3">
@@ -279,11 +404,25 @@ function NovoDAV() {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Desc. (%)</span>
-              <Input className="w-20 h-8 text-right" type="number" min="0" max="100" value={descontoPerc} onChange={e => setDescontoPerc(Number(e.target.value))} />
+              <Input
+                className="w-20 h-8 text-right"
+                type="number"
+                min="0"
+                max="100"
+                value={descontoPerc}
+                onChange={(e) => setDescontoPerc(Number(e.target.value))}
+              />
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Frete (R$)</span>
-              <Input className="w-24 h-8 text-right" type="number" min="0" step="0.01" value={freteValor} onChange={e => setFreteValor(Number(e.target.value))} />
+              <Input
+                className="w-24 h-8 text-right"
+                type="number"
+                min="0"
+                step="0.01"
+                value={freteValor}
+                onChange={(e) => setFreteValor(Number(e.target.value))}
+              />
             </div>
             <div className="flex justify-between items-center border-t pt-3 text-lg font-bold">
               <span>Total</span>

@@ -5,7 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Save, ArrowLeft, Image as ImageIcon, Link as LinkIcon, UploadCloud, X, Plus } from "lucide-react";
+import {
+  Save,
+  ArrowLeft,
+  Image as ImageIcon,
+  Link as LinkIcon,
+  UploadCloud,
+  X,
+  Plus,
+} from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -13,7 +21,7 @@ export const Route = createFileRoute("/app/produto-novo")({
   validateSearch: (search: Record<string, unknown>): { id?: string } => {
     return {
       id: search.id as string | undefined,
-    }
+    };
   },
   head: () => ({ meta: [{ title: "Produto — VIVAVERDE ERP" }] }),
   component: NovoProduto,
@@ -25,7 +33,7 @@ function NovoProduto() {
   const isEditing = !!search.id;
   const [loading, setLoading] = useState(false);
   const [isFetchingInfo, setIsFetchingInfo] = useState(isEditing);
-  
+
   const [produto, setProduto] = useState({
     codigo: "",
     nome: "",
@@ -38,12 +46,18 @@ function NovoProduto() {
     dimensao: "",
     volume: "",
     comprimento: "",
-    cores: [] as string[]
+    cores: [] as string[],
   });
 
   const [categoriasDB, setCategoriasDB] = useState<string[]>([
-    "Vasos Plásticos", "Vasos Decorativos", "Vasos de Produção", 
-    "Floreiras", "Cuias", "Pratos", "Suportes", "Acessórios"
+    "Vasos Plásticos",
+    "Vasos Decorativos",
+    "Vasos de Produção",
+    "Floreiras",
+    "Cuias",
+    "Pratos",
+    "Suportes",
+    "Acessórios",
   ]);
   const [isNovaCategoria, setIsNovaCategoria] = useState(false);
   const [novaCategoria, setNovaCategoria] = useState("");
@@ -51,24 +65,28 @@ function NovoProduto() {
 
   const fetchCategorias = async () => {
     try {
-      const { data } = await supabase.from('produtos').select('categoria');
+      const { data } = await supabase.from("produtos").select("categoria");
       if (data) {
-        const unicas = Array.from(new Set(data.map(p => p.categoria))).filter(Boolean);
+        const unicas = Array.from(new Set(data.map((p) => p.categoria))).filter(Boolean);
         const merged = Array.from(new Set([...categoriasDB, ...unicas]));
         setCategoriasDB(merged);
       }
-    } catch(err) {
+    } catch (err) {
       console.error(err);
     }
   };
 
   useEffect(() => {
     fetchCategorias();
-    
+
     if (isEditing) {
       const fetchProduto = async () => {
         try {
-          const { data, error } = await supabase.from('produtos').select('*').eq('id', search.id).single();
+          const { data, error } = await supabase
+            .from("produtos")
+            .select("*")
+            .eq("id", search.id)
+            .single();
           if (error) throw error;
           if (data) {
             setProduto({
@@ -83,7 +101,7 @@ function NovoProduto() {
               dimensao: data.dimensao || "",
               volume: data.volume || "",
               comprimento: data.comprimento || "",
-              cores: data.cores || []
+              cores: data.cores || [],
             });
           }
         } catch (err) {
@@ -131,7 +149,7 @@ function NovoProduto() {
           canvas.height = height;
           const ctx = canvas.getContext("2d");
           if (!ctx) return reject("Canvas not supported");
-          
+
           ctx.drawImage(img, 0, 0, width, height);
           const compressedBase64 = canvas.toDataURL("image/webp", 0.8);
           resolve(compressedBase64);
@@ -145,10 +163,10 @@ function NovoProduto() {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (!file.type.startsWith('image/')) return alert("Por favor, selecione uma imagem.");
+      if (!file.type.startsWith("image/")) return alert("Por favor, selecione uma imagem.");
       try {
         const compressed = await compressImage(file);
-        setProduto(prev => ({ ...prev, imagem: compressed }));
+        setProduto((prev) => ({ ...prev, imagem: compressed }));
       } catch (err) {
         alert("Erro ao processar imagem.");
       }
@@ -165,7 +183,7 @@ function NovoProduto() {
           if (file) {
             try {
               const compressed = await compressImage(file);
-              setProduto(prev => ({ ...prev, imagem: compressed }));
+              setProduto((prev) => ({ ...prev, imagem: compressed }));
             } catch (err) {
               alert("Erro ao processar imagem colada.");
             }
@@ -178,29 +196,32 @@ function NovoProduto() {
   }, []);
 
   const handleAddUrl = () => {
-    if (imageUrlInput.trim().startsWith('http')) {
-      setProduto(prev => ({ ...prev, imagem: imageUrlInput.trim() }));
+    if (imageUrlInput.trim().startsWith("http")) {
+      setProduto((prev) => ({ ...prev, imagem: imageUrlInput.trim() }));
       setImageUrlInput("");
     } else {
       alert("Insira uma URL válida começando com http:// ou https://");
     }
   };
 
-  const removeImage = () => setProduto(prev => ({ ...prev, imagem: "" }));
+  const removeImage = () => setProduto((prev) => ({ ...prev, imagem: "" }));
 
   const handleAddCor = (e: React.KeyboardEvent<HTMLInputElement> | React.MouseEvent) => {
-    if ((e.type === 'keydown' && (e as React.KeyboardEvent).key === 'Enter') || e.type === 'click') {
+    if (
+      (e.type === "keydown" && (e as React.KeyboardEvent).key === "Enter") ||
+      e.type === "click"
+    ) {
       e.preventDefault();
       const cor = corInput.trim();
       if (cor && !produto.cores.includes(cor)) {
-        setProduto(prev => ({ ...prev, cores: [...prev.cores, cor] }));
+        setProduto((prev) => ({ ...prev, cores: [...prev.cores, cor] }));
         setCorInput("");
       }
     }
   };
 
   const removeCor = (corToRemove: string) => {
-    setProduto(prev => ({ ...prev, cores: prev.cores.filter(c => c !== corToRemove) }));
+    setProduto((prev) => ({ ...prev, cores: prev.cores.filter((c) => c !== corToRemove) }));
   };
 
   // ---------- SAVE LOGIC ----------
@@ -230,23 +251,23 @@ function NovoProduto() {
         dimensao: produto.dimensao || null,
         volume: produto.volume || null,
         comprimento: produto.comprimento || null,
-        cores: produto.cores
+        cores: produto.cores,
       };
 
       if (isEditing) {
-        const { error } = await supabase.from('produtos').update(payload).eq('id', search.id);
+        const { error } = await supabase.from("produtos").update(payload).eq("id", search.id);
         if (error) {
-          if (error.code === '23505') throw new Error("Já existe um produto com este código!");
+          if (error.code === "23505") throw new Error("Já existe um produto com este código!");
           throw error;
         }
       } else {
-        const { error } = await supabase.from('produtos').insert([payload]);
+        const { error } = await supabase.from("produtos").insert([payload]);
         if (error) {
-          if (error.code === '23505') throw new Error("Já existe um produto com este código!");
+          if (error.code === "23505") throw new Error("Já existe um produto com este código!");
           throw error;
         }
       }
-      
+
       navigate({ to: "/app/produtos" });
     } catch (err: any) {
       console.error(err);
@@ -262,32 +283,49 @@ function NovoProduto() {
 
   return (
     <>
-      <PageHeader title={isEditing ? "Editar Produto" : "Novo Produto"} subtitle={isEditing ? "Atualize as informações do item" : "Cadastre um novo item no sistema"} actions={
-        <>
-          <Button variant="outline" asChild><Link to="/app/produtos"><ArrowLeft className="mr-2 h-4 w-4" /> Voltar</Link></Button>
-          <Button className="bg-gradient-brand text-primary-foreground" onClick={handleSalvar} disabled={loading}>
-            <Save className="mr-2 h-4 w-4" /> {loading ? "Salvando..." : "Salvar Produto"}
-          </Button>
-        </>
-      } />
+      <PageHeader
+        title={isEditing ? "Editar Produto" : "Novo Produto"}
+        subtitle={
+          isEditing ? "Atualize as informações do item" : "Cadastre um novo item no sistema"
+        }
+        actions={
+          <>
+            <Button variant="outline" asChild>
+              <Link to="/app/produtos">
+                <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
+              </Link>
+            </Button>
+            <Button
+              className="bg-gradient-brand text-primary-foreground"
+              onClick={handleSalvar}
+              disabled={loading}
+            >
+              <Save className="mr-2 h-4 w-4" /> {loading ? "Salvando..." : "Salvar Produto"}
+            </Button>
+          </>
+        }
+      />
 
       <Card className="shadow-card p-6 max-w-5xl mx-auto grid gap-8 md:grid-cols-[1fr_320px]">
         {/* Coluna Esquerda: Dados do Produto */}
         <div className="space-y-8">
-          
           <div className="space-y-4">
             <h3 className="font-semibold text-lg border-b pb-2">Informações Básicas</h3>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Código (SKU)</Label>
-                <Input value={produto.codigo} onChange={e => setProduto({...produto, codigo: e.target.value})} placeholder="Ex: VPL017" />
+                <Input
+                  value={produto.codigo}
+                  onChange={(e) => setProduto({ ...produto, codigo: e.target.value })}
+                  placeholder="Ex: VPL017"
+                />
               </div>
               <div className="space-y-2">
                 <Label>Status</Label>
-                <select 
+                <select
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  value={produto.status} 
-                  onChange={e => setProduto({...produto, status: e.target.value})}
+                  value={produto.status}
+                  onChange={(e) => setProduto({ ...produto, status: e.target.value })}
                 >
                   <option>Ativo</option>
                   <option>Crítico</option>
@@ -295,40 +333,56 @@ function NovoProduto() {
                 </select>
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <Label>Nome do Produto / Modelo</Label>
-              <Input value={produto.nome} onChange={e => setProduto({...produto, nome: e.target.value})} placeholder="Ex: Cuia C 13" />
+              <Input
+                value={produto.nome}
+                onChange={(e) => setProduto({ ...produto, nome: e.target.value })}
+                placeholder="Ex: Cuia C 13"
+              />
             </div>
 
             <div className="space-y-2">
               <Label>Categoria</Label>
               {!isNovaCategoria ? (
-                <select 
+                <select
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  value={produto.categoria} 
-                  onChange={e => {
+                  value={produto.categoria}
+                  onChange={(e) => {
                     if (e.target.value === "NOVA_CATEGORIA") {
                       setIsNovaCategoria(true);
                     } else {
-                      setProduto({...produto, categoria: e.target.value});
+                      setProduto({ ...produto, categoria: e.target.value });
                     }
                   }}
                 >
-                  {categoriasDB.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
+                  {categoriasDB.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
                   ))}
-                  <option value="NOVA_CATEGORIA" className="font-bold text-primary">+ Adicionar Nova Categoria...</option>
+                  <option value="NOVA_CATEGORIA" className="font-bold text-primary">
+                    + Adicionar Nova Categoria...
+                  </option>
                 </select>
               ) : (
                 <div className="flex gap-2">
-                  <Input 
+                  <Input
                     autoFocus
-                    placeholder="Nome da nova categoria" 
-                    value={novaCategoria} 
-                    onChange={e => setNovaCategoria(e.target.value)} 
+                    placeholder="Nome da nova categoria"
+                    value={novaCategoria}
+                    onChange={(e) => setNovaCategoria(e.target.value)}
                   />
-                  <Button variant="outline" onClick={() => { setIsNovaCategoria(false); setNovaCategoria(""); }}>Cancelar</Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsNovaCategoria(false);
+                      setNovaCategoria("");
+                    }}
+                  >
+                    Cancelar
+                  </Button>
                 </div>
               )}
             </div>
@@ -336,11 +390,22 @@ function NovoProduto() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Estoque Inicial</Label>
-                <Input type="number" min="0" value={produto.estoque} onChange={e => setProduto({...produto, estoque: Number(e.target.value)})} />
+                <Input
+                  type="number"
+                  min="0"
+                  value={produto.estoque}
+                  onChange={(e) => setProduto({ ...produto, estoque: Number(e.target.value) })}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Valor Unitário (R$)</Label>
-                <Input type="number" min="0" step="0.01" value={produto.valor} onChange={e => setProduto({...produto, valor: Number(e.target.value)})} />
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={produto.valor}
+                  onChange={(e) => setProduto({ ...produto, valor: Number(e.target.value) })}
+                />
               </div>
             </div>
           </div>
@@ -349,55 +414,87 @@ function NovoProduto() {
             <h3 className="font-semibold text-lg border-b pb-2 flex items-center gap-2">
               🪴 Especificações do Catálogo Sura Vasos
             </h3>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Número / Referência</Label>
-                <Input value={produto.numero} onChange={e => setProduto({...produto, numero: e.target.value})} placeholder="Ex: 0, 1, Violeta, Mini" />
+                <Input
+                  value={produto.numero}
+                  onChange={(e) => setProduto({ ...produto, numero: e.target.value })}
+                  placeholder="Ex: 0, 1, Violeta, Mini"
+                />
               </div>
               <div className="space-y-2">
                 <Label>Dimensões (cm) D x h x d</Label>
-                <Input value={produto.dimensao} onChange={e => setProduto({...produto, dimensao: e.target.value})} placeholder="Ex: 12,5 x 6,5 x 7,5" />
+                <Input
+                  value={produto.dimensao}
+                  onChange={(e) => setProduto({ ...produto, dimensao: e.target.value })}
+                  placeholder="Ex: 12,5 x 6,5 x 7,5"
+                />
               </div>
               <div className="space-y-2">
                 <Label>Volume (L)</Label>
-                <Input value={produto.volume} onChange={e => setProduto({...produto, volume: e.target.value})} placeholder="Ex: 0,5" />
+                <Input
+                  value={produto.volume}
+                  onChange={(e) => setProduto({ ...produto, volume: e.target.value })}
+                  placeholder="Ex: 0,5"
+                />
               </div>
               <div className="space-y-2">
                 <Label>Comprimento (Alças)</Label>
-                <Input value={produto.comprimento} onChange={e => setProduto({...produto, comprimento: e.target.value})} placeholder="Ex: 39 cm" />
+                <Input
+                  value={produto.comprimento}
+                  onChange={(e) => setProduto({ ...produto, comprimento: e.target.value })}
+                  placeholder="Ex: 39 cm"
+                />
               </div>
             </div>
 
             <div className="space-y-3 pt-2">
               <Label>Cores Disponíveis</Label>
               <div className="flex gap-2">
-                <Input 
-                  value={corInput} 
-                  onChange={e => setCorInput(e.target.value)} 
+                <Input
+                  value={corInput}
+                  onChange={(e) => setCorInput(e.target.value)}
                   onKeyDown={handleAddCor}
-                  placeholder="Ex: Preto, Cerâmica (Pressione Enter para adicionar)" 
+                  placeholder="Ex: Preto, Cerâmica (Pressione Enter para adicionar)"
                 />
-                <Button variant="secondary" onClick={handleAddCor}><Plus className="h-4 w-4" /></Button>
+                <Button variant="secondary" onClick={handleAddCor}>
+                  <Plus className="h-4 w-4" />
+                </Button>
               </div>
               <div className="flex flex-wrap gap-2 mt-2">
-                {produto.cores.length === 0 && <span className="text-xs text-muted-foreground italic">Nenhuma cor informada</span>}
-                {produto.cores.map(cor => (
-                  <Badge key={cor} variant="secondary" className="pl-3 pr-1 py-1 flex items-center gap-1 bg-white border shadow-sm">
+                {produto.cores.length === 0 && (
+                  <span className="text-xs text-muted-foreground italic">
+                    Nenhuma cor informada
+                  </span>
+                )}
+                {produto.cores.map((cor) => (
+                  <Badge
+                    key={cor}
+                    variant="secondary"
+                    className="pl-3 pr-1 py-1 flex items-center gap-1 bg-white border shadow-sm"
+                  >
                     {cor}
-                    <button onClick={() => removeCor(cor)} className="hover:bg-muted rounded-full p-0.5"><X className="h-3 w-3" /></button>
+                    <button
+                      onClick={() => removeCor(cor)}
+                      className="hover:bg-muted rounded-full p-0.5"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
                   </Badge>
                 ))}
               </div>
             </div>
           </div>
-
         </div>
 
         {/* Coluna Direita: Imagem do Produto */}
         <div className="space-y-4 border-l pl-6">
-          <Label className="flex items-center gap-2"><ImageIcon className="h-4 w-4" /> Foto do Produto</Label>
-          
+          <Label className="flex items-center gap-2">
+            <ImageIcon className="h-4 w-4" /> Foto do Produto
+          </Label>
+
           {produto.imagem ? (
             <div className="relative group rounded-xl overflow-hidden border border-border bg-muted aspect-square">
               <img src={produto.imagem} alt="Preview" className="w-full h-full object-cover" />
@@ -411,38 +508,49 @@ function NovoProduto() {
             <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-border rounded-xl bg-muted/30 aspect-square text-center hover:bg-muted/50 transition-colors">
               <UploadCloud className="h-10 w-10 text-muted-foreground mb-3" />
               <p className="text-sm font-semibold">Clique ou Cole a foto</p>
-              <p className="text-xs text-muted-foreground mt-1 mb-4">Suporta Ctrl+V (Área de transferência)</p>
+              <p className="text-xs text-muted-foreground mt-1 mb-4">
+                Suporta Ctrl+V (Área de transferência)
+              </p>
               <Button size="sm" variant="secondary" onClick={() => fileInputRef.current?.click()}>
                 Escolher Arquivo
               </Button>
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                className="hidden" 
-                accept="image/*" 
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/*"
                 onChange={handleFileChange}
               />
             </div>
           )}
 
           <div className="relative">
-            <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
-            <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">Ou por link</span></div>
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">Ou por link</span>
+            </div>
           </div>
 
           <div className="flex gap-2">
             <div className="relative flex-1">
               <LinkIcon className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-              <Input 
-                value={imageUrlInput} 
-                onChange={e => setImageUrlInput(e.target.value)} 
-                placeholder="https://exemplo.com/vaso.jpg" 
-                className="pl-8 text-xs" 
+              <Input
+                value={imageUrlInput}
+                onChange={(e) => setImageUrlInput(e.target.value)}
+                placeholder="https://exemplo.com/vaso.jpg"
+                className="pl-8 text-xs"
               />
             </div>
-            <Button size="sm" variant="outline" onClick={handleAddUrl}>Add</Button>
+            <Button size="sm" variant="outline" onClick={handleAddUrl}>
+              Add
+            </Button>
           </div>
-          <p className="text-[10px] text-muted-foreground text-center">As imagens adicionadas por arquivo/colar são comprimidas automaticamente para economizar espaço.</p>
+          <p className="text-[10px] text-muted-foreground text-center">
+            As imagens adicionadas por arquivo/colar são comprimidas automaticamente para economizar
+            espaço.
+          </p>
         </div>
       </Card>
     </>

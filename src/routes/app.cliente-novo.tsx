@@ -17,7 +17,7 @@ export const Route = createFileRoute("/app/cliente-novo")({
 function NovoCliente() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  
+
   const [cliente, setCliente] = useState({
     nome: "",
     cpf_cnpj: "",
@@ -28,7 +28,7 @@ function NovoCliente() {
     bairro: "",
     cidade: "",
     uf: "",
-    status: "Ativo"
+    status: "Ativo",
   });
 
   const formatCpfCnpj = (v: string) => {
@@ -66,14 +66,16 @@ function NovoCliente() {
         cliente.endereco,
         cliente.numero && `nº ${cliente.numero}`,
         cliente.bairro && `Bairro ${cliente.bairro}`,
-        cliente.cep && `CEP ${cliente.cep}`
-      ].filter(Boolean).join(', ');
+        cliente.cep && `CEP ${cliente.cep}`,
+      ]
+        .filter(Boolean)
+        .join(", ");
 
       const { bairro, cep, numero, ...rest } = cliente;
-      
-      let payload: any = {
+
+      const payload: any = {
         ...rest,
-        endereco: enderecoCompleto || null
+        endereco: enderecoCompleto || null,
       };
 
       let success = false;
@@ -81,23 +83,23 @@ function NovoCliente() {
 
       while (!success && attempts < 10) {
         attempts++;
-        const { error } = await supabase.from('clientes').insert([payload]);
-        
+        const { error } = await supabase.from("clientes").insert([payload]);
+
         if (error) {
-           const missingMatch = error.message.match(/Could not find the '(.*?)' column/);
-           if (missingMatch && missingMatch[1]) {
-             const badCol = missingMatch[1];
-             console.warn(`Removing missing column '${badCol}' from payload`);
-             delete payload[badCol];
-             continue; // Tenta de novo sem essa coluna
-           } else {
-             throw error; // É outro erro, vamos falhar
-           }
+          const missingMatch = error.message.match(/Could not find the '(.*?)' column/);
+          if (missingMatch && missingMatch[1]) {
+            const badCol = missingMatch[1];
+            console.warn(`Removing missing column '${badCol}' from payload`);
+            delete payload[badCol];
+            continue; // Tenta de novo sem essa coluna
+          } else {
+            throw error; // É outro erro, vamos falhar
+          }
         }
-        
+
         success = true;
       }
-      
+
       navigate({ to: "/app/clientes" });
     } catch (err: any) {
       console.error(err);
@@ -109,39 +111,67 @@ function NovoCliente() {
 
   return (
     <>
-      <PageHeader title="Novo Cliente" subtitle="Cadastre um novo cliente no sistema" actions={
-        <>
-          <Button variant="outline" asChild><Link to="/app/clientes"><ArrowLeft className="mr-2 h-4 w-4" /> Voltar</Link></Button>
-          <Button className="bg-gradient-brand text-primary-foreground" onClick={handleSalvar} disabled={loading}>
-            <Save className="mr-2 h-4 w-4" /> {loading ? "Salvando..." : "Salvar Cliente"}
-          </Button>
-        </>
-      } />
+      <PageHeader
+        title="Novo Cliente"
+        subtitle="Cadastre um novo cliente no sistema"
+        actions={
+          <>
+            <Button variant="outline" asChild>
+              <Link to="/app/clientes">
+                <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
+              </Link>
+            </Button>
+            <Button
+              className="bg-gradient-brand text-primary-foreground"
+              onClick={handleSalvar}
+              disabled={loading}
+            >
+              <Save className="mr-2 h-4 w-4" /> {loading ? "Salvando..." : "Salvar Cliente"}
+            </Button>
+          </>
+        }
+      />
 
       <Card className="shadow-card p-6 max-w-2xl mx-auto space-y-6">
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Nome / Razão Social</Label>
-              <Input value={cliente.nome} onChange={e => setCliente({...cliente, nome: e.target.value})} placeholder="Ex: Jardim Verde Ltda" />
+              <Input
+                value={cliente.nome}
+                onChange={(e) => setCliente({ ...cliente, nome: e.target.value })}
+                placeholder="Ex: Jardim Verde Ltda"
+              />
             </div>
             <div className="space-y-2">
               <Label>CPF / CNPJ (Opcional)</Label>
-              <Input value={cliente.cpf_cnpj} onChange={e => setCliente({...cliente, cpf_cnpj: formatCpfCnpj(e.target.value)})} placeholder="000.000.000-00 ou 00.000.000/0000-00" />
+              <Input
+                value={cliente.cpf_cnpj}
+                onChange={(e) =>
+                  setCliente({ ...cliente, cpf_cnpj: formatCpfCnpj(e.target.value) })
+                }
+                placeholder="000.000.000-00 ou 00.000.000/0000-00"
+              />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Telefone</Label>
-              <Input value={cliente.telefone} onChange={e => setCliente({...cliente, telefone: formatTelefone(e.target.value)})} placeholder="(00) 00000-0000" />
+              <Input
+                value={cliente.telefone}
+                onChange={(e) =>
+                  setCliente({ ...cliente, telefone: formatTelefone(e.target.value) })
+                }
+                placeholder="(00) 00000-0000"
+              />
             </div>
             <div className="space-y-2">
               <Label>Status</Label>
-              <select 
+              <select
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                value={cliente.status} 
-                onChange={e => setCliente({...cliente, status: e.target.value})}
+                value={cliente.status}
+                onChange={(e) => setCliente({ ...cliente, status: e.target.value })}
               >
                 <option>Ativo</option>
                 <option>Premium</option>
@@ -152,34 +182,59 @@ function NovoCliente() {
 
           <div className="border-t pt-4 space-y-4 mt-4">
             <h4 className="font-semibold text-sm text-muted-foreground">Endereço (Opcional)</h4>
-            
+
             <div className="grid grid-cols-4 gap-4">
               <div className="space-y-2 col-span-1">
                 <Label>CEP</Label>
-                <Input value={cliente.cep} onChange={e => setCliente({...cliente, cep: formatCep(e.target.value)})} placeholder="00000-000" />
+                <Input
+                  value={cliente.cep}
+                  onChange={(e) => setCliente({ ...cliente, cep: formatCep(e.target.value) })}
+                  placeholder="00000-000"
+                />
               </div>
               <div className="space-y-2 col-span-3">
                 <Label>Logradouro / Endereço</Label>
-                <Input value={cliente.endereco} onChange={e => setCliente({...cliente, endereco: e.target.value})} placeholder="Ex: Rua das Flores" />
+                <Input
+                  value={cliente.endereco}
+                  onChange={(e) => setCliente({ ...cliente, endereco: e.target.value })}
+                  placeholder="Ex: Rua das Flores"
+                />
               </div>
             </div>
 
             <div className="grid grid-cols-4 gap-4">
-               <div className="space-y-2 col-span-1">
+              <div className="space-y-2 col-span-1">
                 <Label>Número</Label>
-                <Input value={cliente.numero} onChange={e => setCliente({...cliente, numero: e.target.value})} placeholder="Ex: 123 ou SN" />
+                <Input
+                  value={cliente.numero}
+                  onChange={(e) => setCliente({ ...cliente, numero: e.target.value })}
+                  placeholder="Ex: 123 ou SN"
+                />
               </div>
               <div className="space-y-2 col-span-1">
                 <Label>Bairro</Label>
-                <Input value={cliente.bairro} onChange={e => setCliente({...cliente, bairro: e.target.value})} placeholder="Centro" />
+                <Input
+                  value={cliente.bairro}
+                  onChange={(e) => setCliente({ ...cliente, bairro: e.target.value })}
+                  placeholder="Centro"
+                />
               </div>
               <div className="space-y-2 col-span-1">
                 <Label>Cidade</Label>
-                <Input value={cliente.cidade} onChange={e => setCliente({...cliente, cidade: e.target.value})} placeholder="Ex: São Paulo" />
+                <Input
+                  value={cliente.cidade}
+                  onChange={(e) => setCliente({ ...cliente, cidade: e.target.value })}
+                  placeholder="Ex: São Paulo"
+                />
               </div>
               <div className="space-y-2 col-span-1">
                 <Label>UF</Label>
-                <Input value={cliente.uf} onChange={e => setCliente({...cliente, uf: e.target.value})} placeholder="Ex: SP" maxLength={2} />
+                <Input
+                  value={cliente.uf}
+                  onChange={(e) => setCliente({ ...cliente, uf: e.target.value })}
+                  placeholder="Ex: SP"
+                  maxLength={2}
+                />
               </div>
             </div>
           </div>

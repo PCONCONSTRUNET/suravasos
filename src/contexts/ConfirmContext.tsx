@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -8,14 +8,14 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+} from "@/components/ui/alert-dialog";
 
 type ConfirmOptions = {
   title?: string;
   description: string;
   confirmText?: string;
   cancelText?: string;
-  variant?: 'default' | 'destructive';
+  variant?: "default" | "destructive";
 };
 
 type ConfirmContextType = (options: string | ConfirmOptions) => Promise<boolean>;
@@ -24,12 +24,12 @@ const ConfirmContext = createContext<ConfirmContextType | undefined>(undefined);
 
 export const ConfirmProvider = ({ children }: { children: ReactNode }) => {
   const [open, setOpen] = useState(false);
-  const [options, setOptions] = useState<ConfirmOptions>({ description: '' });
+  const [options, setOptions] = useState<ConfirmOptions>({ description: "" });
   const [resolver, setResolver] = useState<(value: boolean) => void>();
 
   const confirm = useCallback((opts: string | ConfirmOptions) => {
     return new Promise<boolean>((resolve) => {
-      setOptions(typeof opts === 'string' ? { description: opts, title: 'Confirmação' } : opts);
+      setOptions(typeof opts === "string" ? { description: opts, title: "Confirmação" } : opts);
       setResolver(() => resolve);
       setOpen(true);
     });
@@ -51,15 +51,22 @@ export const ConfirmProvider = ({ children }: { children: ReactNode }) => {
       <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{options.title || 'Confirmação'}</AlertDialogTitle>
+            <AlertDialogTitle>{options.title || "Confirmação"}</AlertDialogTitle>
             <AlertDialogDescription>{options.description}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={handleCancel}>
-              {options.cancelText || 'Cancelar'}
+              {options.cancelText || "Cancelar"}
             </AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm} className={options.variant === 'destructive' ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : 'bg-success text-success-foreground hover:bg-success/90'}>
-              {options.confirmText || 'Confirmar'}
+            <AlertDialogAction
+              onClick={handleConfirm}
+              className={
+                options.variant === "destructive"
+                  ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  : "bg-success text-success-foreground hover:bg-success/90"
+              }
+            >
+              {options.confirmText || "Confirmar"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -71,7 +78,7 @@ export const ConfirmProvider = ({ children }: { children: ReactNode }) => {
 export const useConfirm = () => {
   const context = useContext(ConfirmContext);
   if (!context) {
-    throw new Error('useConfirm deve ser usado dentro de um ConfirmProvider');
+    throw new Error("useConfirm deve ser usado dentro de um ConfirmProvider");
   }
   return context;
 };

@@ -19,9 +19,11 @@ type AuthFormData = z.infer<typeof authSchema>;
 
 export const Route = createFileRoute("/")({
   beforeLoad: async () => {
-    if (typeof window === 'undefined') return;
-    
-    const { data: { session } } = await supabase.auth.getSession();
+    if (typeof window === "undefined") return;
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (session) {
       throw redirect({
         to: "/app/dashboard",
@@ -37,7 +39,12 @@ function Login() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [resetSent, setResetSent] = useState(false);
 
-  const { register, handleSubmit, formState: { errors, isSubmitting }, getValues } = useForm<AuthFormData>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    getValues,
+  } = useForm<AuthFormData>({
     resolver: zodResolver(authSchema),
     defaultValues: { email: "", password: "" },
   });
@@ -50,7 +57,11 @@ function Login() {
     });
 
     if (signInError) {
-      setAuthError(signInError.message === "Invalid login credentials" ? "Email ou senha incorretos." : signInError.message);
+      setAuthError(
+        signInError.message === "Invalid login credentials"
+          ? "Email ou senha incorretos."
+          : signInError.message,
+      );
     } else {
       nav({ to: "/app/dashboard" });
     }
@@ -71,11 +82,11 @@ function Login() {
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-neutral-900">
       {/* Background Image */}
-      <div 
+      <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: "url('/vasos-foto.jpeg')" }}
       />
-      
+
       {/* Dark overlay for better contrast */}
       <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
 
@@ -98,10 +109,7 @@ function Login() {
             Uso restrito a colaboradores autorizados
           </p>
 
-          <form
-            onSubmit={handleSubmit(onSubmitLogin)}
-            className="mt-6 space-y-4"
-          >
+          <form onSubmit={handleSubmit(onSubmitLogin)} className="mt-6 space-y-4">
             {authError && (
               <div className="bg-red-50 text-red-600 text-sm p-3 rounded-md border border-red-200">
                 {authError}
@@ -121,16 +129,18 @@ function Login() {
               {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
             </div>
             <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-sm font-medium text-[#374151]">Senha</Label>
-                  <button
-                    type="button"
-                    onClick={handleForgotPassword}
-                    className="text-xs font-medium text-[#4a7c2a] hover:text-[#2d5a1e] hover:underline transition-colors"
-                  >
-                    {resetSent ? "✅ Link enviado!" : "Esqueceu?"}
-                  </button>
-                </div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-sm font-medium text-[#374151]">
+                  Senha
+                </Label>
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  className="text-xs font-medium text-[#4a7c2a] hover:text-[#2d5a1e] hover:underline transition-colors"
+                >
+                  {resetSent ? "✅ Link enviado!" : "Esqueceu?"}
+                </button>
+              </div>
               <Input
                 id="password"
                 type="password"
@@ -142,7 +152,10 @@ function Login() {
             </div>
 
             <label className="flex items-center gap-2 text-sm text-[#64748b]">
-              <Checkbox className="border-[#d1d5db] data-[state=checked]:bg-[#4a7c2a] data-[state=checked]:border-[#4a7c2a]" defaultChecked />
+              <Checkbox
+                className="border-[#d1d5db] data-[state=checked]:bg-[#4a7c2a] data-[state=checked]:border-[#4a7c2a]"
+                defaultChecked
+              />
               Lembrar este computador
             </label>
 
@@ -157,7 +170,6 @@ function Login() {
               </Button>
             </div>
           </form>
-
         </div>
 
         {/* Footer */}

@@ -4,14 +4,35 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Save, ArrowLeft, Plus, Trash2, ShoppingCart, Check, ChevronsUpDown } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { cn } from "@/lib/utils";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/app/venda-nova")({
   head: () => ({ meta: [{ title: "Nova Venda/DAV — VIVAVERDE ERP" }] }),
@@ -28,7 +49,7 @@ function NovaVenda() {
   const [clienteId, setClienteId] = useState("");
   const [tipo, setTipo] = useState("DAV"); // 'DAV' ou 'VENDA'
   const [status, setStatus] = useState("Orçamento");
-  
+
   // Cart State
   const [itens, setItens] = useState<any[]>([]);
   const [produtoSelecionado, setProdutoSelecionado] = useState("");
@@ -39,13 +60,22 @@ function NovaVenda() {
 
   // States for new client modal
   const [openModalCliente, setOpenModalCliente] = useState(false);
-  const [novoCliente, setNovoCliente] = useState({ nome: "", cpf_cnpj: "", telefone: "", endereco: "" });
+  const [novoCliente, setNovoCliente] = useState({
+    nome: "",
+    cpf_cnpj: "",
+    telefone: "",
+    endereco: "",
+  });
   const [loadingCliente, setLoadingCliente] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data: c } = await supabase.from('clientes').select('*').order('nome');
-      const { data: p } = await supabase.from('produtos').select('*').eq('status', 'Ativo').order('nome');
+      const { data: c } = await supabase.from("clientes").select("*").order("nome");
+      const { data: p } = await supabase
+        .from("produtos")
+        .select("*")
+        .eq("status", "Ativo")
+        .order("nome");
       if (c) setClientes(c);
       if (p) setProdutos(p);
     };
@@ -54,12 +84,12 @@ function NovaVenda() {
 
   const handleAddItem = () => {
     if (!produtoSelecionado || quantidade <= 0) return;
-    const prod = produtos.find(p => p.id === produtoSelecionado);
+    const prod = produtos.find((p) => p.id === produtoSelecionado);
     if (!prod) return;
 
     if (tipo === "VENDA" && prod.estoque < quantidade) {
-        alert(`Estoque insuficiente! Você tem apenas ${prod.estoque} unidades de ${prod.nome}.`);
-        return;
+      alert(`Estoque insuficiente! Você tem apenas ${prod.estoque} unidades de ${prod.nome}.`);
+      return;
     }
 
     const novoItem = {
@@ -88,7 +118,7 @@ function NovaVenda() {
       alert("Adicione pelo menos um item.");
       return;
     }
-    
+
     // Se não tiver cliente selecionado, abre o modal de novo cliente
     if (!clienteId) {
       setOpenModalCliente(true);
@@ -103,7 +133,7 @@ function NovaVenda() {
       alert("O nome da empresa/cliente é obrigatório!");
       return;
     }
-    
+
     setLoadingCliente(true);
     try {
       const payload = {
@@ -111,18 +141,17 @@ function NovaVenda() {
         cpf_cnpj: novoCliente.cpf_cnpj,
         telefone: novoCliente.telefone,
         endereco: novoCliente.endereco,
-        status: "Ativo"
+        status: "Ativo",
       };
-      
-      const { data, error } = await supabase.from('clientes').insert([payload]).select().single();
+
+      const { data, error } = await supabase.from("clientes").insert([payload]).select().single();
       if (error) throw error;
-      
+
       setClienteId(data.id);
       setOpenModalCliente(false);
-      
+
       // Procede com a gravação do DAV/Venda com o novo cliente
       await executarSalvamentoVenda(data.id);
-      
     } catch (err: any) {
       console.error(err);
       alert("Erro ao criar novo cliente: " + err.message);
@@ -139,53 +168,63 @@ function NovaVenda() {
       const totalVenda = subtotal - descontoValor + freteValor;
 
       // 1. Criar a Venda/DAV
-      const { data: vendaData, error: vendaError } = await supabase.from('vendas').insert([{
-        cliente_id: idDoCliente,
-        tipo: tipo,
-        status: status,
-        valor_total: totalVenda
-      }]).select().single();
+      const { data: vendaData, error: vendaError } = await supabase
+        .from("vendas")
+        .insert([
+          {
+            cliente_id: idDoCliente,
+            tipo: tipo,
+            status: status,
+            valor_total: totalVenda,
+          },
+        ])
+        .select()
+        .single();
 
       if (vendaError) throw vendaError;
       const vendaId = vendaData.id;
 
       // 2. Inserir os Itens
-      const itensToInsert = itens.map(i => ({
+      const itensToInsert = itens.map((i) => ({
         venda_id: vendaId,
         produto_id: i.produto_id,
         quantidade: i.quantidade,
         valor_unitario: i.valor_unitario,
-        subtotal: i.subtotal
+        subtotal: i.subtotal,
       }));
 
-      const { error: itensError } = await supabase.from('vendas_itens').insert(itensToInsert);
+      const { error: itensError } = await supabase.from("vendas_itens").insert(itensToInsert);
       if (itensError) throw itensError;
 
       // 3. Dar baixa no estoque e gerar financeiro (Somente se for VENDA e não Orçamento)
       if (tipo === "VENDA") {
         for (const item of itens) {
-           const prod = produtos.find(p => p.id === item.produto_id);
-           const novoEstoque = prod.estoque - item.quantidade;
-           await supabase.from('produtos').update({ estoque: novoEstoque }).eq('id', item.produto_id);
+          const prod = produtos.find((p) => p.id === item.produto_id);
+          const novoEstoque = prod.estoque - item.quantidade;
+          await supabase
+            .from("produtos")
+            .update({ estoque: novoEstoque })
+            .eq("id", item.produto_id);
         }
 
         // Criar Conta a Receber
         const vencimento = new Date();
         vencimento.setDate(vencimento.getDate() + 30); // 30 dias de prazo
-        await supabase.from('contas_receber').insert([{
-           venda_id: vendaId,
-           cliente_id: idDoCliente,
-           descricao: `Venda #${vendaId.substring(0,8).toUpperCase()}`,
-           valor: totalVenda,
-           vencimento: vencimento.toISOString().split('T')[0],
-           status: status === "Pago" ? "Recebido" : "Pendente",
-           data_pagamento: status === "Pago" ? new Date().toISOString().split('T')[0] : null
-        }]);
+        await supabase.from("contas_receber").insert([
+          {
+            venda_id: vendaId,
+            cliente_id: idDoCliente,
+            descricao: `Venda #${vendaId.substring(0, 8).toUpperCase()}`,
+            valor: totalVenda,
+            vencimento: vencimento.toISOString().split("T")[0],
+            status: status === "Pago" ? "Recebido" : "Pendente",
+            data_pagamento: status === "Pago" ? new Date().toISOString().split("T")[0] : null,
+          },
+        ]);
       }
 
       alert(tipo === "DAV" ? "Orçamento criado com sucesso!" : "Venda finalizada com sucesso!");
       navigate({ to: "/app/vendas" });
-
     } catch (err: any) {
       console.error(err);
       alert("Erro ao salvar: " + err.message);
@@ -196,33 +235,49 @@ function NovaVenda() {
 
   // Ajustar o status padrão ao mudar o tipo
   useEffect(() => {
-     if (tipo === "DAV") setStatus("Orçamento");
-     if (tipo === "VENDA") setStatus("Pago");
+    if (tipo === "DAV") setStatus("Orçamento");
+    if (tipo === "VENDA") setStatus("Pago");
   }, [tipo]);
 
   return (
     <>
-      <PageHeader title={tipo === "DAV" ? "Novo Orçamento (DAV)" : "Nova Venda"} subtitle="Preencha os dados e adicione os itens" actions={
-        <>
-          <Button variant="outline" asChild><Link to="/app/vendas"><ArrowLeft className="mr-2 h-4 w-4" /> Voltar</Link></Button>
-          <Button className="bg-gradient-brand text-primary-foreground" onClick={handleSalvar} disabled={loading || itens.length === 0}>
-            <Save className="mr-2 h-4 w-4" /> {loading ? "Processando..." : (tipo === "DAV" ? "Salvar Orçamento" : "Finalizar Venda")}
-          </Button>
-        </>
-      } />
+      <PageHeader
+        title={tipo === "DAV" ? "Novo Orçamento (DAV)" : "Nova Venda"}
+        subtitle="Preencha os dados e adicione os itens"
+        actions={
+          <>
+            <Button variant="outline" asChild>
+              <Link to="/app/vendas">
+                <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
+              </Link>
+            </Button>
+            <Button
+              className="bg-gradient-brand text-primary-foreground"
+              onClick={handleSalvar}
+              disabled={loading || itens.length === 0}
+            >
+              <Save className="mr-2 h-4 w-4" />{" "}
+              {loading ? "Processando..." : tipo === "DAV" ? "Salvar Orçamento" : "Finalizar Venda"}
+            </Button>
+          </>
+        }
+      />
 
       <div className="grid gap-6 md:grid-cols-3">
         {/* Lado Esquerdo - Formulário Principal */}
         <div className="md:col-span-2 space-y-6">
           <Card className="shadow-card p-6 space-y-4">
-            <h3 className="font-semibold text-lg flex items-center gap-2"><ShoppingCart className="h-5 w-5 text-brand" /> Dados da Operação</h3>
-            
+            <h3 className="font-semibold text-lg flex items-center gap-2">
+              <ShoppingCart className="h-5 w-5 text-brand" /> Dados da Operação
+            </h3>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Tipo de Operação</Label>
-                <select 
+                <select
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  value={tipo} onChange={e => setTipo(e.target.value)}
+                  value={tipo}
+                  onChange={(e) => setTipo(e.target.value)}
                 >
                   <option value="DAV">Orçamento (DAV)</option>
                   <option value="VENDA">Venda Direta (Baixa Estoque)</option>
@@ -230,14 +285,23 @@ function NovaVenda() {
               </div>
               <div className="space-y-2">
                 <Label>Status</Label>
-                <select 
+                <select
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  value={status} onChange={e => setStatus(e.target.value)}
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
                 >
                   {tipo === "DAV" ? (
-                    <><option value="Orçamento">Orçamento Aberto</option><option value="Aprovado">Aprovado pelo Cliente</option><option value="Rejeitado">Rejeitado</option></>
+                    <>
+                      <option value="Orçamento">Orçamento Aberto</option>
+                      <option value="Aprovado">Aprovado pelo Cliente</option>
+                      <option value="Rejeitado">Rejeitado</option>
+                    </>
                   ) : (
-                    <><option value="Pago">Pago / Finalizado</option><option value="Aguardando Pagamento">Aguardando Pagamento</option><option value="Em Separação">Em Separação</option></>
+                    <>
+                      <option value="Pago">Pago / Finalizado</option>
+                      <option value="Aguardando Pagamento">Aguardando Pagamento</option>
+                      <option value="Em Separação">Em Separação</option>
+                    </>
                   )}
                 </select>
               </div>
@@ -245,12 +309,17 @@ function NovaVenda() {
 
             <div className="space-y-2">
               <Label>Cliente</Label>
-              <select 
+              <select
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                value={clienteId} onChange={e => setClienteId(e.target.value)}
+                value={clienteId}
+                onChange={(e) => setClienteId(e.target.value)}
               >
                 <option value="">Selecione um cliente...</option>
-                {clientes.map(c => <option key={c.id} value={c.id}>{c.nome} ({c.cidade || 'S/ Cidade'})</option>)}
+                {clientes.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nome} ({c.cidade || "S/ Cidade"})
+                  </option>
+                ))}
               </select>
             </div>
           </Card>
@@ -271,8 +340,10 @@ function NovaVenda() {
                     >
                       {produtoSelecionado
                         ? (() => {
-                            const p = produtos.find(p => p.id === produtoSelecionado);
-                            return p ? `${p.nome} - R$ ${Number(p.valor).toFixed(2)} (Estoque: ${p.estoque})` : "Selecionar produto...";
+                            const p = produtos.find((p) => p.id === produtoSelecionado);
+                            return p
+                              ? `${p.nome} - R$ ${Number(p.valor).toFixed(2)} (Estoque: ${p.estoque})`
+                              : "Selecionar produto...";
                           })()
                         : "Selecionar ou buscar produto..."}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -289,14 +360,14 @@ function NovaVenda() {
                               key={p.id}
                               value={p.nome + " " + p.id}
                               onSelect={() => {
-                                setProdutoSelecionado(p.id === produtoSelecionado ? "" : p.id)
-                                setOpenProduto(false)
+                                setProdutoSelecionado(p.id === produtoSelecionado ? "" : p.id);
+                                setOpenProduto(false);
                               }}
                             >
                               <Check
                                 className={cn(
                                   "mr-2 h-4 w-4",
-                                  produtoSelecionado === p.id ? "opacity-100" : "opacity-0"
+                                  produtoSelecionado === p.id ? "opacity-100" : "opacity-0",
                                 )}
                               />
                               {p.nome} - R$ {Number(p.valor).toFixed(2)} (Estoque: {p.estoque})
@@ -310,25 +381,57 @@ function NovaVenda() {
               </div>
               <div className="space-y-2 w-24">
                 <Label>Qtd</Label>
-                <Input type="number" min="1" value={quantidade} onChange={e => setQuantidade(Number(e.target.value))} />
+                <Input
+                  type="number"
+                  min="1"
+                  value={quantidade}
+                  onChange={(e) => setQuantidade(Number(e.target.value))}
+                />
               </div>
-              <Button type="button" onClick={handleAddItem} variant="secondary"><Plus className="h-4 w-4 mr-2" /> Adicionar</Button>
+              <Button type="button" onClick={handleAddItem} variant="secondary">
+                <Plus className="h-4 w-4 mr-2" /> Adicionar
+              </Button>
             </div>
 
             <div className="border rounded-md mt-4">
               <Table>
-                <TableHeader><TableRow><TableHead>Produto</TableHead><TableHead className="text-right">Qtd</TableHead><TableHead className="text-right">Unitário</TableHead><TableHead className="text-right">Subtotal</TableHead><TableHead></TableHead></TableRow></TableHeader>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Produto</TableHead>
+                    <TableHead className="text-right">Qtd</TableHead>
+                    <TableHead className="text-right">Unitário</TableHead>
+                    <TableHead className="text-right">Subtotal</TableHead>
+                    <TableHead></TableHead>
+                  </TableRow>
+                </TableHeader>
                 <TableBody>
                   {itens.length === 0 ? (
-                    <TableRow><TableCell colSpan={5} className="text-center py-4 text-muted-foreground">Nenhum item adicionado ao carrinho.</TableCell></TableRow>
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
+                        Nenhum item adicionado ao carrinho.
+                      </TableCell>
+                    </TableRow>
                   ) : (
                     itens.map((item, index) => (
                       <TableRow key={index}>
                         <TableCell className="font-semibold">{item.nome}</TableCell>
                         <TableCell className="text-right">{item.quantidade}</TableCell>
-                        <TableCell className="text-right">R$ {item.valor_unitario.toFixed(2)}</TableCell>
-                        <TableCell className="text-right font-bold">R$ {item.subtotal.toFixed(2)}</TableCell>
-                        <TableCell className="text-right"><Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleRemoveItem(index)}><Trash2 className="h-4 w-4" /></Button></TableCell>
+                        <TableCell className="text-right">
+                          R$ {item.valor_unitario.toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-right font-bold">
+                          R$ {item.subtotal.toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive"
+                            onClick={() => handleRemoveItem(index)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))
                   )}
@@ -343,10 +446,21 @@ function NovaVenda() {
           <Card className="shadow-card p-6 bg-accent/30 border-brand/20">
             <h3 className="font-semibold text-lg mb-4">Resumo</h3>
             <div className="space-y-3">
-              <div className="flex justify-between text-sm"><span className="text-muted-foreground">Subtotal ({itens.length} itens)</span><span className="font-semibold">R$ {valorTotal.toFixed(2)}</span></div>
-              <div className="flex justify-between text-sm"><span className="text-muted-foreground">Descontos</span><span className="font-semibold">R$ 0,00</span></div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Subtotal ({itens.length} itens)</span>
+                <span className="font-semibold">R$ {valorTotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Descontos</span>
+                <span className="font-semibold">R$ 0,00</span>
+              </div>
               <div className="h-px w-full bg-border my-2" />
-              <div className="flex justify-between items-center"><span className="font-semibold text-lg">Total</span><span className="font-display text-2xl font-bold text-brand">R$ {valorTotal.toFixed(2)}</span></div>
+              <div className="flex justify-between items-center">
+                <span className="font-semibold text-lg">Total</span>
+                <span className="font-display text-2xl font-bold text-brand">
+                  R$ {valorTotal.toFixed(2)}
+                </span>
+              </div>
             </div>
           </Card>
         </div>
@@ -358,30 +472,57 @@ function NovaVenda() {
           <DialogHeader>
             <DialogTitle>Preencher Dados do Cliente</DialogTitle>
             <DialogDescription>
-              Você não selecionou um cliente. Preencha os dados abaixo para cadastrar e emitir o {tipo === "DAV" ? "Orçamento" : "Pedido"} automaticamente.
+              Você não selecionou um cliente. Preencha os dados abaixo para cadastrar e emitir o{" "}
+              {tipo === "DAV" ? "Orçamento" : "Pedido"} automaticamente.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
               <Label>Nome / Empresa *</Label>
-              <Input value={novoCliente.nome} onChange={e => setNovoCliente({...novoCliente, nome: e.target.value})} placeholder="Nome completo ou Razão Social" />
+              <Input
+                value={novoCliente.nome}
+                onChange={(e) => setNovoCliente({ ...novoCliente, nome: e.target.value })}
+                placeholder="Nome completo ou Razão Social"
+              />
             </div>
             <div className="space-y-2">
               <Label>CPF / CNPJ</Label>
-              <Input value={novoCliente.cpf_cnpj} onChange={e => setNovoCliente({...novoCliente, cpf_cnpj: e.target.value})} placeholder="000.000.000-00 ou 00.000.000/0000-00" />
+              <Input
+                value={novoCliente.cpf_cnpj}
+                onChange={(e) => setNovoCliente({ ...novoCliente, cpf_cnpj: e.target.value })}
+                placeholder="000.000.000-00 ou 00.000.000/0000-00"
+              />
             </div>
             <div className="space-y-2">
               <Label>Telefone</Label>
-              <Input value={novoCliente.telefone} onChange={e => setNovoCliente({...novoCliente, telefone: e.target.value})} placeholder="(00) 00000-0000" />
+              <Input
+                value={novoCliente.telefone}
+                onChange={(e) => setNovoCliente({ ...novoCliente, telefone: e.target.value })}
+                placeholder="(00) 00000-0000"
+              />
             </div>
             <div className="space-y-2">
               <Label>Endereço / Cidade</Label>
-              <Input value={novoCliente.endereco} onChange={e => setNovoCliente({...novoCliente, endereco: e.target.value})} placeholder="Endereço completo" />
+              <Input
+                value={novoCliente.endereco}
+                onChange={(e) => setNovoCliente({ ...novoCliente, endereco: e.target.value })}
+                placeholder="Endereço completo"
+              />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenModalCliente(false)} disabled={loadingCliente}>Cancelar</Button>
-            <Button onClick={handleSalvarNovoCliente} disabled={loadingCliente} className="bg-gradient-brand text-primary-foreground">
+            <Button
+              variant="outline"
+              onClick={() => setOpenModalCliente(false)}
+              disabled={loadingCliente}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSalvarNovoCliente}
+              disabled={loadingCliente}
+              className="bg-gradient-brand text-primary-foreground"
+            >
               {loadingCliente ? "Emitindo..." : "Confirmar e Emitir"}
             </Button>
           </DialogFooter>

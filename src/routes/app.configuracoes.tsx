@@ -38,7 +38,10 @@ function Configuracoes() {
   const fetchUsers = async () => {
     setLoadingUsers(true);
     try {
-      const { data, error } = await supabase.from('usuarios').select('*').order('created_at', { ascending: true });
+      const { data, error } = await supabase
+        .from("usuarios")
+        .select("*")
+        .order("created_at", { ascending: true });
       if (!error && data) {
         setUsers(data);
       }
@@ -54,11 +57,15 @@ function Configuracoes() {
 
     const fetchConfigs = async () => {
       try {
-        const { data, error } = await supabase.from('configuracoes').select('*').eq('id', 1).single();
+        const { data, error } = await supabase
+          .from("configuracoes")
+          .select("*")
+          .eq("id", 1)
+          .single();
         if (data && !error) {
           // Remover os campos id e created_at caso existam no retorno para evitar erro no upsert depois
           const { id, created_at, ...rest } = data;
-          setPerfil(prev => ({ ...prev, ...rest }));
+          setPerfil((prev) => ({ ...prev, ...rest }));
         }
       } catch (err) {
         console.error("Erro ao carregar configurações", err);
@@ -70,14 +77,16 @@ function Configuracoes() {
   const handleAddUser = async () => {
     if (!novoUserNome || !novoUserEmail) return;
     try {
-      const { error } = await supabase.from('usuarios').insert([{
-        nome: novoUserNome,
-        email: novoUserEmail,
-        funcao: "Visualizador",
-        cor: "bg-secondary text-foreground"
-      }]);
+      const { error } = await supabase.from("usuarios").insert([
+        {
+          nome: novoUserNome,
+          email: novoUserEmail,
+          funcao: "Visualizador",
+          cor: "bg-secondary text-foreground",
+        },
+      ]);
       if (error) throw error;
-      
+
       setNovoUserNome("");
       setNovoUserEmail("");
       alert("Usuário convidado com sucesso! Um e-mail foi enviado para ele.");
@@ -88,9 +97,14 @@ function Configuracoes() {
   };
 
   const handleRemoveUser = async (id: string) => {
-    if (await confirm({ description: "Tem certeza que deseja remover o acesso deste usuário?", variant: "destructive" })) {
+    if (
+      await confirm({
+        description: "Tem certeza que deseja remover o acesso deste usuário?",
+        variant: "destructive",
+      })
+    ) {
       try {
-        await supabase.from('usuarios').delete().eq('id', id);
+        await supabase.from("usuarios").delete().eq("id", id);
         fetchUsers();
       } catch (err: any) {
         alert("Erro ao remover usuário: " + err.message);
@@ -101,11 +115,15 @@ function Configuracoes() {
   const handleSaveSettings = async () => {
     setSavingProfile(true);
     try {
-      const { error } = await supabase.from('configuracoes').upsert([{ id: 1, ...perfil }]);
+      const { error } = await supabase.from("configuracoes").upsert([{ id: 1, ...perfil }]);
       if (error) throw error;
       alert("Configurações salvas com sucesso!");
     } catch (err: any) {
-      alert("Erro ao salvar configurações: " + err.message + "\n\nSe a tabela 'configuracoes' não existir no banco, execute o script SQL para criá-la.");
+      alert(
+        "Erro ao salvar configurações: " +
+          err.message +
+          "\n\nSe a tabela 'configuracoes' não existir no banco, execute o script SQL para criá-la.",
+      );
     } finally {
       setSavingProfile(false);
     }
@@ -116,26 +134,35 @@ function Configuracoes() {
   const handleBackup = async () => {
     setIsBackingUp(true);
     try {
-      const tables = ['vendas', 'vendas_itens', 'produtos', 'clientes', 'vendedores', 'contas_receber', 'contas_pagar', 'movimentacoes_estoque'];
+      const tables = [
+        "vendas",
+        "vendas_itens",
+        "produtos",
+        "clientes",
+        "vendedores",
+        "contas_receber",
+        "contas_pagar",
+        "movimentacoes_estoque",
+      ];
       const backupData: Record<string, any[]> = {};
-      
+
       for (const table of tables) {
-        const { data, error } = await supabase.from(table).select('*');
+        const { data, error } = await supabase.from(table).select("*");
         if (!error && data) {
           backupData[table] = data;
         }
       }
-      
+
       const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
-      a.download = `backup_vivaverde_${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `backup_vivaverde_${new Date().toISOString().split("T")[0]}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      
+
       alert("Backup baixado com sucesso!");
     } catch (err: any) {
       alert("Erro ao gerar backup: " + err.message);
@@ -146,29 +173,99 @@ function Configuracoes() {
 
   return (
     <>
-      <PageHeader title="Configurações do ERP" subtitle="Gerencie usuários, permissões e integrações do sistema" />
+      <PageHeader
+        title="Configurações do ERP"
+        subtitle="Gerencie usuários, permissões e integrações do sistema"
+      />
 
       <Tabs defaultValue="perfil">
         <TabsList className="mb-4">
-          <TabsTrigger value="perfil"><User className="mr-1.5 h-4 w-4" />Perfil da Empresa</TabsTrigger>
-          <TabsTrigger value="usuarios"><Users className="mr-1.5 h-4 w-4" />Usuários</TabsTrigger>
-          <TabsTrigger value="backup"><Database className="mr-1.5 h-4 w-4" />Saúde / Backup</TabsTrigger>
-          <TabsTrigger value="preferencias"><Cog className="mr-1.5 h-4 w-4" />Preferências</TabsTrigger>
+          <TabsTrigger value="perfil">
+            <User className="mr-1.5 h-4 w-4" />
+            Perfil da Empresa
+          </TabsTrigger>
+          <TabsTrigger value="usuarios">
+            <Users className="mr-1.5 h-4 w-4" />
+            Usuários
+          </TabsTrigger>
+          <TabsTrigger value="backup">
+            <Database className="mr-1.5 h-4 w-4" />
+            Saúde / Backup
+          </TabsTrigger>
+          <TabsTrigger value="preferencias">
+            <Cog className="mr-1.5 h-4 w-4" />
+            Preferências
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="perfil">
           <Card className="shadow-card">
-            <CardHeader><CardTitle>Dados da Empresa (Emissor NF-e)</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle>Dados da Empresa (Emissor NF-e)</CardTitle>
+            </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
-              <div><Label>Razão Social</Label><Input className="mt-1.5" value={perfil.razao_social || ""} onChange={e => setPerfil(p => ({...p, razao_social: e.target.value}))} /></div>
-              <div><Label>CNPJ</Label><Input className="mt-1.5" value={perfil.cnpj || ""} onChange={e => setPerfil(p => ({...p, cnpj: e.target.value}))} /></div>
-              <div><Label>Inscrição Estadual</Label><Input className="mt-1.5" value={perfil.inscricao_estadual || ""} onChange={e => setPerfil(p => ({...p, inscricao_estadual: e.target.value}))} /></div>
-              <div><Label>Regime Tributário</Label><Input className="mt-1.5" value={perfil.regime_tributario || ""} onChange={e => setPerfil(p => ({...p, regime_tributario: e.target.value}))} /></div>
-              <div className="md:col-span-2"><Label>Endereço</Label><Input className="mt-1.5" value={perfil.endereco || ""} onChange={e => setPerfil(p => ({...p, endereco: e.target.value}))} /></div>
-              <div><Label>Telefone</Label><Input className="mt-1.5" value={perfil.telefone || ""} onChange={e => setPerfil(p => ({...p, telefone: e.target.value}))} /></div>
-              <div><Label>E-mail de Contato</Label><Input className="mt-1.5" value={perfil.email_contato || ""} onChange={e => setPerfil(p => ({...p, email_contato: e.target.value}))} /></div>
+              <div>
+                <Label>Razão Social</Label>
+                <Input
+                  className="mt-1.5"
+                  value={perfil.razao_social || ""}
+                  onChange={(e) => setPerfil((p) => ({ ...p, razao_social: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label>CNPJ</Label>
+                <Input
+                  className="mt-1.5"
+                  value={perfil.cnpj || ""}
+                  onChange={(e) => setPerfil((p) => ({ ...p, cnpj: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label>Inscrição Estadual</Label>
+                <Input
+                  className="mt-1.5"
+                  value={perfil.inscricao_estadual || ""}
+                  onChange={(e) => setPerfil((p) => ({ ...p, inscricao_estadual: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label>Regime Tributário</Label>
+                <Input
+                  className="mt-1.5"
+                  value={perfil.regime_tributario || ""}
+                  onChange={(e) => setPerfil((p) => ({ ...p, regime_tributario: e.target.value }))}
+                />
+              </div>
+              <div className="md:col-span-2">
+                <Label>Endereço</Label>
+                <Input
+                  className="mt-1.5"
+                  value={perfil.endereco || ""}
+                  onChange={(e) => setPerfil((p) => ({ ...p, endereco: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label>Telefone</Label>
+                <Input
+                  className="mt-1.5"
+                  value={perfil.telefone || ""}
+                  onChange={(e) => setPerfil((p) => ({ ...p, telefone: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label>E-mail de Contato</Label>
+                <Input
+                  className="mt-1.5"
+                  value={perfil.email_contato || ""}
+                  onChange={(e) => setPerfil((p) => ({ ...p, email_contato: e.target.value }))}
+                />
+              </div>
               <div className="md:col-span-2 flex justify-end">
-                <Button onClick={handleSaveSettings} disabled={savingProfile} className="bg-gradient-brand text-primary-foreground">
+                <Button
+                  onClick={handleSaveSettings}
+                  disabled={savingProfile}
+                  className="bg-gradient-brand text-primary-foreground"
+                >
                   {savingProfile ? "Salvando..." : "Salvar alterações"}
                 </Button>
               </div>
@@ -178,16 +275,27 @@ function Configuracoes() {
 
         <TabsContent value="usuarios">
           <Card className="shadow-card mb-6">
-            <CardHeader><CardTitle>Adicionar Novo Usuário</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle>Adicionar Novo Usuário</CardTitle>
+            </CardHeader>
             <CardContent>
               <div className="flex gap-4 items-end flex-wrap">
                 <div className="space-y-2 flex-1 min-w-[200px]">
                   <Label>Nome Completo</Label>
-                  <Input value={novoUserNome} onChange={e => setNovoUserNome(e.target.value)} placeholder="Ex: João da Silva" />
+                  <Input
+                    value={novoUserNome}
+                    onChange={(e) => setNovoUserNome(e.target.value)}
+                    placeholder="Ex: João da Silva"
+                  />
                 </div>
                 <div className="space-y-2 flex-1 min-w-[200px]">
                   <Label>E-mail</Label>
-                  <Input value={novoUserEmail} onChange={e => setNovoUserEmail(e.target.value)} placeholder="joao@vivaverde.com.br" type="email" />
+                  <Input
+                    value={novoUserEmail}
+                    onChange={(e) => setNovoUserEmail(e.target.value)}
+                    placeholder="joao@vivaverde.com.br"
+                    type="email"
+                  />
                 </div>
                 <Button onClick={handleAddUser} className="bg-primary text-primary-foreground">
                   <Plus className="mr-2 h-4 w-4" /> Convidar
@@ -197,40 +305,61 @@ function Configuracoes() {
           </Card>
 
           <Card className="shadow-card">
-            <CardHeader><CardTitle>Usuários Ativos do Sistema ({users.length})</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle>Usuários Ativos do Sistema ({users.length})</CardTitle>
+            </CardHeader>
             <CardContent className="space-y-2">
               {loadingUsers ? (
                 <div className="text-center p-4 text-muted-foreground">Carregando usuários...</div>
               ) : users.length === 0 ? (
                 <div className="text-center p-4 text-muted-foreground">Nenhum usuário ativo.</div>
-              ) : users.map((u) => (
-                <div key={u.id} className="flex items-center justify-between rounded-xl border p-4 hover:bg-accent/50 transition-colors">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="h-10 w-10 rounded-full bg-gradient-brand grid place-items-center text-sm font-bold text-primary-foreground shrink-0">
-                      {u.nome ? u.nome.split(" ").map((x: string) => x[0]).join("").substring(0,2).toUpperCase() : "US"}
+              ) : (
+                users.map((u) => (
+                  <div
+                    key={u.id}
+                    className="flex items-center justify-between rounded-xl border p-4 hover:bg-accent/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="h-10 w-10 rounded-full bg-gradient-brand grid place-items-center text-sm font-bold text-primary-foreground shrink-0">
+                        {u.nome
+                          ? u.nome
+                              .split(" ")
+                              .map((x: string) => x[0])
+                              .join("")
+                              .substring(0, 2)
+                              .toUpperCase()
+                          : "US"}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-semibold truncate">{u.nome || "Sem Nome"}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {u.email || "Sem E-mail"}
+                        </p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="font-semibold truncate">{u.nome || "Sem Nome"}</p>
-                      <p className="text-xs text-muted-foreground truncate">{u.email || "Sem E-mail"}</p>
+                    <div className="flex items-center gap-4">
+                      <Badge className={`${u.cor} border-0`}>{u.funcao}</Badge>
+                      <Button
+                        onClick={() => handleRemoveUser(u.id)}
+                        size="icon"
+                        variant="ghost"
+                        className="text-destructive h-8 w-8"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <Badge className={`${u.cor} border-0`}>{u.funcao}</Badge>
-                    <Button onClick={() => handleRemoveUser(u.id)} size="icon" variant="ghost" className="text-destructive h-8 w-8">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
-
-
         <TabsContent value="backup">
           <Card className="shadow-card mb-6">
-            <CardHeader><CardTitle>Saúde do Sistema</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle>Saúde do Sistema</CardTitle>
+            </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
               <div className="rounded-xl border p-4 bg-success/10 border-success/20">
                 <p className="text-sm font-semibold text-success">Status do Servidor Supabase</p>
@@ -244,10 +373,19 @@ function Configuracoes() {
           </Card>
 
           <Card className="shadow-card">
-            <CardHeader><CardTitle>Backup Manual do Banco de Dados</CardTitle><CardDescription>Faça o download de todos os seus dados em formato JSON.</CardDescription></CardHeader>
+            <CardHeader>
+              <CardTitle>Backup Manual do Banco de Dados</CardTitle>
+              <CardDescription>
+                Faça o download de todos os seus dados em formato JSON.
+              </CardDescription>
+            </CardHeader>
             <CardContent>
-              <Button onClick={handleBackup} disabled={isBackingUp} className="bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto font-bold h-12">
-                <Database className="mr-2 h-5 w-5" /> 
+              <Button
+                onClick={handleBackup}
+                disabled={isBackingUp}
+                className="bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto font-bold h-12"
+              >
+                <Database className="mr-2 h-5 w-5" />
                 {isBackingUp ? "Gerando Backup..." : "Fazer Backup Completo Agora"}
               </Button>
             </CardContent>
@@ -256,9 +394,16 @@ function Configuracoes() {
 
         <TabsContent value="preferencias">
           <Card className="shadow-card">
-            <CardHeader><CardTitle>Preferências e Notificações</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle>Preferências e Notificações</CardTitle>
+            </CardHeader>
             <CardContent className="space-y-4">
-              {["Enviar e-mail para contas a pagar vencendo no dia", "Alertar quando estoque atingir mínimo", "Resumo financeiro semanal por WhatsApp", "Habilitar sons de 'Caixa Registradora' no PDV"].map((p) => (
+              {[
+                "Enviar e-mail para contas a pagar vencendo no dia",
+                "Alertar quando estoque atingir mínimo",
+                "Resumo financeiro semanal por WhatsApp",
+                "Habilitar sons de 'Caixa Registradora' no PDV",
+              ].map((p) => (
                 <div key={p} className="flex items-center justify-between rounded-xl border p-4">
                   <p className="font-semibold text-sm">{p}</p>
                   <Switch defaultChecked />

@@ -5,7 +5,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Trash2, ShoppingCart, CheckCircle2 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/parceiro/pdv")({
   head: () => ({ meta: [{ title: "Nova Venda — VIVAVERDE" }] }),
@@ -19,59 +26,87 @@ function ParceiroPDV() {
   const [loading, setLoading] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
-  const [clientForm, setClientForm] = useState({ 
-    nome: '', documento: '', telefone: '', endereco: '', frete: 'Retirada', pagamento: 'Dinheiro / Pix', observacoes: ''
+  const [clientForm, setClientForm] = useState({
+    nome: "",
+    documento: "",
+    telefone: "",
+    endereco: "",
+    frete: "Retirada",
+    pagamento: "Dinheiro / Pix",
+    observacoes: "",
   });
-  const [vendedorInfo, setVendedorInfo] = useState<{id: string, nome: string} | null>(null);
+  const [vendedorInfo, setVendedorInfo] = useState<{ id: string; nome: string } | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [davGeradoId, setDavGeradoId] = useState<string | null>(null);
 
   useEffect(() => {
     const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (session) {
-        const { data: vData } = await supabase.from('vendedores').select('id, status, nome').eq('user_id', session.user.id).single();
+        const { data: vData } = await supabase
+          .from("vendedores")
+          .select("id, status, nome")
+          .eq("user_id", session.user.id)
+          .single();
         if (vData) {
           setVendedorInfo({ id: vData.id, nome: vData.nome });
-          if (vData.status === 'Aguardando Aprovação') {
+          if (vData.status === "Aguardando Aprovação") {
             navigate({ to: "/parceiro/dashboard" });
             return;
           }
         }
       }
 
-      const { data } = await supabase.from('produtos').select('*').eq('status', 'Ativo');
+      const { data } = await supabase.from("produtos").select("*").eq("status", "Ativo");
       if (data) {
         setProdutos(data);
-        
+
         // Verifica se veio um produto mágico pela URL (formato antigo)
         const params = new URLSearchParams(window.location.search);
-        const produtoIdMagic = params.get('produto');
+        const produtoIdMagic = params.get("produto");
         if (produtoIdMagic) {
-          const magicProduct = data.find(p => p.id === produtoIdMagic);
+          const magicProduct = data.find((p) => p.id === produtoIdMagic);
           if (magicProduct) {
-            setCart([{ id: magicProduct.id, p: magicProduct.nome, q: 1, u: Number(magicProduct.valor), t: Number(magicProduct.valor), emoji: magicProduct.emoji }]);
+            setCart([
+              {
+                id: magicProduct.id,
+                p: magicProduct.nome,
+                q: 1,
+                u: Number(magicProduct.valor),
+                t: Number(magicProduct.valor),
+                emoji: magicProduct.emoji,
+              },
+            ]);
             // Limpa a URL para não adicionar de novo num refresh
-            window.history.replaceState({}, '', '/parceiro/pdv');
+            window.history.replaceState({}, "", "/parceiro/pdv");
           }
         }
 
         // Novo formato do Carrinho via Catálogo
-        const cartMagic = params.get('c');
+        const cartMagic = params.get("c");
         if (cartMagic) {
           const parsedCart: any[] = [];
-          const items = cartMagic.split(',');
-          items.forEach(item => {
-            const [id, qStr] = item.split(':');
+          const items = cartMagic.split(",");
+          items.forEach((item) => {
+            const [id, qStr] = item.split(":");
             const qty = parseInt(qStr) || 1;
-            const prod = data.find(p => p.id === id);
+            const prod = data.find((p) => p.id === id);
             if (prod) {
-              parsedCart.push({ id: prod.id, p: prod.nome, q: qty, u: Number(prod.valor), t: qty * Number(prod.valor), emoji: prod.emoji });
+              parsedCart.push({
+                id: prod.id,
+                p: prod.nome,
+                q: qty,
+                u: Number(prod.valor),
+                t: qty * Number(prod.valor),
+                emoji: prod.emoji,
+              });
             }
           });
           if (parsedCart.length > 0) {
             setCart(parsedCart);
-            window.history.replaceState({}, '', '/parceiro/pdv');
+            window.history.replaceState({}, "", "/parceiro/pdv");
           }
         }
       }
@@ -81,37 +116,53 @@ function ParceiroPDV() {
 
   const addToCart = (produto: any) => {
     setCart((prev) => {
-      const existing = prev.find(i => i.id === produto.id);
+      const existing = prev.find((i) => i.id === produto.id);
       if (existing) {
-        return prev.map(i => i.id === produto.id ? { ...i, q: i.q + 1, t: (i.q + 1) * i.u } : i);
+        return prev.map((i) =>
+          i.id === produto.id ? { ...i, q: i.q + 1, t: (i.q + 1) * i.u } : i,
+        );
       }
-      return [...prev, { id: produto.id, p: produto.nome, q: 1, u: Number(produto.valor), t: Number(produto.valor), emoji: produto.emoji }];
+      return [
+        ...prev,
+        {
+          id: produto.id,
+          p: produto.nome,
+          q: 1,
+          u: Number(produto.valor),
+          t: Number(produto.valor),
+          emoji: produto.emoji,
+        },
+      ];
     });
   };
 
   const updateQuantity = (id: string, delta: number) => {
-    setCart(prev => prev.map(i => {
-      if (i.id === id) {
-        const newQ = i.q + delta;
-        if (newQ <= 0) return i; 
-        return { ...i, q: newQ, t: newQ * i.u };
-      }
-      return i;
-    }));
+    setCart((prev) =>
+      prev.map((i) => {
+        if (i.id === id) {
+          const newQ = i.q + delta;
+          if (newQ <= 0) return i;
+          return { ...i, q: newQ, t: newQ * i.u };
+        }
+        return i;
+      }),
+    );
   };
 
   const setQuantity = (id: string, newQ: number) => {
-    setCart(prev => prev.map(i => {
-      if (i.id === id) {
-        if (newQ <= 0) return i; 
-        return { ...i, q: newQ, t: newQ * i.u };
-      }
-      return i;
-    }));
+    setCart((prev) =>
+      prev.map((i) => {
+        if (i.id === id) {
+          if (newQ <= 0) return i;
+          return { ...i, q: newQ, t: newQ * i.u };
+        }
+        return i;
+      }),
+    );
   };
 
   const removeFromCart = (id: string) => {
-    setCart(prev => prev.filter(i => i.id !== id));
+    setCart((prev) => prev.filter((i) => i.id !== id));
   };
 
   const subtotal = cart.reduce((s, i) => s + i.t, 0);
@@ -134,15 +185,15 @@ function ParceiroPDV() {
     try {
       // 1. Cria ou busca o cliente
       let finalClienteId = null;
-      
+
       // Se o cliente digitou um documento, tenta buscar primeiro para não duplicar
-      if (clientForm.documento && clientForm.documento.trim() !== '') {
+      if (clientForm.documento && clientForm.documento.trim() !== "") {
         const { data: existingClient } = await supabase
-          .from('clientes')
-          .select('id')
-          .eq('cpf_cnpj', clientForm.documento.trim())
+          .from("clientes")
+          .select("id")
+          .eq("cpf_cnpj", clientForm.documento.trim())
           .maybeSingle();
-          
+
         if (existingClient) {
           finalClienteId = existingClient.id;
         }
@@ -151,20 +202,20 @@ function ParceiroPDV() {
       // Se não encontrou o cliente, tenta criar um novo
       if (!finalClienteId) {
         const payload: any = { nome: clientForm.nome };
-        if (clientForm.documento && clientForm.documento.trim() !== '') {
+        if (clientForm.documento && clientForm.documento.trim() !== "") {
           payload.cpf_cnpj = clientForm.documento.trim();
         }
-        if (clientForm.telefone && clientForm.telefone.trim() !== '') {
+        if (clientForm.telefone && clientForm.telefone.trim() !== "") {
           payload.telefone = clientForm.telefone.trim();
         }
-        if (clientForm.endereco && clientForm.endereco.trim() !== '') {
+        if (clientForm.endereco && clientForm.endereco.trim() !== "") {
           payload.endereco = clientForm.endereco.trim();
         }
         payload.status = "Ativo";
         payload.cidade = "Indefinida";
 
         const { data: clienteData, error: clienteError } = await supabase
-          .from('clientes')
+          .from("clientes")
           .insert([payload])
           .select()
           .maybeSingle();
@@ -180,62 +231,79 @@ function ParceiroPDV() {
       }
 
       // 2. Cria a venda pendente
-      const { data: vendaData, error: vendaError } = await supabase.from('vendas').insert([{
-        tipo: 'PDV',
-        status_aprovacao: 'Pendente',
-        status: 'Pendente', 
-        valor_total: subtotal,
-        vendedor_id: vendedorInfo?.id,
-        cliente_id: finalClienteId
-      }]).select().single();
+      const { data: vendaData, error: vendaError } = await supabase
+        .from("vendas")
+        .insert([
+          {
+            tipo: "PDV",
+            status_aprovacao: "Pendente",
+            status: "Pendente",
+            valor_total: subtotal,
+            vendedor_id: vendedorInfo?.id,
+            cliente_id: finalClienteId,
+          },
+        ])
+        .select()
+        .single();
 
       if (vendaError) throw vendaError;
 
       // Insere os itens
-      const itensToInsert = cart.map(i => ({
+      const itensToInsert = cart.map((i) => ({
         venda_id: vendaData.id,
         produto_id: i.id,
         quantidade: i.q,
         valor_unitario: i.u,
-        subtotal: i.t
+        subtotal: i.t,
       }));
 
-      const { error: itensError } = await supabase.from('vendas_itens').insert(itensToInsert);
+      const { error: itensError } = await supabase.from("vendas_itens").insert(itensToInsert);
       if (itensError) throw itensError;
 
       // 3. Gera o DAV Oficial (Orçamento) na tabela VENDAS
-      const { data: dav, error: davError } = await supabase.from('vendas').insert([{
-        tipo: 'DAV',
-        status: 'Pendente',
-        status_aprovacao: 'Pendente',
-        valor_total: subtotal,
-        vendedor_id: vendedorInfo?.id,
-        cliente_id: finalClienteId
-      }]).select().single();
+      const { data: dav, error: davError } = await supabase
+        .from("vendas")
+        .insert([
+          {
+            tipo: "DAV",
+            status: "Pendente",
+            status_aprovacao: "Pendente",
+            valor_total: subtotal,
+            vendedor_id: vendedorInfo?.id,
+            cliente_id: finalClienteId,
+          },
+        ])
+        .select()
+        .single();
 
       if (!davError && dav) {
         setDavGeradoId(dav.id);
-        
+
         // Salvar itens do DAV
-        const davItensToInsert = cart.map(i => ({
+        const davItensToInsert = cart.map((i) => ({
           venda_id: dav.id,
           produto_id: i.id,
           quantidade: i.q,
           valor_unitario: i.u,
-          subtotal: i.t
+          subtotal: i.t,
         }));
-        await supabase.from('vendas_itens').insert(davItensToInsert);
+        await supabase.from("vendas_itens").insert(davItensToInsert);
       } else if (davError) {
         console.error("Erro ao gerar DAV:", davError);
-        alert("Aviso: O pedido foi enviado, mas o Orçamento (DAV) não pôde ser gerado: " + davError.message);
+        alert(
+          "Aviso: O pedido foi enviado, mas o Orçamento (DAV) não pôde ser gerado: " +
+            davError.message,
+        );
       }
 
       // 4. Dispara a notificação para o dono
-      await supabase.from('notificacoes').insert([{
-        tipo: 'venda',
-        titulo: `Novo pedido pendente`,
-        mensagem: `Um parceiro enviou um novo pedido (Cliente: ${clientForm.nome}) no valor de ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(subtotal)} para aprovação.`
-      }]);
+      await supabase.from("notificacoes").insert([
+        {
+          tipo: "venda",
+          titulo: `Novo pedido pendente`,
+          mensagem: `Um parceiro enviou um novo pedido (Cliente: ${clientForm.nome}) no valor de ${new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(subtotal)} para aprovação.`,
+        },
+      ]);
 
       setIsSuccessModalOpen(true);
     } catch (err: any) {
@@ -252,26 +320,27 @@ function ParceiroPDV() {
 
   const handleShareWhatsApp = () => {
     if (!davGeradoId) return;
-    
+
     let msg = `*ORÇAMENTO - VIVAVERDE VASOS*\n`;
     msg += `Nº do Orçamento: ${davGeradoId.substring(0, 8).toUpperCase()}\n\n`;
     msg += `Olá ${clientForm.nome}, aqui está o seu orçamento detalhado!\n\n`;
-    
+
     msg += `*ITENS DO ORÇAMENTO:*\n`;
-    cart.forEach(item => {
-      msg += `• ${item.q}x ${item.p} - R$ ${Number(item.t).toFixed(2).replace('.', ',')}\n`;
+    cart.forEach((item) => {
+      msg += `• ${item.q}x ${item.p} - R$ ${Number(item.t).toFixed(2).replace(".", ",")}\n`;
     });
-    
-    msg += `\n*TOTAL: R$ ${subtotal.toFixed(2).replace('.', ',')}*\n\n`;
-    
+
+    msg += `\n*TOTAL: R$ ${subtotal.toFixed(2).replace(".", ",")}*\n\n`;
+
     const linkPdf = `${window.location.origin}/orcamento/${davGeradoId}`;
     msg += `📄 *Acesse o orçamento completo em PDF aqui:*\n${linkPdf}`;
 
     const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
-    window.open(url, '_blank');
+    window.open(url, "_blank");
   };
 
-  if (!vendedorInfo) return <div className="text-center py-10">Verificando perfil de vendedor...</div>;
+  if (!vendedorInfo)
+    return <div className="text-center py-10">Verificando perfil de vendedor...</div>;
 
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -282,75 +351,100 @@ function ParceiroPDV() {
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input 
-          placeholder="Buscar produto…" 
+        <Input
+          placeholder="Buscar produto…"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="h-12 pl-10 rounded-xl bg-white shadow-sm border-0 ring-1 ring-slate-900/5" 
+          className="h-12 pl-10 rounded-xl bg-white shadow-sm border-0 ring-1 ring-slate-900/5"
         />
       </div>
 
       <div className="flex overflow-x-auto pb-2 gap-2 snap-x">
-        {produtos.filter(p => p.nome.toLowerCase().includes(searchTerm.toLowerCase())).map((p) => (
-          <button 
-            key={p.id} 
-            onClick={() => addToCart(p)} 
-            className="flex-shrink-0 snap-center w-28 bg-white p-3 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center gap-2 active:scale-95 transition-transform"
-          >
-            <div className="text-3xl">{p.emoji || "🪴"}</div>
-            <div className="text-center">
-              <p className="text-xs font-semibold text-slate-800 line-clamp-2 leading-tight">{p.nome}</p>
-              <p className="text-[10px] font-bold text-brand mt-1">R$ {Number(p.valor).toFixed(2)}</p>
-            </div>
-          </button>
-        ))}
+        {produtos
+          .filter((p) => p.nome.toLowerCase().includes(searchTerm.toLowerCase()))
+          .map((p) => (
+            <button
+              key={p.id}
+              onClick={() => addToCart(p)}
+              className="flex-shrink-0 snap-center w-28 bg-white p-3 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center gap-2 active:scale-95 transition-transform"
+            >
+              <div className="text-3xl">{p.emoji || "🪴"}</div>
+              <div className="text-center">
+                <p className="text-xs font-semibold text-slate-800 line-clamp-2 leading-tight">
+                  {p.nome}
+                </p>
+                <p className="text-[10px] font-bold text-brand mt-1">
+                  R$ {Number(p.valor).toFixed(2)}
+                </p>
+              </div>
+            </button>
+          ))}
       </div>
 
       <Card className="shadow-sm border-0 ring-1 ring-slate-900/5 overflow-hidden">
         <div className="bg-slate-50 border-b p-3 flex justify-between items-center">
-          <h2 className="font-semibold text-sm flex items-center gap-2"><ShoppingCart className="h-4 w-4"/> Carrinho</h2>
+          <h2 className="font-semibold text-sm flex items-center gap-2">
+            <ShoppingCart className="h-4 w-4" /> Carrinho
+          </h2>
           <span className="text-xs font-bold text-muted-foreground">{cart.length} itens</span>
         </div>
         <CardContent className="p-0">
           <div className="max-h-[40vh] overflow-y-auto divide-y">
             {cart.length === 0 ? (
-              <div className="p-6 text-center text-sm text-muted-foreground">Selecione produtos acima.</div>
-            ) : cart.map((i) => (
-              <div key={i.id} className="flex items-center gap-3 p-3">
-                <div className="text-2xl">{i.emoji}</div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-800 truncate">{i.p}</p>
-                  <p className="text-xs text-brand font-bold">R$ {i.t.toFixed(2)}</p>
-                </div>
-                <div className="flex items-center gap-1.5 bg-slate-100 rounded-lg p-1">
-                  <button onClick={() => updateQuantity(i.id, -1)} className="h-6 w-6 grid place-items-center bg-white rounded shadow-sm text-lg leading-none font-medium">−</button>
-                  <input 
-                    type="number" 
-                    min="1" 
-                    value={i.q || ''} 
-                    onChange={(e) => setQuantity(i.id, parseInt(e.target.value) || 1)}
-                    className="w-8 text-center text-xs font-bold bg-transparent border-0 outline-none p-0 focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  />
-                  <button onClick={() => updateQuantity(i.id, 1)} className="h-6 w-6 grid place-items-center bg-white rounded shadow-sm text-lg leading-none font-medium">+</button>
-                </div>
-                <button onClick={() => removeFromCart(i.id)} className="p-1.5 text-destructive bg-destructive/10 rounded-md">
-                  <Trash2 className="h-4 w-4" />
-                </button>
+              <div className="p-6 text-center text-sm text-muted-foreground">
+                Selecione produtos acima.
               </div>
-            ))}
+            ) : (
+              cart.map((i) => (
+                <div key={i.id} className="flex items-center gap-3 p-3">
+                  <div className="text-2xl">{i.emoji}</div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-slate-800 truncate">{i.p}</p>
+                    <p className="text-xs text-brand font-bold">R$ {i.t.toFixed(2)}</p>
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-slate-100 rounded-lg p-1">
+                    <button
+                      onClick={() => updateQuantity(i.id, -1)}
+                      className="h-6 w-6 grid place-items-center bg-white rounded shadow-sm text-lg leading-none font-medium"
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      min="1"
+                      value={i.q || ""}
+                      onChange={(e) => setQuantity(i.id, parseInt(e.target.value) || 1)}
+                      className="w-8 text-center text-xs font-bold bg-transparent border-0 outline-none p-0 focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <button
+                      onClick={() => updateQuantity(i.id, 1)}
+                      className="h-6 w-6 grid place-items-center bg-white rounded shadow-sm text-lg leading-none font-medium"
+                    >
+                      +
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => removeFromCart(i.id)}
+                    className="p-1.5 text-destructive bg-destructive/10 rounded-md"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              ))
+            )}
           </div>
         </CardContent>
       </Card>
 
       {cart.length > 0 && (
         <div className="sticky bottom-24 pt-2">
-          <Button 
-            onClick={handleOpenClientModal} 
-            disabled={loading} 
+          <Button
+            onClick={handleOpenClientModal}
+            disabled={loading}
             className="w-full h-14 bg-gradient-brand text-primary-foreground text-lg font-bold shadow-lg shadow-brand/25 flex justify-between px-6"
           >
             <span>Enviar Pedido</span>
-            <span>R$ {subtotal.toFixed(2).replace('.', ',')}</span>
+            <span>R$ {subtotal.toFixed(2).replace(".", ",")}</span>
           </Button>
         </div>
       )}
@@ -364,19 +458,23 @@ function ParceiroPDV() {
             </div>
             <DialogTitle className="text-2xl">Pedido Enviado!</DialogTitle>
             <DialogDescription className="text-center text-base">
-              A venda foi registrada com sucesso e está aguardando a aprovação da loja para liberar sua comissão.
+              A venda foi registrada com sucesso e está aguardando a aprovação da loja para liberar
+              sua comissão.
             </DialogDescription>
           </div>
           <DialogFooter className="flex-col gap-2 sm:justify-center">
             {davGeradoId && (
-              <Button 
-                className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white h-12 text-lg" 
+              <Button
+                className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white h-12 text-lg"
                 onClick={handleShareWhatsApp}
               >
                 Enviar Orçamento por WhatsApp
               </Button>
             )}
-            <Button className="w-full bg-slate-100 text-slate-800 hover:bg-slate-200 h-12 text-lg" onClick={closeSuccessModal}>
+            <Button
+              className="w-full bg-slate-100 text-slate-800 hover:bg-slate-200 h-12 text-lg"
+              onClick={closeSuccessModal}
+            >
               Voltar ao Painel
             </Button>
           </DialogFooter>
@@ -398,19 +496,36 @@ function ParceiroPDV() {
                 <h3 className="font-semibold text-brand text-sm border-b pb-1">Dados do Cliente</h3>
                 <div className="grid gap-2">
                   <label className="text-sm font-medium">Nome / Empresa *</label>
-                  <Input required placeholder="Ex: João Silva ou Construtora X" value={clientForm.nome} onChange={e => setClientForm({...clientForm, nome: e.target.value})} />
+                  <Input
+                    required
+                    placeholder="Ex: João Silva ou Construtora X"
+                    value={clientForm.nome}
+                    onChange={(e) => setClientForm({ ...clientForm, nome: e.target.value })}
+                  />
                 </div>
                 <div className="grid gap-2">
                   <label className="text-sm font-medium">CPF / CNPJ</label>
-                  <Input placeholder="Apenas números" value={clientForm.documento} onChange={e => setClientForm({...clientForm, documento: e.target.value})} />
+                  <Input
+                    placeholder="Apenas números"
+                    value={clientForm.documento}
+                    onChange={(e) => setClientForm({ ...clientForm, documento: e.target.value })}
+                  />
                 </div>
                 <div className="grid gap-2">
                   <label className="text-sm font-medium">Telefone / WhatsApp</label>
-                  <Input placeholder="(00) 00000-0000" value={clientForm.telefone} onChange={e => setClientForm({...clientForm, telefone: e.target.value})} />
+                  <Input
+                    placeholder="(00) 00000-0000"
+                    value={clientForm.telefone}
+                    onChange={(e) => setClientForm({ ...clientForm, telefone: e.target.value })}
+                  />
                 </div>
                 <div className="grid gap-2">
                   <label className="text-sm font-medium">Endereço Completo</label>
-                  <Input placeholder="Rua, número, bairro, cidade - UF" value={clientForm.endereco} onChange={e => setClientForm({...clientForm, endereco: e.target.value})} />
+                  <Input
+                    placeholder="Rua, número, bairro, cidade - UF"
+                    value={clientForm.endereco}
+                    onChange={(e) => setClientForm({ ...clientForm, endereco: e.target.value })}
+                  />
                 </div>
               </div>
 
@@ -418,10 +533,10 @@ function ParceiroPDV() {
                 <h3 className="font-semibold text-brand text-sm border-b pb-1">Condições</h3>
                 <div className="grid gap-2">
                   <label className="text-sm font-medium">Forma de Pagamento</label>
-                  <select 
+                  <select
                     className="flex h-10 w-full items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
-                    value={clientForm.pagamento} 
-                    onChange={e => setClientForm({...clientForm, pagamento: e.target.value})}
+                    value={clientForm.pagamento}
+                    onChange={(e) => setClientForm({ ...clientForm, pagamento: e.target.value })}
                   >
                     <option>Dinheiro / Pix</option>
                     <option>Cartão de Crédito</option>
@@ -431,10 +546,10 @@ function ParceiroPDV() {
                 </div>
                 <div className="grid gap-2">
                   <label className="text-sm font-medium">Forma do Frete</label>
-                  <select 
+                  <select
                     className="flex h-10 w-full items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
-                    value={clientForm.frete} 
-                    onChange={e => setClientForm({...clientForm, frete: e.target.value})}
+                    value={clientForm.frete}
+                    onChange={(e) => setClientForm({ ...clientForm, frete: e.target.value })}
                   >
                     <option>Retirada</option>
                     <option>FOB (Por conta do cliente)</option>
@@ -443,12 +558,18 @@ function ParceiroPDV() {
                 </div>
                 <div className="grid gap-2">
                   <label className="text-sm font-medium">Observações</label>
-                  <Input placeholder="Anotações extras..." value={clientForm.observacoes} onChange={e => setClientForm({...clientForm, observacoes: e.target.value})} />
+                  <Input
+                    placeholder="Anotações extras..."
+                    value={clientForm.observacoes}
+                    onChange={(e) => setClientForm({ ...clientForm, observacoes: e.target.value })}
+                  />
                 </div>
               </div>
             </div>
             <DialogFooter className="mt-4">
-              <Button type="button" variant="outline" onClick={() => setIsClientModalOpen(false)}>Cancelar</Button>
+              <Button type="button" variant="outline" onClick={() => setIsClientModalOpen(false)}>
+                Cancelar
+              </Button>
               <Button type="submit" disabled={loading} className="bg-gradient-brand text-white">
                 {loading ? "Gerando..." : "Gerar Pedido e Orçamento"}
               </Button>
