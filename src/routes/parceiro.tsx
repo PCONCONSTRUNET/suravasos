@@ -27,9 +27,25 @@ export const Route = createFileRoute("/parceiro")({
         throw redirect({ to: "/app/dashboard" });
       }
 
+      // Verifica se o parceiro está aprovado no sistema
+      const { data: vendedor } = await supabase
+        .from('vendedores')
+        .select('status')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+
+      if (!vendedor) {
+        // Se o vendedor não existe na tabela, pode ser que o admin deletou ele (vendedores e auth.users).
+        // Validamos diretamente no servidor do Supabase se o login (auth) ainda existe e é válido.
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError || !user) {
+          // O usuário foi deletado! Desloga do local storage e expulsa para o login.
+          await supabase.auth.signOut();
+          throw redirect({ to: "/parceiro/login" });
+        }
+      }
+
       // Não bloqueia o acesso globalmente aqui para não deslogar o usuário.
-      // O parceiro.dashboard.tsx vai exibir a tela de "Aguardando Aprovação"
-      // e o parceiro.pdv.tsx vai impedir vendas se não estiver Ativo.
 
     } catch (err: any) {
       // Se o erro é um redirect do TanStack Router, repassa normalmente
