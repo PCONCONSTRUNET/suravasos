@@ -91,7 +91,7 @@ function DAVList() {
       msg += `\n*TOTAL: R$ ${Number(venda.valor_total).toFixed(2).replace('.', ',')}*\n\n`;
       
       // Adiciona o link para visualização/PDF online (se estiver publicado, o cliente pode abrir)
-      const linkPdf = `${window.location.origin}/app/imprimir-dav/${venda.id}`;
+      const linkPdf = `${window.location.origin}/orcamento/${venda.id}`;
       msg += `📄 *Acesse o documento formal em PDF aqui:*\n${linkPdf}`;
 
       const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
@@ -218,7 +218,7 @@ function DAVList() {
                 Enviar WhatsApp
               </Button>
               <Button className="flex-1 bg-slate-900" asChild>
-                <Link to={`/app/imprimir-dav/${selectedDav?.id}`} target="_blank">
+                <Link to={`/orcamento/${selectedDav?.id}`} target="_blank">
                   Imprimir PDF
                 </Link>
               </Button>
