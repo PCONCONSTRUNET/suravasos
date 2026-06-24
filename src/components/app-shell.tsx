@@ -33,6 +33,7 @@ const NAV = [
     { to: "/app/dav", label: "DAV", icon: FileText },
     { to: "/app/pdv", label: "PDV", icon: Calculator },
     { to: "/app/vendedores", label: "Vendedores", icon: Users },
+    { to: "/app/vendas-parceiros", label: "Vendas Parceiros", icon: ShoppingCart },
   ]},
   { group: "Gestão", items: [
     { to: "/app/financeiro", label: "Financeiro", icon: Wallet },
