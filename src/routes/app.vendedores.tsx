@@ -579,7 +579,7 @@ function VendedoresAdmin() {
           </DialogHeader>
           <DialogFooter className="flex gap-2 sm:justify-end mt-4">
             <Button variant="outline" onClick={() => setConfirmModal({...confirmModal, isOpen: false})}>Cancelar</Button>
-            <Button className="bg-brand text-white" onClick={handleConfirmAction}>Confirmar</Button>
+            <Button className="bg-success text-success-foreground hover:bg-success/90" onClick={handleConfirmAction}>Confirmar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

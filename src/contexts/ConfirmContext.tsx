@@ -58,7 +58,7 @@ export const ConfirmProvider = ({ children }: { children: ReactNode }) => {
             <AlertDialogCancel onClick={handleCancel}>
               {options.cancelText || 'Cancelar'}
             </AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm} className={options.variant === 'destructive' ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : 'bg-gradient-brand text-primary-foreground'}>
+            <AlertDialogAction onClick={handleConfirm} className={options.variant === 'destructive' ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : 'bg-success text-success-foreground hover:bg-success/90'}>
               {options.confirmText || 'Confirmar'}
             </AlertDialogAction>
           </AlertDialogFooter>
