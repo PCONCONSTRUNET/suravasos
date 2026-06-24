@@ -72,7 +72,7 @@ function VendedoresAdmin() {
 
       const { data: vendasData, error } = await supabase
         .from('vendas')
-        .select('*, vendedor:vendedores(nome), cliente:clientes(nome, cpf_cnpj, telefone)')
+        .select('*, vendedor:vendedores(nome), cliente:clientes(nome, cpf_cnpj, telefone, endereco)')
         .not('vendedor_id', 'is', null)
         .order('created_at', { ascending: false });
       
@@ -549,6 +549,7 @@ function VendedoresAdmin() {
                     <p className="font-semibold text-slate-900 flex items-center gap-2">👤 {selectedSaleForDetails.cliente.nome}</p>
                     {selectedSaleForDetails.cliente.cpf_cnpj && <p className="mt-1">📄 {selectedSaleForDetails.cliente.cpf_cnpj}</p>}
                     {selectedSaleForDetails.cliente.telefone && <p className="mt-1">📞 {selectedSaleForDetails.cliente.telefone}</p>}
+                    {selectedSaleForDetails.cliente.endereco && <p className="mt-1">🏠 {selectedSaleForDetails.cliente.endereco}</p>}
                   </div>
                 )}
               </div>
