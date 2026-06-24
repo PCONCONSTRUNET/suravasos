@@ -235,9 +235,7 @@ function Compras() {
                   value={selectedCompra?.status || ""}
                   onValueChange={(val) => handleStatusChange(selectedCompra.id, val)}
                 >
-                  <SelectTrigger
-                    className={`h-8 border-0 ${selectedCompra ? getTone(selectedCompra.status) : ""}`}
-                  >
+                  <SelectTrigger className="h-8">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

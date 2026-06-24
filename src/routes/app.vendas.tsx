@@ -302,9 +302,7 @@ function Vendas() {
                   value={selectedVenda?.status || ""}
                   onValueChange={(val) => handleStatusChange(selectedVenda.id, val)}
                 >
-                  <SelectTrigger
-                    className={`h-8 border-0 ${selectedVenda ? getTone(selectedVenda.status) : ""}`}
-                  >
+                  <SelectTrigger className="h-8">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
