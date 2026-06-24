@@ -62,7 +62,6 @@ function NovoCliente() {
 
     setLoading(true);
     try {
-      // Create a safe address string in case the individual columns don't exist
       const enderecoCompleto = [
         cliente.endereco,
         cliente.numero && `nº ${cliente.numero}`,
@@ -70,34 +69,34 @@ function NovoCliente() {
         cliente.cep && `CEP ${cliente.cep}`
       ].filter(Boolean).join(', ');
 
-      const { bairro, cep, numero, endereco, cidade, uf, ...rest } = cliente;
+      const { bairro, cep, numero, ...rest } = cliente;
       
-      const payload: any = {
+      let payload: any = {
         ...rest,
         endereco: enderecoCompleto || null
       };
 
-      // We add cidade and uf optionally. If it still crashes because of cidade/uf, we catch and retry without them.
-      if (cidade) payload.cidade = cidade;
-      if (uf) payload.uf = uf;
+      let success = false;
+      let attempts = 0;
 
-      let { error } = await supabase.from('clientes').insert([payload]);
-      
-      // If error is about missing column (cidade or uf), retry with only basic fields
-      if (error && error.message && error.message.includes("Could not find the")) {
-         console.warn("Retrying insert with safe fields due to schema error:", error);
-         const safePayload = {
-            nome: cliente.nome,
-            cpf_cnpj: cliente.cpf_cnpj,
-            telefone: cliente.telefone,
-            status: cliente.status,
-            endereco: [enderecoCompleto, cidade, uf].filter(Boolean).join(' - ') || null
-         };
-         const retry = await supabase.from('clientes').insert([safePayload]);
-         error = retry.error;
+      while (!success && attempts < 10) {
+        attempts++;
+        const { error } = await supabase.from('clientes').insert([payload]);
+        
+        if (error) {
+           const missingMatch = error.message.match(/Could not find the '(.*?)' column/);
+           if (missingMatch && missingMatch[1]) {
+             const badCol = missingMatch[1];
+             console.warn(`Removing missing column '${badCol}' from payload`);
+             delete payload[badCol];
+             continue; // Tenta de novo sem essa coluna
+           } else {
+             throw error; // É outro erro, vamos falhar
+           }
+        }
+        
+        success = true;
       }
-
-      if (error) throw error;
       
       navigate({ to: "/app/clientes" });
     } catch (err: any) {
