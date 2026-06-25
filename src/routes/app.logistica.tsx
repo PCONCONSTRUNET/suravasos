@@ -598,7 +598,7 @@ function Logistica() {
               vendas.map((v) => (
                 <TableRow key={v.id}>
                   <TableCell className="font-mono text-xs">
-                    {v.id.substring(0, 8).toUpperCase()}
+                    {v.numero_venda || v.id.substring(0, 8).toUpperCase()}
                   </TableCell>
                   <TableCell className="font-semibold">
                     {v.clientes?.nome || "Cliente não informado"}

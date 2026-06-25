@@ -224,7 +224,7 @@ function VendasParceiros() {
                 >
                   <TableCell>
                     <p className="font-mono text-xs font-medium">
-                      #{v.id.substring(0, 8).toUpperCase()}
+                      #{v.numero_venda || v.id.substring(0, 8).toUpperCase()}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {new Date(v.created_at).toLocaleDateString()}

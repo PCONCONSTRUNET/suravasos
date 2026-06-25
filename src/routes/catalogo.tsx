@@ -86,7 +86,7 @@ function PublicCatalogo() {
 
   useEffect(() => {
     const fetchProdutos = async () => {
-      const { data } = await supabase.from("produtos").select("*").eq("status", "Ativo");
+      const { data } = await supabase.from("produtos").select("*").eq("status", "Ativo").order("nome");
       if (data) setProdutos(data);
 
       const params = new URLSearchParams(window.location.search);

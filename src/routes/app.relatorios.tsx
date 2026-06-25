@@ -355,7 +355,7 @@ function Relatorios() {
                     <TableRow key={v.id}>
                       <TableCell>{new Date(v.created_at).toLocaleDateString()}</TableCell>
                       <TableCell className="font-medium">
-                        {v.tipo} #{v.id.substring(0, 8).toUpperCase()}
+                        {v.tipo} #{v.numero_venda || v.id.substring(0, 8).toUpperCase()}
                       </TableCell>
                       <TableCell>{v.clientes?.nome || "Consumidor Final"}</TableCell>
                       <TableCell className="text-right font-medium">

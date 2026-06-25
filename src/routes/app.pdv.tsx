@@ -53,7 +53,7 @@ function PDV() {
 
   useEffect(() => {
     const fetchProdutos = async () => {
-      const { data } = await supabase.from("produtos").select("*").eq("status", "Ativo");
+      const { data } = await supabase.from("produtos").select("*").eq("status", "Ativo").order("nome");
       if (data) {
         setProdutos(data);
 
@@ -244,7 +244,7 @@ function PDV() {
       await supabase.from("contas_receber").insert([
         {
           venda_id: vendaId,
-          descricao: `Venda PDV #${vendaId.substring(0, 8).toUpperCase()}`,
+          descricao: `Venda PDV #${vendaData.numero_venda || vendaId.substring(0, 8).toUpperCase()}`,
           valor: subtotal,
           vencimento: dataAtual,
           status: "Recebido",
@@ -497,7 +497,7 @@ function PDV() {
                 >
                   <div>
                     <p className="font-semibold text-slate-800">
-                      #{orc.id.substring(0, 8).toUpperCase()}
+                      #{orc.numero_venda || orc.id.substring(0, 8).toUpperCase()}
                     </p>
                     <p className="text-sm text-slate-600 font-medium">
                       👤 {orc.cliente?.nome || "Cliente Desconhecido"}

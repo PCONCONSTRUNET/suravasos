@@ -117,7 +117,7 @@ function Fiscal() {
                 pendentes.map((p) => (
                   <TableRow key={p.id}>
                     <TableCell className="font-mono">
-                      {p.id.substring(0, 8).toUpperCase()}
+                      {p.numero_venda || p.id.substring(0, 8).toUpperCase()}
                     </TableCell>
                     <TableCell className="font-semibold">
                       {p.clientes?.nome || "Consumidor Final"}

@@ -90,7 +90,7 @@ function ImprimirDAV() {
             {tituloDocumento}
           </h1>
           <p className="text-sm font-medium mt-1">
-            {venda.tipo === "DAV" ? "DAV" : "Pedido"} Nº: {venda.id.substring(0, 8).toUpperCase()}
+            {venda.tipo === "DAV" ? "DAV" : "Pedido"} Nº: {venda.numero_venda || venda.id.substring(0, 8).toUpperCase()}
           </p>
           <p className="text-sm">
             Emissão: {dataDAV} às {horaDAV}

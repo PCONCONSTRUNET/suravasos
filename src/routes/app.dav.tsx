@@ -104,7 +104,7 @@ function DAVList() {
         .eq("venda_id", venda.id);
 
       let msg = `*ORÇAMENTO - VIVAVERDE VASOS*\n`;
-      msg += `Nº: ${venda.id.substring(0, 8).toUpperCase()}\n`;
+      msg += `Nº: ${venda.numero_venda || venda.id.substring(0, 8).toUpperCase()}\n`;
       msg += `Data: ${new Date(venda.created_at).toLocaleDateString()}\n\n`;
       msg += `*ITENS DO ORÇAMENTO:*\n`;
 
@@ -181,7 +181,7 @@ function DAVList() {
                   onClick={() => handleOpenDetails(v)}
                 >
                   <TableCell className="font-mono text-xs">
-                    {v.id.substring(0, 8).toUpperCase()}
+                    {v.numero_venda || v.id.substring(0, 8).toUpperCase()}
                   </TableCell>
                   <TableCell className="font-semibold">
                     {v.clientes?.nome || "Cliente Removido"}
@@ -235,7 +235,7 @@ function DAVList() {
           <SheetHeader>
             <SheetTitle>Detalhes do Orçamento</SheetTitle>
             <SheetDescription>
-              DAV Nº {selectedDav?.id?.substring(0, 8).toUpperCase()}
+              DAV Nº {selectedDav?.numero_venda || selectedDav?.id?.substring(0, 8).toUpperCase()}
             </SheetDescription>
           </SheetHeader>
 

@@ -87,7 +87,7 @@ function NovoDAV() {
         return;
       }
 
-      const { data: produtos } = await supabase.from("produtos").select("*").eq("status", "Ativo");
+      const { data: produtos } = await supabase.from("produtos").select("*").eq("status", "Ativo").order("nome");
       if (produtos) {
         const parsedItens: any[] = [];
         const items = cartMagic.split(",");

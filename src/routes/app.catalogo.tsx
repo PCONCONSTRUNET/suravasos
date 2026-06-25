@@ -44,7 +44,7 @@ function Catalogo() {
 
   const fetchProdutos = async () => {
     try {
-      const { data } = await supabase.from("produtos").select("*").eq("status", "Ativo");
+      const { data } = await supabase.from("produtos").select("*").eq("status", "Ativo").order("nome");
       if (data) setProdutos(data);
     } finally {
       setLoading(false);

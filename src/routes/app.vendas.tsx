@@ -94,7 +94,7 @@ function Vendas() {
         .eq("venda_id", venda.id);
 
       let msg = `*${venda.tipo === "DAV" ? "ORÇAMENTO" : "PEDIDO"} - VIVAVERDE VASOS*\n`;
-      msg += `Nº: ${venda.id.substring(0, 8).toUpperCase()}\n`;
+      msg += `Nº: ${venda.numero_venda || venda.id.substring(0, 8).toUpperCase()}\n`;
       msg += `Data: ${new Date(venda.created_at).toLocaleDateString()}\n\n`;
       msg += `*ITENS:*\n`;
 
@@ -234,7 +234,7 @@ function Vendas() {
                   onClick={() => handleOpenDetails(v)}
                 >
                   <TableCell className="font-mono text-xs">
-                    {v.id.substring(0, 8).toUpperCase()}
+                    {v.numero_venda || v.id.substring(0, 8).toUpperCase()}
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline">{v.tipo}</Badge>
@@ -272,7 +272,7 @@ function Vendas() {
             <SheetTitle>Detalhes da Operação</SheetTitle>
             <SheetDescription>
               {selectedVenda?.tipo === "DAV" ? "Orçamento" : "Venda"} Nº{" "}
-              {selectedVenda?.id?.substring(0, 8).toUpperCase()}
+              {selectedVenda?.numero_venda || selectedVenda?.id?.substring(0, 8).toUpperCase()}
             </SheetDescription>
           </SheetHeader>
 

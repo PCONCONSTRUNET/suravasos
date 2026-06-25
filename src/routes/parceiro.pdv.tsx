@@ -38,6 +38,7 @@ function ParceiroPDV() {
   const [vendedorInfo, setVendedorInfo] = useState<{ id: string; nome: string } | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [davGeradoId, setDavGeradoId] = useState<string | null>(null);
+  const [davGeradoNumero, setDavGeradoNumero] = useState<string | number | null>(null);
 
   useEffect(() => {
     const init = async () => {
@@ -59,7 +60,7 @@ function ParceiroPDV() {
         }
       }
 
-      const { data } = await supabase.from("produtos").select("*").eq("status", "Ativo");
+      const { data } = await supabase.from("produtos").select("*").eq("status", "Ativo").order("nome");
       if (data) {
         setProdutos(data);
 
@@ -278,6 +279,7 @@ function ParceiroPDV() {
 
       if (!davError && dav) {
         setDavGeradoId(dav.id);
+        setDavGeradoNumero(dav.numero_venda);
 
         // Salvar itens do DAV
         const davItensToInsert = cart.map((i) => ({
@@ -322,7 +324,7 @@ function ParceiroPDV() {
     if (!davGeradoId) return;
 
     let msg = `*ORÇAMENTO - VIVAVERDE VASOS*\n`;
-    msg += `Nº do Orçamento: ${davGeradoId.substring(0, 8).toUpperCase()}\n\n`;
+    msg += `Nº do Orçamento: ${davGeradoNumero || davGeradoId.substring(0, 8).toUpperCase()}\n\n`;
     msg += `Olá ${clientForm.nome}, aqui está o seu orçamento detalhado!\n\n`;
 
     msg += `*ITENS DO ORÇAMENTO:*\n`;
