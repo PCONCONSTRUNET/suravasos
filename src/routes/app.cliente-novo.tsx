@@ -55,14 +55,37 @@ function NovoCliente() {
           
           if (error) throw error;
           if (data) {
+            let parsedEndereco = data.endereco || "";
+            let parsedNumero = "";
+            let parsedBairro = "";
+            let parsedCep = "";
+
+            if (parsedEndereco) {
+              const parts = parsedEndereco.split(",").map((p: string) => p.trim());
+              const newEnderecoParts: string[] = [];
+
+              for (const part of parts) {
+                if (part.startsWith("nº ")) {
+                  parsedNumero = part.substring(3);
+                } else if (part.startsWith("Bairro ")) {
+                  parsedBairro = part.substring(7);
+                } else if (part.startsWith("CEP ")) {
+                  parsedCep = part.substring(4);
+                } else {
+                  newEnderecoParts.push(part);
+                }
+              }
+              parsedEndereco = newEnderecoParts.join(", ");
+            }
+
             setCliente({
               nome: data.nome || "",
               cpf_cnpj: data.cpf_cnpj || "",
               telefone: data.telefone || "",
-              cep: "", 
-              endereco: data.endereco || "",
-              numero: "",
-              bairro: "",
+              cep: parsedCep, 
+              endereco: parsedEndereco,
+              numero: parsedNumero,
+              bairro: parsedBairro,
               cidade: data.cidade || "",
               uf: data.uf || "",
               status: data.status || "Ativo",
