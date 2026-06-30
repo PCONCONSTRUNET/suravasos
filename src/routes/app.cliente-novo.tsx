@@ -147,42 +147,27 @@ function NovoCliente() {
         .filter(Boolean)
         .join(", ");
 
-      const payload: any = {
-        ...cliente,
-        logradouro: cliente.endereco || null,
-        estado: cliente.uf || null,
+      // Envia apenas as colunas conhecidas da tabela clientes
+      const payload = {
+        nome: cliente.nome,
+        cpf_cnpj: cliente.cpf_cnpj || null,
+        telefone: cliente.telefone || null,
+        cidade: cliente.cidade || null,
+        uf: cliente.uf || null,
+        status: cliente.status,
         endereco: enderecoCompleto || null,
       };
 
-      let success = false;
-      let attempts = 0;
-
-      while (!success && attempts < 10) {
-        attempts++;
-        let error;
-
-        if (isEditing) {
-          const res = await supabase.from("clientes").update(payload).eq("id", id);
-          error = res.error;
-        } else {
-          const res = await supabase.from("clientes").insert([payload]);
-          error = res.error;
-        }
-
-        if (error) {
-          const missingMatch = error.message.match(/Could not find the '(.*?)' column/);
-          if (missingMatch && missingMatch[1]) {
-            const badCol = missingMatch[1];
-            console.warn(`Removing missing column '${badCol}' from payload`);
-            delete payload[badCol];
-            continue;
-          } else {
-            throw error;
-          }
-        }
-
-        success = true;
+      let error;
+      if (isEditing) {
+        const res = await supabase.from("clientes").update(payload).eq("id", id);
+        error = res.error;
+      } else {
+        const res = await supabase.from("clientes").insert([payload]);
+        error = res.error;
       }
+
+      if (error) throw error;
 
       navigate({ to: "/app/clientes" });
     } catch (err: any) {
