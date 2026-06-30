@@ -55,27 +55,35 @@ function NovoCliente() {
           
           if (error) throw error;
           if (data) {
-            let parsedEndereco = data.endereco || "";
-            let parsedNumero = "";
-            let parsedBairro = "";
-            let parsedCep = "";
+            let parsedEndereco = data.logradouro || data.endereco || "";
+            let parsedNumero = data.numero || "";
+            let parsedBairro = data.bairro || "";
+            let parsedCep = data.cep || "";
+            let parsedUf = data.uf || data.estado || "";
 
             if (parsedEndereco) {
               const parts = parsedEndereco.split(",").map((p: string) => p.trim());
               const newEnderecoParts: string[] = [];
+              let foundConcat = false;
 
               for (const part of parts) {
                 if (part.startsWith("nº ")) {
-                  parsedNumero = part.substring(3);
+                  if (!parsedNumero) parsedNumero = part.substring(3);
+                  foundConcat = true;
                 } else if (part.startsWith("Bairro ")) {
-                  parsedBairro = part.substring(7);
+                  if (!parsedBairro) parsedBairro = part.substring(7);
+                  foundConcat = true;
                 } else if (part.startsWith("CEP ")) {
-                  parsedCep = part.substring(4);
+                  if (!parsedCep) parsedCep = part.substring(4);
+                  foundConcat = true;
                 } else {
                   newEnderecoParts.push(part);
                 }
               }
-              parsedEndereco = newEnderecoParts.join(", ");
+              
+              if (foundConcat) {
+                parsedEndereco = newEnderecoParts.join(", ");
+              }
             }
 
             setCliente({
@@ -87,7 +95,7 @@ function NovoCliente() {
               numero: parsedNumero,
               bairro: parsedBairro,
               cidade: data.cidade || "",
-              uf: data.uf || "",
+              uf: parsedUf,
               status: data.status || "Ativo",
             });
           }
@@ -139,10 +147,10 @@ function NovoCliente() {
         .filter(Boolean)
         .join(", ");
 
-      const { bairro, cep, numero, ...rest } = cliente;
-
       const payload: any = {
-        ...rest,
+        ...cliente,
+        logradouro: cliente.endereco || null,
+        estado: cliente.uf || null,
         endereco: enderecoCompleto || null,
       };
 
