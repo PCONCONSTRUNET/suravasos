@@ -210,14 +210,26 @@ function Clientes() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8 text-destructive"
-                        onClick={() => handleDelete(c.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-primary"
+                          asChild
+                        >
+                          <Link to="/app/cliente-novo" search={{ id: c.id }}>
+                            <Pencil className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-destructive"
+                          onClick={() => handleDelete(c.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -230,10 +242,22 @@ function Clientes() {
       <Sheet open={openSheet} onOpenChange={setOpenSheet}>
         <SheetContent className="w-[400px] sm:w-[540px] sm:max-w-md overflow-y-auto">
           <SheetHeader>
-            <SheetTitle>Detalhes do Cliente</SheetTitle>
-            <SheetDescription>
-              {selectedCliente?.nome} - {selectedCliente?.cpf_cnpj || "Sem documento"}
-            </SheetDescription>
+            <div className="flex justify-between items-start">
+              <div>
+                <SheetTitle>Detalhes do Cliente</SheetTitle>
+                <SheetDescription>
+                  {selectedCliente?.nome} - {selectedCliente?.cpf_cnpj || "Sem documento"}
+                </SheetDescription>
+              </div>
+              {selectedCliente && (
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/app/cliente-novo" search={{ id: selectedCliente.id }}>
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Editar
+                  </Link>
+                </Button>
+              )}
+            </div>
           </SheetHeader>
           <div className="mt-6 space-y-6">
             <div className="grid grid-cols-2 gap-4 text-sm">

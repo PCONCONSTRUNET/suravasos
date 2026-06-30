@@ -5,16 +5,26 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Save, ArrowLeft } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Link } from "@tanstack/react-router";
 
+type ClienteSearch = {
+  id?: string;
+};
+
 export const Route = createFileRoute("/app/cliente-novo")({
+  validateSearch: (search: Record<string, unknown>): ClienteSearch => {
+    return {
+      id: search.id as string | undefined,
+    };
+  },
   head: () => ({ meta: [{ title: "Novo Cliente — VIVAVERDE ERP" }] }),
   component: NovoCliente,
 });
 
 function NovoCliente() {
+  const { id } = Route.useSearch();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
@@ -30,6 +40,41 @@ function NovoCliente() {
     uf: "",
     status: "Ativo",
   });
+
+  const isEditing = !!id;
+
+  useEffect(() => {
+    if (id) {
+      const fetchCliente = async () => {
+        try {
+          const { data, error } = await supabase
+            .from("clientes")
+            .select("*")
+            .eq("id", id)
+            .single();
+          
+          if (error) throw error;
+          if (data) {
+            setCliente({
+              nome: data.nome || "",
+              cpf_cnpj: data.cpf_cnpj || "",
+              telefone: data.telefone || "",
+              cep: "", 
+              endereco: data.endereco || "",
+              numero: "",
+              bairro: "",
+              cidade: data.cidade || "",
+              uf: data.uf || "",
+              status: data.status || "Ativo",
+            });
+          }
+        } catch (err) {
+          console.error("Erro ao buscar cliente para edição", err);
+        }
+      };
+      fetchCliente();
+    }
+  }, [id]);
 
   const formatCpfCnpj = (v: string) => {
     v = v.replace(/\D/g, "");
@@ -83,7 +128,15 @@ function NovoCliente() {
 
       while (!success && attempts < 10) {
         attempts++;
-        const { error } = await supabase.from("clientes").insert([payload]);
+        let error;
+
+        if (isEditing) {
+          const res = await supabase.from("clientes").update(payload).eq("id", id);
+          error = res.error;
+        } else {
+          const res = await supabase.from("clientes").insert([payload]);
+          error = res.error;
+        }
 
         if (error) {
           const missingMatch = error.message.match(/Could not find the '(.*?)' column/);
@@ -91,9 +144,9 @@ function NovoCliente() {
             const badCol = missingMatch[1];
             console.warn(`Removing missing column '${badCol}' from payload`);
             delete payload[badCol];
-            continue; // Tenta de novo sem essa coluna
+            continue;
           } else {
-            throw error; // É outro erro, vamos falhar
+            throw error;
           }
         }
 
@@ -112,8 +165,8 @@ function NovoCliente() {
   return (
     <>
       <PageHeader
-        title="Novo Cliente"
-        subtitle="Cadastre um novo cliente no sistema"
+        title={isEditing ? "Editar Cliente" : "Novo Cliente"}
+        subtitle={isEditing ? "Altere os dados do cliente selecionado" : "Cadastre um novo cliente no sistema"}
         actions={
           <>
             <Button variant="outline" asChild>
@@ -126,7 +179,7 @@ function NovoCliente() {
               onClick={handleSalvar}
               disabled={loading}
             >
-              <Save className="mr-2 h-4 w-4" /> {loading ? "Salvando..." : "Salvar Cliente"}
+              <Save className="mr-2 h-4 w-4" /> {loading ? "Salvando..." : (isEditing ? "Salvar Alterações" : "Salvar Cliente")}
             </Button>
           </>
         }
