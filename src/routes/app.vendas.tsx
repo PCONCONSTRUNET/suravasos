@@ -240,7 +240,7 @@ function Vendas() {
                     <Badge variant="outline">{v.tipo}</Badge>
                   </TableCell>
                   <TableCell className="font-semibold">
-                    {v.clientes?.nome || "Cliente Removido"}
+                    {v.cliente_id ? v.clientes?.nome || "Cliente Removido" : "Venda Avulsa"}
                   </TableCell>
                   <TableCell>{new Date(v.created_at).toLocaleDateString()}</TableCell>
                   <TableCell className="text-right font-semibold">
