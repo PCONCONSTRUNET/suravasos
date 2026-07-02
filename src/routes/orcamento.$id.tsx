@@ -51,7 +51,8 @@ function ImprimirDAV() {
              subtotal: v.valor_total,
              total: v.valor_total,
              vendedor: "",
-             emissor_nome: "VIVAVERDE VASOS"
+             emissor_nome: "VIVAVERDE VASOS",
+             isVenda: v.tipo !== "DAV"
           };
           setDav(d);
           
@@ -81,7 +82,7 @@ function ImprimirDAV() {
     loadData();
   }, [id]);
 
-  if (!dav) return <div className="p-8 text-center font-sans">Carregando Orçamento...</div>;
+  if (!dav) return <div className="p-8 text-center font-sans">Carregando documento...</div>;
 
   const dataDAV = new Date(dav.created_at).toLocaleDateString("pt-BR");
   const horaDAV = new Date(dav.created_at).toLocaleTimeString("pt-BR", {
@@ -119,10 +120,10 @@ function ImprimirDAV() {
         </div>
         <div className="text-right">
           <h1 className="text-3xl font-bold text-slate-900 uppercase tracking-wider">
-            Orçamento
+            {dav.isVenda ? "Comprovante de Venda" : "Orçamento"}
           </h1>
           <p className="text-sm font-medium mt-1">
-            DAV Nº: {dav.numero ? String(dav.numero).padStart(3, "0") : dav.id.substring(0, 8).toUpperCase()}
+            {dav.isVenda ? "Venda Nº: " : "DAV Nº: "} {dav.numero ? String(dav.numero).padStart(3, "0") : dav.id.substring(0, 8).toUpperCase()}
           </p>
           <p className="text-sm">
             Emissão: {dataDAV} às {horaDAV}
@@ -243,7 +244,9 @@ function ImprimirDAV() {
       </div>
 
       <div className="mt-8 text-center text-xs text-slate-400">
-        Este documento não possui valor fiscal. É apenas um Documento Auxiliar de Venda.
+        {dav.isVenda
+          ? "Este comprovante não possui valor fiscal."
+          : "Este documento não possui valor fiscal. É apenas um Documento Auxiliar de Venda."}
       </div>
     </div>
   );
