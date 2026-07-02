@@ -12,6 +12,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Command,
@@ -22,7 +29,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
-import { Save, Plus, Trash2, Check, ChevronsUpDown } from "lucide-react";
+import { Save, Plus, Trash2, Check, ChevronsUpDown, Search } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -56,6 +63,24 @@ function NovoDAV() {
   const [descontoPerc, setDescontoPerc] = useState(0);
   const [freteValor, setFreteValor] = useState(0);
   const [produtos, setProdutos] = useState<any[]>([]);
+
+  const [isClientModalOpen, setIsClientModalOpen] = useState(false);
+  const [clientSearch, setClientSearch] = useState("");
+  const [clientesBuscaLista, setClientesBuscaLista] = useState<any[]>([]);
+
+  const handleSearchClients = async (q: string) => {
+    setClientSearch(q);
+    if (!q) {
+      setClientesBuscaLista([]);
+      return;
+    }
+    const { data } = await supabase
+      .from("clientes")
+      .select("id, nome, cpf_cnpj, telefone, endereco")
+      .ilike("nome", `%${q}%`)
+      .limit(10);
+    setClientesBuscaLista(data || []);
+  };
 
   const addItem = () =>
     setItens([...itens, { id: Date.now(), codigo: "", produto: "", qtd: 1, vlrUnit: 0, openSearch: false }]);
@@ -250,7 +275,12 @@ function NovoDAV() {
       <Card className="shadow-card p-6 max-w-5xl mx-auto space-y-8">
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div className="space-y-4">
-            <h3 className="font-semibold border-b pb-2">Dados do Cliente (Comprador)</h3>
+            <div className="flex items-center justify-between border-b pb-2">
+              <h3 className="font-semibold">Dados do Cliente (Comprador)</h3>
+              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setIsClientModalOpen(true)}>
+                <Search className="mr-1 h-3 w-3" /> Buscar
+              </Button>
+            </div>
             <div className="space-y-2">
               <Label>Nome / Razão Social</Label>
               <Input
@@ -540,6 +570,51 @@ function NovoDAV() {
           </div>
         </div>
       </Card>
+
+      <Dialog open={isClientModalOpen} onOpenChange={setIsClientModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Buscar Cliente</DialogTitle>
+            <DialogDescription>Selecione um cliente já cadastrado no sistema.</DialogDescription>
+          </DialogHeader>
+          <div className="mt-4">
+            <Input 
+              placeholder="Buscar por nome..." 
+              value={clientSearch}
+              onChange={(e) => handleSearchClients(e.target.value)}
+              className="mb-4"
+            />
+            <div className="max-h-60 overflow-y-auto space-y-2">
+              {clientesBuscaLista.map(c => (
+                <Button 
+                  key={c.id} 
+                  variant="outline" 
+                  className="w-full justify-start h-auto py-3"
+                  onClick={() => {
+                    setCliente({
+                      nome: c.nome,
+                      cnpj: c.cpf_cnpj || "",
+                      endereco: c.endereco || "",
+                      telefone: c.telefone || ""
+                    });
+                    setIsClientModalOpen(false);
+                    setClientSearch("");
+                    setClientesBuscaLista([]);
+                  }}
+                >
+                  <div className="flex flex-col items-start">
+                    <span className="font-semibold">{c.nome}</span>
+                    {c.cpf_cnpj && <span className="text-xs text-muted-foreground">{c.cpf_cnpj}</span>}
+                  </div>
+                </Button>
+              ))}
+              {clientSearch && clientesBuscaLista.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">Nenhum cliente encontrado.</p>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
