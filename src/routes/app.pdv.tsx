@@ -38,9 +38,26 @@ function PDV() {
   const [isOrcamentoModalOpen, setIsOrcamentoModalOpen] = useState(false);
   const [orcamentoIdSelecionado, setOrcamentoIdSelecionado] = useState<string | null>(null);
   const [orcamentoOrigem, setOrcamentoOrigem] = useState<"vendas" | "davs" | null>(null);
-  const [clienteSelecionado, setClienteSelecionado] = useState<{ id: string; nome: string } | null>(
-    null,
-  );
+  const [clienteSelecionado, setClienteSelecionado] = useState<{ id: string; nome: string } | null>(null);
+  
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [isClientModalOpen, setIsClientModalOpen] = useState(false);
+  const [clientSearch, setClientSearch] = useState("");
+  const [clientesBuscaLista, setClientesBuscaLista] = useState<any[]>([]);
+
+  const handleSearchClients = async (q: string) => {
+    setClientSearch(q);
+    if (!q) {
+      setClientesBuscaLista([]);
+      return;
+    }
+    const { data } = await supabase
+      .from("clientes")
+      .select("id, nome, cpf_cnpj")
+      .ilike("nome", `%${q}%`)
+      .limit(10);
+    setClientesBuscaLista(data || []);
+  };
 
   const fetchOrcamentos = async () => {
     // Busca DAVs antigos da tabela de vendas
@@ -150,7 +167,9 @@ function PDV() {
           setCart(novoCarrinho);
           setOrcamentoIdSelecionado(orcamento.id);
           setOrcamentoOrigem("davs");
-          if (orcamento.cliente_id) setClienteSelecionado({ id: orcamento.cliente_id, nome: orcamento.cliente.nome });
+          if (orcamento.cliente?.nome) {
+            setClienteSelecionado({ id: orcamento.cliente_id || "avulso", nome: orcamento.cliente.nome });
+          }
           setIsOrcamentoModalOpen(false);
         } else {
           alert("Nenhum item encontrado.");
@@ -181,8 +200,8 @@ function PDV() {
           setCart(novoCarrinho);
           setOrcamentoIdSelecionado(orcamento.id);
           setOrcamentoOrigem("vendas");
-          if (orcamento.cliente_id && orcamento.cliente) {
-            setClienteSelecionado({ id: orcamento.cliente_id, nome: orcamento.cliente.nome });
+          if (orcamento.cliente?.nome) {
+            setClienteSelecionado({ id: orcamento.cliente_id || "avulso", nome: orcamento.cliente.nome });
           }
           setIsOrcamentoModalOpen(false);
         } else {
@@ -347,7 +366,7 @@ function PDV() {
         fetchOrcamentos();
       }
 
-      alert("Venda realizada com sucesso!");
+      setIsSuccessModalOpen(true);
       limparCaixa();
     } catch (err: any) {
       console.error(err);
@@ -470,7 +489,7 @@ function PDV() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-1.5 text-sm">
-              {clienteSelecionado && (
+              {clienteSelecionado ? (
                 <div className="flex justify-between items-center text-brand font-semibold mb-3 bg-brand/10 p-2 rounded-md">
                   <span>👤 {clienteSelecionado.nome}</span>
                   <Button
@@ -482,6 +501,14 @@ function PDV() {
                     <X className="h-3 w-3" />
                   </Button>
                 </div>
+              ) : (
+                <Button 
+                  variant="outline" 
+                  className="w-full mb-3 border-dashed"
+                  onClick={() => setIsClientModalOpen(true)}
+                >
+                  + Adicionar Cliente à Venda
+                </Button>
               )}
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Subtotal</span>
@@ -606,6 +633,66 @@ function PDV() {
           </div>
         </DialogContent>
       </Dialog>
+      <Dialog open={isSuccessModalOpen} onOpenChange={setIsSuccessModalOpen}>
+        <DialogContent className="sm:max-w-md text-center">
+          <div className="flex flex-col items-center justify-center py-6">
+            <div className="h-16 w-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4">
+              <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <DialogTitle className="text-2xl mb-2">Venda Aprovada!</DialogTitle>
+            <DialogDescription className="text-base mb-6">
+              A venda foi registrada com sucesso e o estoque foi atualizado.
+            </DialogDescription>
+            <Button className="w-full bg-brand hover:bg-brand/90 text-white" onClick={() => setIsSuccessModalOpen(false)}>
+              Nova Venda
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isClientModalOpen} onOpenChange={setIsClientModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Selecionar Cliente</DialogTitle>
+            <DialogDescription>Busque um cliente para vincular a esta venda.</DialogDescription>
+          </DialogHeader>
+          <div className="mt-4">
+            <Input 
+              placeholder="Buscar por nome..." 
+              value={clientSearch}
+              onChange={(e) => handleSearchClients(e.target.value)}
+              className="mb-4"
+            />
+            <div className="max-h-60 overflow-y-auto space-y-2">
+              {clientesBuscaLista.map(c => (
+                <Button 
+                  key={c.id} 
+                  variant="outline" 
+                  className="w-full justify-start h-auto py-3"
+                  onClick={() => {
+                    setClienteSelecionado({ id: c.id, nome: c.nome });
+                    setIsClientModalOpen(false);
+                    setClientSearch("");
+                    setClientesBuscaLista([]);
+                  }}
+                >
+                  <div className="flex flex-col items-start">
+                    <span className="font-semibold">{c.nome}</span>
+                    {c.cpf_cnpj && <span className="text-xs text-muted-foreground">{c.cpf_cnpj}</span>}
+                  </div>
+                </Button>
+              ))}
+              {clientSearch && clientesBuscaLista.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">Nenhum cliente encontrado.</p>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
+
+export default PDV;
