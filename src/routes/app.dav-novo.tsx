@@ -12,7 +12,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Save, Plus, Trash2 } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { cn } from "@/lib/utils";
+import { Save, Plus, Trash2, Check, ChevronsUpDown } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -41,13 +51,14 @@ function NovoDAV() {
   const [observacoes, setObservacoes] = useState("");
 
   const [itens, setItens] = useState<
-    { id: number; codigo: string; produto: string; qtd: number; vlrUnit: number }[]
+    { id: number; codigo: string; produto: string; qtd: number; vlrUnit: number; openSearch: boolean }[]
   >([]);
   const [descontoPerc, setDescontoPerc] = useState(0);
   const [freteValor, setFreteValor] = useState(0);
+  const [produtos, setProdutos] = useState<any[]>([]);
 
   const addItem = () =>
-    setItens([...itens, { id: Date.now(), codigo: "", produto: "", qtd: 1, vlrUnit: 0 }]);
+    setItens([...itens, { id: Date.now(), codigo: "", produto: "", qtd: 1, vlrUnit: 0, openSearch: false }]);
 
   const removeItem = (id: number) => setItens(itens.filter((i) => i.id !== id));
 
@@ -77,24 +88,35 @@ function NovoDAV() {
     };
     fetchConfigs();
 
+    const fetchProdutos = async () => {
+      const { data } = await supabase
+        .from("produtos")
+        .select("*")
+        .eq("status", "Ativo")
+        .order("nome");
+      if (data) setProdutos(data);
+    };
+    fetchProdutos();
+
     const loadCartFromURL = async () => {
       const params = new URLSearchParams(window.location.search);
       const cartMagic = params.get("c");
       if (!cartMagic) {
         if (itens.length === 0) {
-          setItens([{ id: Date.now(), codigo: "", produto: "", qtd: 1, vlrUnit: 0 }]);
+          setItens([{ id: Date.now(), codigo: "", produto: "", qtd: 1, vlrUnit: 0, openSearch: false }]);
         }
         return;
       }
 
-      const { data: produtos } = await supabase.from("produtos").select("*").eq("status", "Ativo").order("nome");
-      if (produtos) {
+      const { data: produtosData } = await supabase.from("produtos").select("*").eq("status", "Ativo").order("nome");
+      if (produtosData) {
+        setProdutos(produtosData);
         const parsedItens: any[] = [];
         const items = cartMagic.split(",");
         items.forEach((item, index) => {
           const [id, qStr] = item.split(":");
           const qty = parseInt(qStr) || 1;
-          const prod = produtos.find((p) => p.id === id);
+          const prod = produtosData.find((p) => p.id === id);
           if (prod) {
             parsedItens.push({
               id: Date.now() + index,
@@ -102,6 +124,7 @@ function NovoDAV() {
               produto: prod.nome,
               qtd: qty,
               vlrUnit: Number(prod.valor),
+              openSearch: false,
             });
           }
         });
@@ -109,7 +132,7 @@ function NovoDAV() {
           setItens(parsedItens);
           window.history.replaceState({}, "", "/app/dav-novo");
         } else if (itens.length === 0) {
-          setItens([{ id: Date.now(), codigo: "", produto: "", qtd: 1, vlrUnit: 0 }]);
+          setItens([{ id: Date.now(), codigo: "", produto: "", qtd: 1, vlrUnit: 0, openSearch: false }]);
         }
       }
     };
@@ -341,12 +364,73 @@ function NovoDAV() {
                         onChange={(e) => updateItem(i.id, "codigo", e.target.value)}
                       />
                     </TableCell>
-                    <TableCell>
-                      <Input
-                        className="h-8"
-                        value={i.produto}
-                        onChange={(e) => updateItem(i.id, "produto", e.target.value)}
-                      />
+                    <TableCell className="min-w-[220px]">
+                      <Popover
+                        open={i.openSearch}
+                        onOpenChange={(open) =>
+                          setItens((prev) =>
+                            prev.map((it) => (it.id === i.id ? { ...it, openSearch: open } : it))
+                          )
+                        }
+                      >
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className={cn(
+                              "h-8 w-full justify-between font-normal px-2 text-sm",
+                              !i.produto && "text-muted-foreground"
+                            )}
+                          >
+                            <span className="truncate">{i.produto || "Buscar produto..."}</span>
+                            <ChevronsUpDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[320px] p-0" align="start">
+                          <Command>
+                            <CommandInput placeholder="Pesquisar por nome..." />
+                            <CommandList>
+                              <CommandEmpty>Nenhum produto encontrado.</CommandEmpty>
+                              <CommandGroup>
+                                {produtos.map((p) => (
+                                  <CommandItem
+                                    key={p.id}
+                                    value={p.nome + " " + (p.codigo || "")}
+                                    onSelect={() => {
+                                      setItens((prev) =>
+                                        prev.map((it) =>
+                                          it.id === i.id
+                                            ? {
+                                                ...it,
+                                                codigo: p.codigo || "",
+                                                produto: p.nome,
+                                                vlrUnit: Number(p.valor),
+                                                openSearch: false,
+                                              }
+                                            : it
+                                        )
+                                      );
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        i.produto === p.nome ? "opacity-100" : "opacity-0"
+                                      )}
+                                    />
+                                    <div className="flex flex-col">
+                                      <span className="font-medium">{p.nome}</span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {p.codigo ? `Cód: ${p.codigo} · ` : ""}R$ {Number(p.valor).toFixed(2)}
+                                      </span>
+                                    </div>
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
                     </TableCell>
                     <TableCell>
                       <Input
