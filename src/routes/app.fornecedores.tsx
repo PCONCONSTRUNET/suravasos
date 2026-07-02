@@ -1,3 +1,4 @@
+import React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
@@ -22,9 +23,9 @@ export const Route = createFileRoute("/app/fornecedores")({
 
 function Fornecedores() {
   const confirm = useConfirm();
-  const [fornecedores, setFornecedores] = useState<any[]>([]);
+  const [fornecedores, setFornecedores] = useState<Record<string, any>[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState<any | null>(null);
+  const [selected, setSelected] = useState<Record<string, any> | null>(null);
 
   const fetchFornecedores = async () => {
     try {
@@ -107,7 +108,7 @@ function Fornecedores() {
                   </TableCell>
                 </TableRow>
               ) : (
-                fornecedores.map((d) => (
+                fornecedores.map((d: Record<string, any>) => (
                   <TableRow
                     key={d.id}
                     className={`cursor-pointer transition-colors ${selected?.id === d.id ? "bg-primary/10" : "hover:bg-muted/50"}`}
@@ -122,7 +123,7 @@ function Fornecedores() {
                     <TableCell className="text-right font-semibold">
                       R$ {Number(d.valor_total || 0).toFixed(2).replace(".", ",")}
                     </TableCell>
-                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                    <TableCell className="text-right" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                       <Button
                         size="icon"
                         variant="ghost"
@@ -213,7 +214,8 @@ function Fornecedores() {
   );
 }
 
-function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+interface InfoRowProps { icon: React.ReactNode; label: string; value: string; }
+function InfoRow({ icon, label, value }: InfoRowProps) {
   return (
     <div className="flex items-start gap-3">
       <div className="mt-0.5 text-muted-foreground shrink-0">{icon}</div>
