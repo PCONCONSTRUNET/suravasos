@@ -52,11 +52,15 @@ function PDV() {
       .order("created_at", { ascending: false });
       
     // Busca Novos DAVs da tabela davs
-    const { data: davData } = await supabase
+    const { data: davData, error: davError } = await supabase
       .from("davs")
       .select("*")
       .or("status.is.null,status.eq.Aberto,status.eq.Orçamento")
       .order("created_at", { ascending: false });
+
+    if (davError) {
+      console.error("Erro ao buscar novos DAVs (Verifique se as migrations foram rodadas):", davError);
+    }
 
     let combined: any[] = [];
     if (vendasData) {
@@ -124,7 +128,7 @@ function PDV() {
       if (orcamento.isNovoDav) {
         const { data, error } = await supabase
           .from("dav_items")
-          .select("*, produto:produtos(nome, estoque, valor, emoji)")
+          .select("*, produtos(nome, estoque, valor, emoji)")
           .eq("dav_id", orcamento.id);
 
         if (error) {
@@ -135,12 +139,12 @@ function PDV() {
         if (data && data.length > 0) {
           const novoCarrinho = data.map((item) => ({
             id: item.produto_id || item.codigo || Math.random().toString(), 
-            p: item.produto?.nome || item.produto || "Produto não encontrado",
+            p: item.produtos?.nome || item.produto || "Produto não encontrado",
             q: item.qtd,
             u: Number(item.valor_unitario),
             t: Number(item.total),
-            emoji: item.produto?.emoji || "📦",
-            max: item.produto?.estoque || 0,
+            emoji: item.produtos?.emoji || "📦",
+            max: item.produtos?.estoque || 0,
             hasDbId: !!item.produto_id
           }));
           setCart(novoCarrinho);
