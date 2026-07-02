@@ -172,26 +172,26 @@ function Estoque() {
     }
   };
 
-  const getSomaCategoria = (categoria: string) =>
+  const getSomaCategoria = (categoriaBusca: string) =>
     produtos
-      .filter((p) => p.categoria === categoria)
+      .filter((p) => p.categoria?.toLowerCase().includes(categoriaBusca.toLowerCase()))
       .reduce((acc, p) => acc + Number(p.estoque || 0), 0);
 
   const cats = [
     {
       l: "Total de Vasos",
-      v: getSomaCategoria("Vasos de Produção") + getSomaCategoria("Vasos Decorativos"),
+      v: getSomaCategoria("Vaso"),
       c: "bg-primary/10 text-primary",
       pct: 78,
     },
     {
       l: "Total de Floreiras",
-      v: getSomaCategoria("Floreiras"),
+      v: getSomaCategoria("Floreira"),
       c: "bg-success/15 text-success",
       pct: 62,
     },
-    { l: "Total de Cuias", v: getSomaCategoria("Cuias"), c: "bg-terra/10 text-terra", pct: 48 },
-    { l: "Total de Pratos", v: getSomaCategoria("Pratos"), c: "bg-info/10 text-info", pct: 55 },
+    { l: "Total de Cuias", v: getSomaCategoria("Cuia"), c: "bg-terra/10 text-terra", pct: 48 },
+    { l: "Total de Pratos", v: getSomaCategoria("Prato"), c: "bg-info/10 text-info", pct: 55 },
   ];
 
   const critical = produtos.filter((p) => Number(p.estoque) <= 10).slice(0, 5);

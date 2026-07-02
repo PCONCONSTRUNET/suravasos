@@ -346,6 +346,14 @@ function PDV() {
         if (prod) {
           const novoEstoque = prod.estoque - item.q;
           await supabase.from("produtos").update({ estoque: novoEstoque }).eq("id", item.id);
+          
+          await supabase.from("movimentacoes_estoque").insert({
+            produto_id: item.id,
+            tipo: "Saída",
+            quantidade: -item.q,
+            motivo: `Venda PDV #${vendaData.numero ? String(vendaData.numero).padStart(3, "0") : vendaData.numero_venda || vendaId.substring(0, 8).toUpperCase()}`
+          });
+          
           prod.estoque = novoEstoque; // Atualiza local
         }
       }
