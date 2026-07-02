@@ -37,18 +37,47 @@ function PDV() {
   const [orcamentos, setOrcamentos] = useState<any[]>([]);
   const [isOrcamentoModalOpen, setIsOrcamentoModalOpen] = useState(false);
   const [orcamentoIdSelecionado, setOrcamentoIdSelecionado] = useState<string | null>(null);
+  const [orcamentoOrigem, setOrcamentoOrigem] = useState<"vendas" | "davs" | null>(null);
   const [clienteSelecionado, setClienteSelecionado] = useState<{ id: string; nome: string } | null>(
     null,
   );
 
   const fetchOrcamentos = async () => {
-    const { data } = await supabase
+    // Busca DAVs antigos da tabela de vendas
+    const { data: vendasData } = await supabase
       .from("vendas")
       .select("*, cliente:clientes(nome)")
       .eq("tipo", "DAV")
       .in("status", ["Orçamento", "Aguardando Pagamento"])
       .order("created_at", { ascending: false });
-    if (data) setOrcamentos(data);
+      
+    // Busca Novos DAVs da tabela davs
+    const { data: davData } = await supabase
+      .from("davs")
+      .select("*")
+      .or("status.is.null,status.eq.Aberto,status.eq.Orçamento")
+      .order("created_at", { ascending: false });
+
+    let combined: any[] = [];
+    if (vendasData) {
+      combined = [...combined, ...vendasData];
+    }
+    if (davData) {
+      const mappedDavs = davData.map((d: any) => ({
+        id: d.id,
+        numero_venda: d.numero,
+        numero: d.numero,
+        valor_total: d.total,
+        created_at: d.created_at,
+        cliente_id: d.cliente_id,
+        cliente: { nome: d.cliente_nome },
+        isNovoDav: true
+      }));
+      combined = [...combined, ...mappedDavs];
+    }
+    
+    combined.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    setOrcamentos(combined);
   };
 
   useEffect(() => {
@@ -92,35 +121,69 @@ function PDV() {
 
   const puxarOrcamento = async (orcamento: any) => {
     try {
-      const { data, error } = await supabase
-        .from("vendas_itens")
-        .select("*, produto:produtos(nome, estoque, valor, emoji)")
-        .eq("venda_id", orcamento.id);
+      if (orcamento.isNovoDav) {
+        const { data, error } = await supabase
+          .from("dav_items")
+          .select("*, produto:produtos(nome, estoque, valor, emoji)")
+          .eq("dav_id", orcamento.id);
 
-      if (error) {
-        console.error(error);
-        alert("Erro no banco de dados ao puxar os itens: " + error.message);
-        return;
-      }
-
-      if (data && data.length > 0) {
-        const novoCarrinho = data.map((item) => ({
-          id: item.produto_id,
-          p: item.produto?.nome || "Produto não encontrado",
-          q: item.quantidade,
-          u: Number(item.valor_unitario),
-          t: Number(item.subtotal),
-          emoji: item.produto?.emoji || "📦",
-          max: item.produto?.estoque || 0,
-        }));
-        setCart(novoCarrinho);
-        setOrcamentoIdSelecionado(orcamento.id);
-        if (orcamento.cliente_id && orcamento.cliente) {
-          setClienteSelecionado({ id: orcamento.cliente_id, nome: orcamento.cliente.nome });
+        if (error) {
+          console.error(error);
+          alert("Erro ao puxar itens: " + error.message);
+          return;
         }
-        setIsOrcamentoModalOpen(false);
+        if (data && data.length > 0) {
+          const novoCarrinho = data.map((item) => ({
+            id: item.produto_id || item.codigo || Math.random().toString(), 
+            p: item.produto?.nome || item.produto || "Produto não encontrado",
+            q: item.qtd,
+            u: Number(item.valor_unitario),
+            t: Number(item.total),
+            emoji: item.produto?.emoji || "📦",
+            max: item.produto?.estoque || 0,
+            hasDbId: !!item.produto_id
+          }));
+          setCart(novoCarrinho);
+          setOrcamentoIdSelecionado(orcamento.id);
+          setOrcamentoOrigem("davs");
+          if (orcamento.cliente_id) setClienteSelecionado({ id: orcamento.cliente_id, nome: orcamento.cliente.nome });
+          setIsOrcamentoModalOpen(false);
+        } else {
+          alert("Nenhum item encontrado.");
+        }
       } else {
-        alert("Nenhum item encontrado neste orçamento.");
+        const { data, error } = await supabase
+          .from("vendas_itens")
+          .select("*, produto:produtos(nome, estoque, valor, emoji)")
+          .eq("venda_id", orcamento.id);
+
+        if (error) {
+          console.error(error);
+          alert("Erro no banco de dados ao puxar os itens: " + error.message);
+          return;
+        }
+
+        if (data && data.length > 0) {
+          const novoCarrinho = data.map((item) => ({
+            id: item.produto_id,
+            p: item.produto?.nome || "Produto não encontrado",
+            q: item.quantidade,
+            u: Number(item.valor_unitario),
+            t: Number(item.subtotal),
+            emoji: item.produto?.emoji || "📦",
+            max: item.produto?.estoque || 0,
+            hasDbId: true
+          }));
+          setCart(novoCarrinho);
+          setOrcamentoIdSelecionado(orcamento.id);
+          setOrcamentoOrigem("vendas");
+          if (orcamento.cliente_id && orcamento.cliente) {
+            setClienteSelecionado({ id: orcamento.cliente_id, nome: orcamento.cliente.nome });
+          }
+          setIsOrcamentoModalOpen(false);
+        } else {
+          alert("Nenhum item encontrado neste orçamento.");
+        }
       }
     } catch (e: any) {
       alert("Erro ao puxar itens do orçamento: " + e.message);
@@ -130,6 +193,7 @@ function PDV() {
   const limparCaixa = () => {
     setCart([]);
     setOrcamentoIdSelecionado(null);
+    setOrcamentoOrigem(null);
     setClienteSelecionado(null);
   };
 
@@ -244,7 +308,7 @@ function PDV() {
       await supabase.from("contas_receber").insert([
         {
           venda_id: vendaId,
-          descricao: `Venda PDV #${vendaData.numero_venda || vendaId.substring(0, 8).toUpperCase()}`,
+          descricao: `Venda PDV #${vendaData.numero ? String(vendaData.numero).padStart(3, "0") : vendaData.numero_venda || vendaId.substring(0, 8).toUpperCase()}`,
           valor: subtotal,
           vencimento: dataAtual,
           status: "Recebido",
@@ -254,6 +318,7 @@ function PDV() {
 
       // Baixa no estoque
       for (const item of cart) {
+        if (item.hasDbId === false) continue; // Pula se não tiver ID real do banco (DAVs muito antigos sem produto_id)
         const prod = produtos.find((p) => p.id === item.id);
         if (prod) {
           const novoEstoque = prod.estoque - item.q;
@@ -264,10 +329,17 @@ function PDV() {
 
       // Atualiza o orçamento anterior se foi puxado
       if (orcamentoIdSelecionado) {
-        await supabase
-          .from("vendas")
-          .update({ status: "Faturado" })
-          .eq("id", orcamentoIdSelecionado);
+        if (orcamentoOrigem === "davs") {
+          await supabase
+            .from("davs")
+            .update({ status: "Aprovado" })
+            .eq("id", orcamentoIdSelecionado);
+        } else {
+          await supabase
+            .from("vendas")
+            .update({ status: "Faturado" })
+            .eq("id", orcamentoIdSelecionado);
+        }
         fetchOrcamentos();
       }
 
@@ -424,7 +496,7 @@ function PDV() {
               <p className="text-xs font-semibold uppercase text-muted-foreground tracking-wider mb-2">
                 Pagamento
               </p>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-4 gap-2">
                 <Button
                   onClick={() => setMetodoPagamento("Dinheiro")}
                   variant="outline"
@@ -460,6 +532,18 @@ function PDV() {
                     className="h-5 w-5 object-contain"
                   />
                   <span className="text-xs">Pix</span>
+                </Button>
+                <Button
+                  onClick={() => setMetodoPagamento("Boleto")}
+                  variant="outline"
+                  className={`h-16 flex-col gap-1 ${metodoPagamento === "Boleto" ? "ring-2 ring-primary" : ""}`}
+                >
+                  <img
+                    src="https://img.icons8.com/fluency/48/recurring-appointment.png"
+                    alt="Boleto"
+                    className="h-5 w-5 object-contain"
+                  />
+                  <span className="text-xs">Boleto</span>
                 </Button>
               </div>
             </div>
@@ -497,7 +581,7 @@ function PDV() {
                 >
                   <div>
                     <p className="font-semibold text-slate-800">
-                      #{orc.numero_venda || orc.id.substring(0, 8).toUpperCase()}
+                      #{orc.numero ? String(orc.numero).padStart(3, "0") : orc.numero_venda || orc.id.substring(0, 8).toUpperCase()}
                     </p>
                     <p className="text-sm text-slate-600 font-medium">
                       👤 {orc.cliente?.nome || "Cliente Desconhecido"}

@@ -51,7 +51,7 @@ function NovoDAV() {
   const [observacoes, setObservacoes] = useState("");
 
   const [itens, setItens] = useState<
-    { id: number; codigo: string; produto: string; qtd: number; vlrUnit: number; openSearch: boolean }[]
+    { id: number; produto_id?: string; codigo: string; produto: string; qtd: number; vlrUnit: number; openSearch: boolean }[]
   >([]);
   const [descontoPerc, setDescontoPerc] = useState(0);
   const [freteValor, setFreteValor] = useState(0);
@@ -118,14 +118,15 @@ function NovoDAV() {
           const qty = parseInt(qStr) || 1;
           const prod = produtosData.find((p) => p.id === id);
           if (prod) {
-            parsedItens.push({
-              id: Date.now() + index,
-              codigo: prod.codigo || "",
-              produto: prod.nome,
-              qtd: qty,
-              vlrUnit: Number(prod.valor),
-              openSearch: false,
-            });
+              parsedItens.push({
+                id: Date.now() + index,
+                produto_id: prod.id,
+                codigo: prod.codigo || "",
+                produto: prod.nome,
+                qtd: qty,
+                vlrUnit: Number(prod.valor),
+                openSearch: false,
+              });
           }
         });
         if (parsedItens.length > 0) {
@@ -155,10 +156,32 @@ function NovoDAV() {
 
     setLoading(true);
     try {
+      let cliente_id = null;
+      if (cliente.nome) {
+        let query = supabase.from("clientes").select("id").limit(1);
+        if (cliente.cnpj) query = query.eq("cpf_cnpj", cliente.cnpj);
+        else query = query.eq("nome", cliente.nome);
+
+        const { data: existingClient } = await query;
+        if (existingClient && existingClient.length > 0) {
+          cliente_id = existingClient[0].id;
+        } else {
+          const { data: newClient } = await supabase.from("clientes").insert({
+            nome: cliente.nome,
+            cpf_cnpj: cliente.cnpj,
+            telefone: cliente.telefone,
+            endereco: cliente.endereco,
+            status: "Ativo"
+          }).select("id").single();
+          if (newClient) cliente_id = newClient.id;
+        }
+      }
+
       // 1. Salvar o DAV principal
       const { data: dav, error: davError } = await supabase
         .from("davs")
         .insert({
+          cliente_id: cliente_id,
           cliente_nome: cliente.nome,
           cliente_cnpj: cliente.cnpj,
           cliente_endereco: cliente.endereco,
@@ -187,6 +210,7 @@ function NovoDAV() {
       // 2. Salvar os itens
       const itensToInsert = itens.map((i) => ({
         dav_id: dav.id,
+        produto_id: i.produto_id || null,
         codigo: i.codigo,
         produto: i.produto,
         qtd: i.qtd,
@@ -402,6 +426,7 @@ function NovoDAV() {
                                           it.id === i.id
                                             ? {
                                                 ...it,
+                                                produto_id: p.id,
                                                 codigo: p.codigo || "",
                                                 produto: p.nome,
                                                 vlrUnit: Number(p.valor),

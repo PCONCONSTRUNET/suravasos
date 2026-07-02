@@ -102,7 +102,7 @@ function DAVList() {
         .eq("dav_id", dav.id);
 
       let msg = `*ORÇAMENTO - VIVAVERDE VASOS*\n`;
-      msg += `Nº: ${dav.id.substring(0, 8).toUpperCase()}\n`;
+      msg += `Nº: ${dav.numero ? String(dav.numero).padStart(3, "0") : dav.id.substring(0, 8).toUpperCase()}\n`;
       msg += `Data: ${new Date(dav.created_at).toLocaleDateString()}\n`;
       msg += `Cliente: ${dav.cliente_nome}\n\n`;
       msg += `*ITENS DO ORÇAMENTO:*\n`;
@@ -179,7 +179,7 @@ function DAVList() {
                   onClick={() => handleOpenDetails(v)}
                 >
                   <TableCell className="font-mono text-xs">
-                    {v.id.substring(0, 8).toUpperCase()}
+                    {v.numero ? String(v.numero).padStart(3, "0") : v.id.substring(0, 8).toUpperCase()}
                   </TableCell>
                   <TableCell className="font-semibold">
                     {v.cliente_nome || "—"}
@@ -233,7 +233,7 @@ function DAVList() {
           <SheetHeader>
             <SheetTitle>Detalhes do Orçamento</SheetTitle>
             <SheetDescription>
-              DAV Nº {selectedDav?.numero_venda || selectedDav?.id?.substring(0, 8).toUpperCase()}
+              DAV Nº {selectedDav?.numero ? String(selectedDav.numero).padStart(3, "0") : selectedDav?.numero_venda || selectedDav?.id?.substring(0, 8).toUpperCase()}
             </SheetDescription>
           </SheetHeader>
 
@@ -329,7 +329,7 @@ function DAVList() {
                 </svg>
                 Enviar WhatsApp
               </Button>
-              <Button className="flex-1 bg-brand text-white hover:bg-brand/90" asChild>
+              <Button className="flex-1 bg-gradient-brand text-primary-foreground" asChild>
                 <Link to="/orcamento/$id" params={{ id: selectedDav?.id }}>
                   <Printer className="h-4 w-4 mr-2" /> Imprimir / PDF
                 </Link>

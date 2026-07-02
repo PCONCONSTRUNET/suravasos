@@ -76,7 +76,7 @@ function ImprimirDAV() {
             Orçamento
           </h1>
           <p className="text-sm font-medium mt-1">
-            DAV Nº: {dav.id.substring(0, 8).toUpperCase()}
+            DAV Nº: {dav.numero ? String(dav.numero).padStart(3, "0") : dav.id.substring(0, 8).toUpperCase()}
           </p>
           <p className="text-sm">
             Emissão: {dataDAV} às {horaDAV}
