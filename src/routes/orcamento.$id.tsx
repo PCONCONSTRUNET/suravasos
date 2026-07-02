@@ -15,18 +15,64 @@ function ImprimirDAV() {
 
   useEffect(() => {
     async function loadData() {
-      const { data: d } = await supabase
+      let { data: d } = await supabase
         .from("davs")
         .select("*")
         .eq("id", id)
         .single();
-      if (d) setDav(d);
 
-      const { data: i } = await supabase
-        .from("dav_items")
-        .select("*")
-        .eq("dav_id", id);
-      if (i) setItens(i);
+      let itemsData: any[] = [];
+
+      if (d) {
+        setDav(d);
+        const { data: i } = await supabase
+          .from("dav_items")
+          .select("*")
+          .eq("dav_id", id);
+        if (i) itemsData = i;
+      } else {
+        // Tenta buscar na tabela de vendas (Vendas ou DAVs antigos)
+        const { data: v } = await supabase
+          .from("vendas")
+          .select("*, cliente:clientes(*)")
+          .eq("id", id)
+          .single();
+        
+        if (v) {
+          d = {
+             id: v.id,
+             numero: v.numero_venda || v.numero,
+             created_at: v.created_at,
+             cliente_nome: v.cliente?.nome,
+             cliente_cnpj: v.cliente?.cpf_cnpj,
+             cliente_telefone: v.cliente?.telefone,
+             cliente_endereco: v.cliente?.endereco,
+             condicao_pagamento: v.metodo_pagamento,
+             subtotal: v.valor_total,
+             total: v.valor_total,
+             vendedor: "",
+             emissor_nome: "VIVAVERDE VASOS"
+          };
+          setDav(d);
+          
+          const { data: vi } = await supabase
+            .from("vendas_itens")
+            .select("*, produto:produtos(nome, codigo)")
+            .eq("venda_id", id);
+          
+          if (vi) {
+             itemsData = vi.map(item => ({
+               codigo: item.produto?.codigo,
+               produto: item.produto?.nome || "Produto sem nome",
+               qtd: item.quantidade,
+               valor_unitario: item.valor_unitario,
+               total: item.subtotal
+             }));
+          }
+        }
+      }
+
+      setItens(itemsData);
 
       if (d) {
         setTimeout(() => window.print(), 800);
