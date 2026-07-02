@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/app/venda-nova")({
-  head: () => ({ meta: [{ title: "Nova Venda/DAV — VIVAVERDE ERP" }] }),
+  head: () => ({ meta: [{ title: "Nova Venda — VIVAVERDE ERP" }] }),
   component: NovaVenda,
 });
 
@@ -47,8 +47,8 @@ function NovaVenda() {
 
   // Form State
   const [clienteId, setClienteId] = useState("");
-  const [tipo, setTipo] = useState("DAV"); // 'DAV' ou 'VENDA'
-  const [status, setStatus] = useState("Orçamento");
+  const [tipo] = useState("VENDA");
+  const [status, setStatus] = useState("Pago");
 
   // Cart State
   const [itens, setItens] = useState<any[]>([]);
@@ -223,7 +223,7 @@ function NovaVenda() {
         ]);
       }
 
-      alert(tipo === "DAV" ? "Orçamento criado com sucesso!" : "Venda finalizada com sucesso!");
+      alert("Venda finalizada com sucesso!");
       navigate({ to: "/app/vendas" });
     } catch (err: any) {
       console.error(err);
@@ -233,16 +233,12 @@ function NovaVenda() {
     }
   };
 
-  // Ajustar o status padrão ao mudar o tipo
-  useEffect(() => {
-    if (tipo === "DAV") setStatus("Orçamento");
-    if (tipo === "VENDA") setStatus("Pago");
-  }, [tipo]);
+  // Status padrão fixo para VENDA
 
   return (
     <>
       <PageHeader
-        title={tipo === "DAV" ? "Novo Orçamento (DAV)" : "Nova Venda"}
+        title="Nova Venda"
         subtitle="Preencha os dados e adicione os itens"
         actions={
           <>
@@ -257,7 +253,7 @@ function NovaVenda() {
               disabled={loading || itens.length === 0}
             >
               <Save className="mr-2 h-4 w-4" />{" "}
-              {loading ? "Processando..." : tipo === "DAV" ? "Salvar Orçamento" : "Finalizar Venda"}
+              {loading ? "Processando..." : "Finalizar Venda"}
             </Button>
           </>
         }
@@ -271,18 +267,6 @@ function NovaVenda() {
               <ShoppingCart className="h-5 w-5 text-brand" /> Dados da Operação
             </h3>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Tipo de Operação</Label>
-                <select
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  value={tipo}
-                  onChange={(e) => setTipo(e.target.value)}
-                >
-                  <option value="DAV">Orçamento (DAV)</option>
-                  <option value="VENDA">Venda Direta (Baixa Estoque)</option>
-                </select>
-              </div>
               <div className="space-y-2">
                 <Label>Status</Label>
                 <select
@@ -290,19 +274,11 @@ function NovaVenda() {
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
                 >
-                  {tipo === "DAV" ? (
-                    <>
-                      <option value="Orçamento">Orçamento Aberto</option>
-                      <option value="Aprovado">Aprovado pelo Cliente</option>
-                      <option value="Rejeitado">Rejeitado</option>
-                    </>
-                  ) : (
-                    <>
-                      <option value="Pago">Pago / Finalizado</option>
-                      <option value="Aguardando Pagamento">Aguardando Pagamento</option>
-                      <option value="Em Separação">Em Separação</option>
-                    </>
-                  )}
+                  <>
+                    <option value="Pago">Pago / Finalizado</option>
+                    <option value="Aguardando Pagamento">Aguardando Pagamento</option>
+                    <option value="Em Separação">Em Separação</option>
+                  </>
                 </select>
               </div>
             </div>
@@ -473,7 +449,7 @@ function NovaVenda() {
             <DialogTitle>Preencher Dados do Cliente</DialogTitle>
             <DialogDescription>
               Você não selecionou um cliente. Preencha os dados abaixo para cadastrar e emitir o{" "}
-              {tipo === "DAV" ? "Orçamento" : "Pedido"} automaticamente.
+              Pedido automaticamente.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">

@@ -141,7 +141,7 @@ function DAVList() {
         subtitle="Documentos Auxiliares de Venda"
         actions={
           <Button className="bg-gradient-brand text-primary-foreground" asChild>
-            <Link to="/app/venda-nova">
+            <Link to="/app/dav-novo">
               <Plus className="mr-2 h-4 w-4" />
               Novo DAV
             </Link>
