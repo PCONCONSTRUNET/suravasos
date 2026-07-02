@@ -267,7 +267,7 @@ function NovaVenda() {
               <ShoppingCart className="h-5 w-5 text-brand" /> Dados da Operação
             </h3>
 
-              <div className="space-y-2">
+            <div className="space-y-2">
                 <Label>Status</Label>
                 <select
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -281,7 +281,6 @@ function NovaVenda() {
                   </>
                 </select>
               </div>
-            </div>
 
             <div className="space-y-2">
               <Label>Cliente</Label>
