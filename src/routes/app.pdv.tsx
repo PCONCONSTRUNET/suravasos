@@ -304,7 +304,7 @@ function PDV() {
             tipo: "PDV",
             status: "Pago",
             valor_total: subtotal,
-            cliente_id: clienteSelecionado?.id || null,
+            cliente_id: clienteSelecionado?.id === "avulso" ? null : clienteSelecionado?.id || null,
             metodo_pagamento: metodoPagamento,
           },
         ])
