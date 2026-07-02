@@ -42,10 +42,8 @@ function DAVList() {
   const fetchDAVs = async () => {
     try {
       const { data, error } = await supabase
-        .from("vendas")
-        .select(`*, clientes (nome)`)
-        .eq("tipo", "DAV")
-        .or("status_aprovacao.neq.Pendente,status_aprovacao.is.null")
+        .from("davs")
+        .select("*")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -68,9 +66,9 @@ function DAVList() {
     setLoadingItens(true);
     try {
       const { data, error } = await supabase
-        .from("vendas_itens")
-        .select("*, produtos(nome)")
-        .eq("venda_id", dav.id);
+        .from("dav_items")
+        .select("*")
+        .eq("dav_id", dav.id);
       if (!error && data) setDavItens(data);
     } catch (err) {
       console.error(err);
@@ -88,7 +86,7 @@ function DAVList() {
     )
       return;
     try {
-      const { error } = await supabase.from("vendas").delete().eq("id", id);
+      const { error } = await supabase.from("davs").delete().eq("id", id);
       if (error) throw error;
       fetchDAVs();
     } catch (err: any) {
@@ -96,28 +94,28 @@ function DAVList() {
     }
   };
 
-  const handleShareWhatsApp = async (venda: any) => {
+  const handleShareWhatsApp = async (dav: any) => {
     try {
       const { data: itens } = await supabase
-        .from("vendas_itens")
-        .select("*, produtos(nome)")
-        .eq("venda_id", venda.id);
+        .from("dav_items")
+        .select("*")
+        .eq("dav_id", dav.id);
 
       let msg = `*ORÇAMENTO - VIVAVERDE VASOS*\n`;
-      msg += `Nº: ${venda.numero_venda || venda.id.substring(0, 8).toUpperCase()}\n`;
-      msg += `Data: ${new Date(venda.created_at).toLocaleDateString()}\n\n`;
+      msg += `Nº: ${dav.id.substring(0, 8).toUpperCase()}\n`;
+      msg += `Data: ${new Date(dav.created_at).toLocaleDateString()}\n`;
+      msg += `Cliente: ${dav.cliente_nome}\n\n`;
       msg += `*ITENS DO ORÇAMENTO:*\n`;
 
       if (itens) {
-        itens.forEach((item) => {
-          msg += `• ${item.quantidade}x ${item.produtos?.nome || "Produto"} - R$ ${Number(item.subtotal).toFixed(2).replace(".", ",")}\n`;
+        itens.forEach((item: any) => {
+          msg += `• ${item.qtd}x ${item.produto} - R$ ${Number(item.total).toFixed(2).replace(".", ",")}\n`;
         });
       }
 
-      msg += `\n*TOTAL: R$ ${Number(venda.valor_total).toFixed(2).replace(".", ",")}*\n\n`;
+      msg += `\n*TOTAL: R$ ${Number(dav.total).toFixed(2).replace(".", ",")}*\n\n`;
 
-      // Adiciona o link para visualização/PDF online (se estiver publicado, o cliente pode abrir)
-      const linkPdf = `${window.location.origin}/orcamento/${venda.id}`;
+      const linkPdf = `${window.location.origin}/orcamento/${dav.id}`;
       msg += `📄 *Acesse o documento formal em PDF aqui:*\n${linkPdf}`;
 
       const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
@@ -181,17 +179,17 @@ function DAVList() {
                   onClick={() => handleOpenDetails(v)}
                 >
                   <TableCell className="font-mono text-xs">
-                    {v.numero_venda || v.id.substring(0, 8).toUpperCase()}
+                    {v.id.substring(0, 8).toUpperCase()}
                   </TableCell>
                   <TableCell className="font-semibold">
-                    {v.clientes?.nome || "Cliente Removido"}
+                    {v.cliente_nome || "—"}
                   </TableCell>
                   <TableCell>{new Date(v.created_at).toLocaleDateString()}</TableCell>
                   <TableCell className="text-right font-semibold">
-                    R$ {Number(v.valor_total).toFixed(2).replace(".", ",")}
+                    R$ {Number(v.total || 0).toFixed(2).replace(".", ",")}
                   </TableCell>
                   <TableCell>
-                    <Badge className={getTone(v.status)}>{v.status}</Badge>
+                    <Badge className={getTone(v.status || "Aberto")}>{v.status || "Aberto"}</Badge>
                   </TableCell>
                   <TableCell className="text-right space-x-2" onClick={(e) => e.stopPropagation()}>
                     <Button
@@ -246,7 +244,7 @@ function DAVList() {
                   Cliente
                 </span>
                 <span className="font-medium">
-                  {selectedDav?.clientes?.nome || "Cliente Removido"}
+                  {selectedDav?.cliente_nome || "—"}
                 </span>
               </div>
               <div>
@@ -259,11 +257,9 @@ function DAVList() {
               </div>
               <div>
                 <span className="text-muted-foreground block text-xs uppercase tracking-wider">
-                  Status
+                  Emissor
                 </span>
-                <Badge className={selectedDav ? getTone(selectedDav.status) : ""}>
-                  {selectedDav?.status}
-                </Badge>
+                <span className="font-medium">{selectedDav?.emissor_nome || "—"}</span>
               </div>
               <div>
                 <span className="text-muted-foreground block text-xs uppercase tracking-wider">
@@ -271,7 +267,7 @@ function DAVList() {
                 </span>
                 <span className="font-bold text-base">
                   R${" "}
-                  {Number(selectedDav?.valor_total || 0).toLocaleString("pt-BR", {
+                  {Number(selectedDav?.total || 0).toLocaleString("pt-BR", {
                     minimumFractionDigits: 2,
                   })}
                 </span>
@@ -289,17 +285,17 @@ function DAVList() {
                 <p className="text-sm text-muted-foreground">Nenhum item encontrado.</p>
               ) : (
                 <div className="space-y-3">
-                  {davItens.map((item) => (
+                  {davItens.map((item: any) => (
                     <div
                       key={item.id}
                       className="flex justify-between items-center p-3 rounded-lg border border-border/50 bg-background hover:bg-muted/20 transition-colors"
                     >
                       <div>
                         <div className="font-semibold text-sm">
-                          {item.produtos?.nome || "Produto Desconhecido"}
+                          {item.produto || "Produto Desconhecido"}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {item.quantidade}x R${" "}
+                          {item.qtd}x R${" "}
                           {Number(item.valor_unitario).toLocaleString("pt-BR", {
                             minimumFractionDigits: 2,
                           })}
@@ -307,7 +303,7 @@ function DAVList() {
                       </div>
                       <div className="text-right font-medium text-sm">
                         R${" "}
-                        {Number(item.subtotal).toLocaleString("pt-BR", {
+                        {Number(item.total).toLocaleString("pt-BR", {
                           minimumFractionDigits: 2,
                         })}
                       </div>
