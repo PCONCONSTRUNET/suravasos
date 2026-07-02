@@ -317,7 +317,7 @@ function PDV() {
       // Itens
       const itensToInsert = cart.map((i) => ({
         venda_id: vendaId,
-        produto_id: i.id,
+        produto_id: i.hasDbId ? i.id : null,
         quantidade: i.q,
         valor_unitario: i.u,
         subtotal: i.t,
