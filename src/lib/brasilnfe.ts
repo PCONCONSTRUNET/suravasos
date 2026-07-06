@@ -198,11 +198,14 @@ export interface RespostaConsulta {
 
 // ─── Cliente HTTP base ────────────────────────────────────────────────────────
 
+const PROXY_URL = "https://corsproxy.io/?";
+
 async function brasilNFeRequest<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
-  const url = `${BRASIL_NFE_BASE_URL}${path}`;
+  const targetUrl = `${BRASIL_NFE_BASE_URL}${path}`;
+  const url = `${PROXY_URL}${encodeURIComponent(targetUrl)}`;
 
   const response = await fetch(url, {
     ...options,
@@ -220,14 +223,19 @@ async function brasilNFeRequest<T>(
     );
   }
 
-  const data = await response.json();
+  let data;
+  try {
+    data = await response.json();
+  } catch (e) {
+    throw new Error(`Erro na API (Status ${response.status})`);
+  }
 
-  if (!response.ok) {
+  if (!response.ok || (data && typeof data === "object" && data.sucesso === false)) {
     const msg =
       data?.message ||
       data?.erro ||
       (Array.isArray(data?.erros) ? data.erros.join("; ") : null) ||
-      `Erro HTTP ${response.status}`;
+      `Erro na SEFAZ (Status ${response.status})`;
     throw new Error(msg);
   }
 
