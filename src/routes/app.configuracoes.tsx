@@ -7,10 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Database, Shield, Users, User, Settings as Cog, Plus, Trash2 } from "lucide-react";
+import { Database, Shield, Users, User, Settings as Cog, Plus, Trash2, FileText, CheckCircle2, XCircle, Loader2, Eye, EyeOff } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import { supabase } from "@/lib/supabase";
+import { testarConexao, BRASIL_NFE_TOKEN, labelAmbiente } from "@/lib/brasilnfe";
 
 export const Route = createFileRoute("/app/configuracoes")({
   head: () => ({ meta: [{ title: "Configurações — VIVAVERDE ERP" }] }),
@@ -198,6 +199,10 @@ function Configuracoes() {
           <TabsTrigger value="preferencias">
             <Cog className="mr-1.5 h-4 w-4" />
             Preferências
+          </TabsTrigger>
+          <TabsTrigger value="fiscal">
+            <FileText className="mr-1.5 h-4 w-4" />
+            Fiscal / NFe
           </TabsTrigger>
         </TabsList>
 
@@ -424,7 +429,154 @@ function Configuracoes() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* ── Aba Fiscal / NFe ── */}
+        <TabsContent value="fiscal">
+          <FiscalTab />
+        </TabsContent>
       </Tabs>
     </>
+  );
+}
+
+// ─── Componente Aba Fiscal ────────────────────────────────────────────────────
+
+function FiscalTab() {
+  const [testando, setTestando] = useState(false);
+  const [resultadoTeste, setResultadoTeste] = useState<boolean | null>(null);
+  const [showToken, setShowToken] = useState(false);
+
+  const handleTestarConexao = async () => {
+    setTestando(true);
+    setResultadoTeste(null);
+    try {
+      const ok = await testarConexao();
+      setResultadoTeste(ok);
+    } catch {
+      setResultadoTeste(false);
+    } finally {
+      setTestando(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Card de Status */}
+      <Card className="shadow-card border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5 text-primary" />
+            Brasil NFe — Integração Fiscal
+          </CardTitle>
+          <CardDescription>
+            API para emissão de NF-e, NFC-e e outros documentos fiscais diretamente à SEFAZ.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Token */}
+          <div>
+            <Label className="mb-1.5 block">Token de Autenticação</Label>
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Input
+                  type={showToken ? "text" : "password"}
+                  value={BRASIL_NFE_TOKEN}
+                  readOnly
+                  className="pr-10 font-mono text-xs"
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowToken((v) => !v)}
+                >
+                  {showToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              <Button
+                variant="outline"
+                onClick={handleTestarConexao}
+                disabled={testando}
+                className="shrink-0"
+              >
+                {testando ? (
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Testando…</>
+                ) : (
+                  <>Testar Conexão</>
+                )}
+              </Button>
+            </div>
+            {resultadoTeste === true && (
+              <p className="flex items-center gap-2 text-sm text-success mt-2">
+                <CheckCircle2 className="h-4 w-4" />
+                Conexão com Brasil NFe estabelecida com sucesso!
+              </p>
+            )}
+            {resultadoTeste === false && (
+              <p className="flex items-center gap-2 text-sm text-destructive mt-2">
+                <XCircle className="h-4 w-4" />
+                Falha na conexão. Verifique o token e tente novamente.
+              </p>
+            )}
+          </div>
+
+          {/* Ambiente Padrão */}
+          <div className="rounded-xl border p-4 bg-warning/5 border-warning/20">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="font-semibold text-sm">Ambiente Padrão: Homologação</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  As emissões são feitas em homologação por padrão (sem valor fiscal).
+                  Para produção, altere o ambiente diretamente no modal de emissão de cada NF-e.
+                </p>
+              </div>
+              <Badge className="bg-warning/15 text-warning border-0 shrink-0 ml-4">
+                Homologação
+              </Badge>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Card de Documentos Suportados */}
+      <Card className="shadow-card">
+        <CardHeader>
+          <CardTitle className="text-base">Documentos Suportados</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {[
+              { doc: "NF-e", mod: "Modelo 55", desc: "Nota Fiscal Eletrônica para operações entre empresas", status: "Ativo" },
+              { doc: "NFC-e", mod: "Modelo 65", desc: "Nota Fiscal ao Consumidor Eletrônica (PDV)", status: "Em breve" },
+              { doc: "NFS-e", mod: "Modelo 10", desc: "Nota Fiscal de Serviços Eletrônica", status: "Em breve" },
+              { doc: "CT-e", mod: "Modelo 57", desc: "Conhecimento de Transporte Eletrônico", status: "Em breve" },
+            ].map((item) => (
+              <div key={item.doc} className="flex items-start gap-3 rounded-lg border p-3">
+                <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary/10 text-primary shrink-0">
+                  <FileText className="h-4 w-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-semibold text-sm">
+                      {item.doc}{" "}
+                      <span className="text-muted-foreground font-normal text-xs">({item.mod})</span>
+                    </p>
+                    <Badge
+                      className={
+                        item.status === "Ativo"
+                          ? "bg-success/15 text-success border-0 text-xs"
+                          : "bg-muted text-muted-foreground border-0 text-xs"
+                      }
+                    >
+                      {item.status}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
