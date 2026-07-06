@@ -573,28 +573,32 @@ function ParceiroDashboard() {
               </div>
             )}
           </div>
-          <DialogFooter className="sm:justify-between flex-col sm:flex-row gap-2">
+          <div className="pt-2 flex flex-col gap-2 w-full">
             {selectedSaleForDetails?.status_aprovacao === "Pendente" && (
-              <div className="flex gap-2 w-full sm:w-auto">
-                <Button 
-                  variant="outline" 
-                  className="w-full sm:w-auto text-xs" 
-                  onClick={openEditClient}
-                >
-                  Editar Informações
-                </Button>
-                <Button 
-                  className="w-full sm:w-auto bg-brand text-white text-xs"
+              <>
+                <Button
+                  className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold"
                   onClick={handleEnviarPedido}
                 >
-                  Enviar pedido p/ dono
+                  🚀 Enviar pedido para o dono
                 </Button>
-              </div>
+                <Button
+                  variant="outline"
+                  className="w-full border-slate-300 text-slate-800 font-semibold"
+                  onClick={openEditClient}
+                >
+                  ✏️ Editar Informações do Cliente
+                </Button>
+              </>
             )}
-            <Button variant="secondary" className="w-full sm:w-auto" onClick={() => setIsSaleDetailsOpen(false)}>
+            <Button
+              variant="outline"
+              className="w-full border-slate-200 text-slate-600"
+              onClick={() => setIsSaleDetailsOpen(false)}
+            >
               Fechar
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
 
