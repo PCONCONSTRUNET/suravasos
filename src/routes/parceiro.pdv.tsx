@@ -480,22 +480,23 @@ function ParceiroPDV() {
               sua comissão.
             </DialogDescription>
           </div>
-          <DialogFooter className="flex-col gap-2 sm:justify-center">
+          <div className="pt-2 flex flex-col gap-3 w-full">
             {davGeradoId && (
               <Button
-                className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white h-12 text-lg"
+                className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white h-12 text-sm sm:text-base font-bold shadow-md"
                 onClick={handleShareWhatsApp}
               >
-                Enviar Orçamento por WhatsApp
+                Enviar Orçamento no WhatsApp
               </Button>
             )}
             <Button
-              className="w-full bg-slate-100 text-slate-800 hover:bg-slate-200 h-12 text-lg"
+              variant="outline"
+              className="w-full border-slate-300 text-slate-800 hover:bg-slate-100 h-12 text-sm sm:text-base font-bold"
               onClick={closeSuccessModal}
             >
               Voltar ao Painel
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
 
