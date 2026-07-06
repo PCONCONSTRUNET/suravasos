@@ -198,71 +198,58 @@ export interface RespostaConsulta {
 
 // ─── Cliente HTTP base ────────────────────────────────────────────────────────
 
-// Lista de proxies CORS para fallback caso um falhe
-const CORS_PROXIES = [
-  (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-  (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  (url: string) => `https://thingproxy.freeboard.io/fetch/${url}`,
-];
+// Usa a Edge Function brasilnfe-proxy do Supabase como proxy confiável
+// (sem dependência de serviços externos de CORS)
+const SUPABASE_URL = typeof import.meta !== "undefined"
+  ? (import.meta as any).env?.VITE_SUPABASE_URL ?? ""
+  : "";
+
+const PROXY_FUNCTION_URL = SUPABASE_URL
+  ? `${SUPABASE_URL}/functions/v1/brasilnfe-proxy`
+  : "";
 
 async function brasilNFeRequest<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
-  const targetUrl = `${BRASIL_NFE_BASE_URL}${path}`;
+  if (!PROXY_FUNCTION_URL) {
+    throw new Error("VITE_SUPABASE_URL não configurada. Verifique as variáveis de ambiente.");
+  }
 
-  const fetchOptions: RequestInit = {
+  const response = await fetch(PROXY_FUNCTION_URL, {
     ...options,
     headers: {
       "Content-Type": "application/json",
-      Token: BRASIL_NFE_TOKEN,
+      "Token": BRASIL_NFE_TOKEN,
+      "Target-Path": path,
       ...(options.headers || {}),
     },
-  };
+  });
 
-  let lastError: Error = new Error("Todos os proxies CORS falharam.");
-
-  for (const buildUrl of CORS_PROXIES) {
-    const proxyUrl = buildUrl(targetUrl);
-    try {
-      const response = await fetch(proxyUrl, fetchOptions);
-
-      if (response.status === 429) {
-        const retryAfter = response.headers.get("Retry-After") ?? "10";
-        throw new Error(
-          `Rate limit atingido. Aguarde ${retryAfter}s antes de tentar novamente.`,
-        );
-      }
-
-      let data;
-      try {
-        data = await response.json();
-      } catch (e) {
-        throw new Error(`Erro na API (Status ${response.status})`);
-      }
-
-      if (!response.ok || (data && typeof data === "object" && data.sucesso === false)) {
-        const msg =
-          data?.message ||
-          data?.erro ||
-          (Array.isArray(data?.erros) ? data.erros.join("; ") : null) ||
-          `Erro na SEFAZ (Status ${response.status})`;
-        throw new Error(msg);
-      }
-
-      return data as T;
-    } catch (err: any) {
-      // Se for erro de lógica da SEFAZ (não de rede), propagar imediatamente
-      if (err.message && !err.message.includes("fetch") && !err.message.includes("Failed")) {
-        throw err;
-      }
-      lastError = err;
-      // Tentar próximo proxy
-      continue;
-    }
+  if (response.status === 429) {
+    const retryAfter = response.headers.get("Retry-After") ?? "10";
+    throw new Error(
+      `Rate limit atingido. Aguarde ${retryAfter}s antes de tentar novamente.`,
+    );
   }
 
-  throw lastError;
+  let data;
+  try {
+    data = await response.json();
+  } catch (e) {
+    throw new Error(`Erro na API (Status ${response.status})`);
+  }
+
+  if (!response.ok || (data && typeof data === "object" && data.sucesso === false)) {
+    const msg =
+      data?.message ||
+      data?.erro ||
+      (Array.isArray(data?.erros) ? data.erros.join("; ") : null) ||
+      `Erro na SEFAZ (Status ${response.status})`;
+    throw new Error(msg);
+  }
+
+  return data as T;
 }
 
 // ─── Funções de API ───────────────────────────────────────────────────────────
