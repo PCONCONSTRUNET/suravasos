@@ -307,6 +307,76 @@ function ParceiroDashboard() {
     );
   }
 
+  const [isEditingClient, setIsEditingClient] = useState(false);
+  const [editClientData, setEditClientData] = useState({ nome: "", cpf_cnpj: "", telefone: "" });
+  const [savingClient, setSavingClient] = useState(false);
+
+  const handleEnviarPedido = async () => {
+    if (!selectedSaleForDetails) return;
+    try {
+      setLoadingSaleDetails(true);
+      // Notifica o admin
+      await supabase.from("notificacoes").insert([
+        {
+          tipo: "venda",
+          titulo: `Pedido reenviado pelo parceiro: ${nome.split(" ")[0]}`,
+          mensagem: `O parceiro reenviou o pedido #${selectedSaleForDetails.id.substring(0, 6)} para aprovação.`,
+        },
+      ]);
+      alert("Pedido enviado para o dono com sucesso!");
+      setIsSaleDetailsOpen(false);
+    } catch (err: any) {
+      alert("Erro ao enviar pedido: " + err.message);
+    } finally {
+      setLoadingSaleDetails(false);
+    }
+  };
+
+  const openEditClient = () => {
+    setEditClientData({
+      nome: selectedSaleForDetails.cliente?.nome || "",
+      cpf_cnpj: selectedSaleForDetails.cliente?.cpf_cnpj || "",
+      telefone: selectedSaleForDetails.cliente?.telefone || "",
+    });
+    setIsEditingClient(true);
+  };
+
+  const handleSalvarCliente = async () => {
+    if (!selectedSaleForDetails?.cliente_id) return;
+    try {
+      setSavingClient(true);
+      const { error } = await supabase
+        .from("clientes")
+        .update({
+          nome: editClientData.nome,
+          cpf_cnpj: editClientData.cpf_cnpj,
+          telefone: editClientData.telefone,
+        })
+        .eq("id", selectedSaleForDetails.cliente_id);
+
+      if (error) throw error;
+      
+      // Atualiza estado local
+      setSelectedSaleForDetails((prev: any) => ({
+        ...prev,
+        cliente: {
+          ...prev.cliente,
+          nome: editClientData.nome,
+          cpf_cnpj: editClientData.cpf_cnpj,
+          telefone: editClientData.telefone,
+        }
+      }));
+      setVendas((prev) => prev.map(v => v.id === selectedSaleForDetails.id ? { ...v, cliente: { ...v.cliente, ...editClientData } } : v));
+      
+      alert("Informações do cliente atualizadas!");
+      setIsEditingClient(false);
+    } catch (err: any) {
+      alert("Erro ao atualizar cliente: " + err.message);
+    } finally {
+      setSavingClient(false);
+    }
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
       <div>
@@ -503,9 +573,64 @@ function ParceiroDashboard() {
               </div>
             )}
           </div>
-          <DialogFooter className="sm:justify-center">
-            <Button className="w-full" onClick={() => setIsSaleDetailsOpen(false)}>
+          <DialogFooter className="sm:justify-between flex-col sm:flex-row gap-2">
+            {selectedSaleForDetails?.status_aprovacao === "Pendente" && (
+              <div className="flex gap-2 w-full sm:w-auto">
+                <Button 
+                  variant="outline" 
+                  className="w-full sm:w-auto text-xs" 
+                  onClick={openEditClient}
+                >
+                  Editar Informações
+                </Button>
+                <Button 
+                  className="w-full sm:w-auto bg-brand text-white text-xs"
+                  onClick={handleEnviarPedido}
+                >
+                  Enviar pedido p/ dono
+                </Button>
+              </div>
+            )}
+            <Button variant="secondary" className="w-full sm:w-auto" onClick={() => setIsSaleDetailsOpen(false)}>
               Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditingClient} onOpenChange={setIsEditingClient}>
+        <DialogContent className="sm:max-w-[350px]">
+          <DialogHeader>
+            <DialogTitle>Editar Informações</DialogTitle>
+            <DialogDescription>Corrija os dados do cliente para este pedido.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Nome</label>
+              <Input 
+                value={editClientData.nome} 
+                onChange={(e) => setEditClientData(p => ({ ...p, nome: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">CPF/CNPJ</label>
+              <Input 
+                value={editClientData.cpf_cnpj} 
+                onChange={(e) => setEditClientData(p => ({ ...p, cpf_cnpj: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Telefone</label>
+              <Input 
+                value={editClientData.telefone} 
+                onChange={(e) => setEditClientData(p => ({ ...p, telefone: e.target.value }))}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditingClient(false)}>Cancelar</Button>
+            <Button onClick={handleSalvarCliente} disabled={savingClient}>
+              {savingClient ? "Salvando..." : "Salvar Alterações"}
             </Button>
           </DialogFooter>
         </DialogContent>
