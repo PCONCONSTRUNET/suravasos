@@ -193,21 +193,24 @@ function Fiscal() {
   const fetchFiscalData = async () => {
     setLoading(true);
     try {
-      const { data: nfData } = await supabase
+      const { data: nfData, error: nfErr } = await supabase
         .from("notas_fiscais")
         .select("*, vendas(valor_total, clientes(nome))")
         .order("created_at", { ascending: false });
 
+      if (nfErr) console.error("Erro notas_fiscais:", nfErr.message);
       if (nfData) setNotas(nfData);
 
-      const { data: vData } = await supabase
+      const { data: vData, error: vErr } = await supabase
         .from("vendas")
-        .select("*, clientes(nome, cpf_cnpj, email, endereco, cidade, uf, cep, bairro)")
-        .in("status", ["Pendente", "Pago", "Faturado", "Em Separação", "Entregue"]);
+        .select("*, clientes(nome, cpf_cnpj, email, endereco, cidade, uf, cep)");
+
+      if (vErr) console.error("Erro vendas:", vErr.message);
 
       if (vData) {
         const nfIds = nfData?.map((n) => n.venda_id) || [];
-        setPendentes(vData.filter((v) => !nfIds.includes(v.id)));
+        const todas = vData.filter((v) => !nfIds.includes(v.id));
+        setPendentes(todas);
       }
 
       // Buscar configurações da empresa
