@@ -229,10 +229,16 @@ async function brasilNFeRequest<T>(
     throw new Error(`Erro na API (Status ${response.status})`);
   }
 
-  if (!response.ok || (data && typeof data === "object" && data.sucesso === false)) {
+  if (!response.ok || (data && typeof data === "object" && (
+    data.sucesso === false ||
+    (data.Error && data.Error !== "") ||
+    (data.ReturnNF && data.ReturnNF.Ok === false)
+  ))) {
     const msg =
+      data?.Error ||
       data?.message ||
       data?.erro ||
+      data?.ReturnNF?.DsStatusRespostaSefaz ||
       (Array.isArray(data?.erros) ? data.erros.join("; ") : null) ||
       `Erro na SEFAZ (Status ${response.status})`;
     throw new Error(msg);
@@ -248,10 +254,24 @@ async function brasilNFeRequest<T>(
  * Retorna o resultado da transmissão à SEFAZ.
  */
 export async function emitirNFe(payload: PayloadNFe): Promise<RespostaNFe> {
-  return brasilNFeRequest<RespostaNFe>("/services/Fiscal/EnviarNotaFiscal", {
+  const raw = await brasilNFeRequest<any>("/services/Fiscal/EnviarNotaFiscal", {
     method: "POST",
     body: JSON.stringify(payload),
   });
+
+  // Mapear resposta real da API Brasil NFe para nossa interface
+  const nf = raw?.ReturnNF ?? raw;
+  return {
+    sucesso: nf?.Ok === true || nf?.sucesso === true,
+    id: nf?.Id ?? raw?.id,
+    numero: nf?.Numero ?? nf?.numero,
+    serie: nf?.Serie ?? nf?.serie,
+    chaveAcesso: nf?.ChaveNF ?? nf?.chaveAcesso,
+    numeroProtocolo: nf?.NumeroProtocolo ?? nf?.numeroProtocolo,
+    codStatus: nf?.CodStatusRespostaSefaz ?? nf?.codStatus,
+    dsStatus: nf?.DsStatusRespostaSefaz ?? nf?.dsStatus,
+    erro: raw?.Error ?? raw?.erro,
+  };
 }
 
 /**
