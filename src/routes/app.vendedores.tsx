@@ -114,12 +114,19 @@ function VendedoresAdmin() {
 
       const { data: vendasData, error } = await supabase
         .from("vendas")
-        .select("*, vendedor:vendedores(*), cliente:clientes(*)")
-        .not("vendedor_id", "is", null)
+        .select("*, vendedores(*), clientes(*)")
         .order("created_at", { ascending: false });
 
       if (!error && vendasData) {
-        setTodasVendas(vendasData);
+        // Mapeia para manter a compatibilidade com o resto do código que usa v.vendedor e v.cliente
+        const mappedData = vendasData
+          .filter((v: any) => v.vendedor_id !== null)
+          .map((v: any) => ({
+            ...v,
+            vendedor: v.vendedores,
+            cliente: v.clientes,
+          }));
+        setTodasVendas(mappedData);
       } else if (error) {
         console.error("Erro ao buscar vendas:", error);
         alert("Erro ao buscar vendas dos parceiros: " + error.message);
