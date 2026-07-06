@@ -47,6 +47,7 @@ function NovoProduto() {
     volume: "",
     comprimento: "",
     cores: [] as string[],
+    ncm: "",
   });
 
   const [categoriasDB, setCategoriasDB] = useState<string[]>([
@@ -102,6 +103,7 @@ function NovoProduto() {
               volume: data.volume || "",
               comprimento: data.comprimento || "",
               cores: data.cores || [],
+              ncm: data.ncm || "",
             });
           }
         } catch (err) {
@@ -252,6 +254,7 @@ function NovoProduto() {
         volume: produto.volume || null,
         comprimento: produto.comprimento || null,
         cores: produto.cores,
+        ncm: produto.ncm || null,
       };
 
       if (isEditing) {
@@ -385,6 +388,16 @@ function NovoProduto() {
                   </Button>
                 </div>
               )}
+            </div>
+            
+            <div className="space-y-2">
+              <Label>NCM (Nomenclatura Comum do Mercosul)</Label>
+              <Input
+                value={produto.ncm}
+                onChange={(e) => setProduto({ ...produto, ncm: e.target.value.replace(/\D/g, "").slice(0, 8) })}
+                placeholder="Ex: 39269090 (8 dígitos)"
+              />
+              <p className="text-xs text-muted-foreground">Obrigatório para emissão de NF-e. Consulte seu contador.</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
