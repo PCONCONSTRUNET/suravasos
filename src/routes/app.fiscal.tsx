@@ -203,7 +203,7 @@ function Fiscal() {
 
       const { data: vData, error: vErr } = await supabase
         .from("vendas")
-        .select("*, clientes(nome, cpf_cnpj, endereco, cidade, uf, cep)");
+        .select("*, clientes(nome, cidade)");
 
       if (vErr) console.error("Erro vendas:", vErr.message);
 
