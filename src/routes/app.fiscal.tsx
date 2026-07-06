@@ -203,7 +203,7 @@ function Fiscal() {
 
       const { data: vData, error: vErr } = await supabase
         .from("vendas")
-        .select("*, clientes(nome, cpf_cnpj, email, endereco, cidade, uf, cep)");
+        .select("*, clientes(nome, cpf_cnpj, endereco, cidade, uf, cep)");
 
       if (vErr) console.error("Erro vendas:", vErr.message);
 
@@ -266,12 +266,10 @@ function Fiscal() {
       ...prev,
       cpfCnpj: cli?.cpf_cnpj?.replace(/\D/g, "") || "",
       xNome: cli?.nome || "CONSUMIDOR FINAL",
-      email: cli?.email || "",
       logradouro: cli?.endereco || "",
       nomeMunicipio: cli?.cidade || "",
       uf: cli?.uf || "",
       cep: cli?.cep?.replace(/\D/g, "") || "",
-      bairro: cli?.bairro || "",
     }));
 
     setModalOpen(true);
