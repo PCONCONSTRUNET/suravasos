@@ -203,7 +203,7 @@ function Fiscal() {
       const { data: vData } = await supabase
         .from("vendas")
         .select("*, clientes(nome, cpf_cnpj, email, endereco, cidade, uf, cep, bairro)")
-        .in("status", ["Pago", "Faturado", "Em Separação", "Entregue"]);
+        .in("status", ["Pendente", "Pago", "Faturado", "Em Separação", "Entregue"]);
 
       if (vData) {
         const nfIds = nfData?.map((n) => n.venda_id) || [];
