@@ -239,7 +239,7 @@ function Fiscal() {
     // Buscar itens da venda
     const { data: itens } = await supabase
       .from("vendas_itens")
-      .select("*, produtos(nome, codigo, ncm, cfop, crt)")
+      .select("*, produtos(nome, codigo, ncm)")
       .eq("venda_id", venda.id);
 
     const itensFormatados: ItemEmissao[] = (itens || []).map((item: any, idx: number) => ({
