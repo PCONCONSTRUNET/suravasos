@@ -374,6 +374,7 @@ function Fiscal() {
     const [logEmit, numEmit] = (configuracoes.endereco || "S/N").split(",");
 
     const payload: PayloadNFe = {
+      modelo: 55, // Forçar NF-e (evitar NFC-e)
       tipoAmbiente: configEmissao.tipoAmbiente,
       naturezaOperacao: configEmissao.naturezaOperacao,
       emitente: {

@@ -153,6 +153,9 @@ export interface TransporteNFe {
 }
 
 export interface PayloadNFe {
+  modelo?: number; // 55 = NF-e, 65 = NFC-e
+  numero?: number;
+  serie?: number;
   tipoAmbiente: TipoAmbiente;
   naturezaOperacao: string;
   emitente: EmitenteNFe;
