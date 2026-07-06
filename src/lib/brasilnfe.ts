@@ -198,48 +198,71 @@ export interface RespostaConsulta {
 
 // ─── Cliente HTTP base ────────────────────────────────────────────────────────
 
-const PROXY_URL = "https://corsproxy.io/?";
+// Lista de proxies CORS para fallback caso um falhe
+const CORS_PROXIES = [
+  (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  (url: string) => `https://thingproxy.freeboard.io/fetch/${url}`,
+];
 
 async function brasilNFeRequest<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
   const targetUrl = `${BRASIL_NFE_BASE_URL}${path}`;
-  const url = `${PROXY_URL}${encodeURIComponent(targetUrl)}`;
 
-  const response = await fetch(url, {
+  const fetchOptions: RequestInit = {
     ...options,
     headers: {
       "Content-Type": "application/json",
       Token: BRASIL_NFE_TOKEN,
       ...(options.headers || {}),
     },
-  });
+  };
 
-  if (response.status === 429) {
-    const retryAfter = response.headers.get("Retry-After") ?? "10";
-    throw new Error(
-      `Rate limit atingido. Aguarde ${retryAfter}s antes de tentar novamente.`,
-    );
+  let lastError: Error = new Error("Todos os proxies CORS falharam.");
+
+  for (const buildUrl of CORS_PROXIES) {
+    const proxyUrl = buildUrl(targetUrl);
+    try {
+      const response = await fetch(proxyUrl, fetchOptions);
+
+      if (response.status === 429) {
+        const retryAfter = response.headers.get("Retry-After") ?? "10";
+        throw new Error(
+          `Rate limit atingido. Aguarde ${retryAfter}s antes de tentar novamente.`,
+        );
+      }
+
+      let data;
+      try {
+        data = await response.json();
+      } catch (e) {
+        throw new Error(`Erro na API (Status ${response.status})`);
+      }
+
+      if (!response.ok || (data && typeof data === "object" && data.sucesso === false)) {
+        const msg =
+          data?.message ||
+          data?.erro ||
+          (Array.isArray(data?.erros) ? data.erros.join("; ") : null) ||
+          `Erro na SEFAZ (Status ${response.status})`;
+        throw new Error(msg);
+      }
+
+      return data as T;
+    } catch (err: any) {
+      // Se for erro de lógica da SEFAZ (não de rede), propagar imediatamente
+      if (err.message && !err.message.includes("fetch") && !err.message.includes("Failed")) {
+        throw err;
+      }
+      lastError = err;
+      // Tentar próximo proxy
+      continue;
+    }
   }
 
-  let data;
-  try {
-    data = await response.json();
-  } catch (e) {
-    throw new Error(`Erro na API (Status ${response.status})`);
-  }
-
-  if (!response.ok || (data && typeof data === "object" && data.sucesso === false)) {
-    const msg =
-      data?.message ||
-      data?.erro ||
-      (Array.isArray(data?.erros) ? data.erros.join("; ") : null) ||
-      `Erro na SEFAZ (Status ${response.status})`;
-    throw new Error(msg);
-  }
-
-  return data as T;
+  throw lastError;
 }
 
 // ─── Funções de API ───────────────────────────────────────────────────────────
