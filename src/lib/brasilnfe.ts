@@ -259,7 +259,7 @@ async function brasilNFeRequest<T>(
  * Retorna o resultado da transmissão à SEFAZ.
  */
 export async function emitirNFe(payload: PayloadNFe): Promise<RespostaNFe> {
-  return brasilNFeRequest<RespostaNFe>("/EnviarNotaFiscal", {
+  return brasilNFeRequest<RespostaNFe>("/services/Fiscal/EnviarNotaFiscal", {
     method: "POST",
     body: JSON.stringify(payload),
   });
@@ -269,7 +269,7 @@ export async function emitirNFe(payload: PayloadNFe): Promise<RespostaNFe> {
  * Consulta o status de uma NF-e pelo ID interno do Brasil NFe.
  */
 export async function consultarNFe(id: number): Promise<RespostaConsulta> {
-  return brasilNFeRequest<RespostaConsulta>(`/ConsultarNFe/${id}`, {
+  return brasilNFeRequest<RespostaConsulta>(`/services/Fiscal/ConsultarNFe/${id}`, {
     method: "GET",
   });
 }
@@ -283,7 +283,7 @@ export async function cancelarNFe(
   id: number,
   justificativa: string,
 ): Promise<RespostaNFe> {
-  return brasilNFeRequest<RespostaNFe>(`/CancelarNFe/${id}`, {
+  return brasilNFeRequest<RespostaNFe>(`/services/Fiscal/CancelarNFe/${id}`, {
     method: "POST",
     body: JSON.stringify({ justificativa }),
   });
@@ -294,7 +294,7 @@ export async function cancelarNFe(
  */
 export async function downloadDanfe(id: number): Promise<string> {
   const resp = await brasilNFeRequest<{ pdfBase64: string }>(
-    `/DownloadDanfe/${id}`,
+    `/services/Fiscal/DownloadDanfe/${id}`,
     { method: "GET" },
   );
   return resp.pdfBase64;
@@ -305,7 +305,7 @@ export async function downloadDanfe(id: number): Promise<string> {
  */
 export async function downloadXml(id: number): Promise<string> {
   const resp = await brasilNFeRequest<{ xmlBase64: string }>(
-    `/DownloadXml/${id}`,
+    `/services/Fiscal/DownloadXml/${id}`,
     { method: "GET" },
   );
   return resp.xmlBase64;
