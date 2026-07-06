@@ -31,6 +31,10 @@ function ParceiroDashboard() {
   const [isSaleDetailsOpen, setIsSaleDetailsOpen] = useState(false);
   const [loadingSaleDetails, setLoadingSaleDetails] = useState(false);
 
+  const [isEditingClient, setIsEditingClient] = useState(false);
+  const [editClientData, setEditClientData] = useState({ nome: "", cpf_cnpj: "", telefone: "" });
+  const [savingClient, setSavingClient] = useState(false);
+
   const openSaleDetails = async (venda: any) => {
     setSelectedSaleForDetails(venda);
     setIsSaleDetailsOpen(true);
@@ -306,10 +310,6 @@ function ParceiroDashboard() {
       </div>
     );
   }
-
-  const [isEditingClient, setIsEditingClient] = useState(false);
-  const [editClientData, setEditClientData] = useState({ nome: "", cpf_cnpj: "", telefone: "" });
-  const [savingClient, setSavingClient] = useState(false);
 
   const handleEnviarPedido = async () => {
     if (!selectedSaleForDetails) return;
