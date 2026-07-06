@@ -299,6 +299,32 @@ function Fiscal() {
     setModalOpen(true);
   };
 
+  const handleBuscarIBGE = async () => {
+    if (!configEmissao.nomeMunicipio || !configEmissao.uf) {
+      alert("Preencha o Município e a UF primeiro para buscar o código.");
+      return;
+    }
+    try {
+      const uf = configEmissao.uf.toUpperCase();
+      const res = await fetch(`https://brasilapi.com.br/api/ibge/municipios/v1/${uf}`);
+      const cidades = await res.json();
+      
+      const cidadeTarget = configEmissao.nomeMunicipio.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      
+      const encontrada = cidades.find((c: any) => 
+        c.nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === cidadeTarget
+      );
+
+      if (encontrada) {
+        setConfigEmissao((p) => ({ ...p, codigoMunicipio: String(encontrada.codigo_ibge) }));
+      } else {
+        alert("Município não encontrado nesta UF. Verifique se o nome está correto (ex: São Paulo).");
+      }
+    } catch (err) {
+      alert("Erro ao buscar código IBGE. Tente digitar manualmente.");
+    }
+  };
+
   // ── Atualizar item de emissão ─────────────────────────────────────────────
 
   const updateItem = (id: string, field: keyof ItemEmissao, value: any) => {
@@ -921,7 +947,17 @@ function Fiscal() {
                     />
                   </div>
                   <div>
-                    <Label className="text-xs mb-1.5 block">Cód. Município IBGE</Label>
+                    <Label className="text-xs mb-1.5 flex items-center justify-between">
+                      <span>Cód. Município IBGE</span>
+                      <button 
+                        type="button" 
+                        onClick={handleBuscarIBGE}
+                        className="text-[10px] text-brand hover:underline"
+                        title="Buscar código pelo nome do município"
+                      >
+                        Buscar Auto
+                      </button>
+                    </Label>
                     <Input
                       value={configEmissao.codigoMunicipio}
                       onChange={(e) =>
