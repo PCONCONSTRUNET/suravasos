@@ -198,24 +198,13 @@ export interface RespostaConsulta {
 
 // ─── Cliente HTTP base ────────────────────────────────────────────────────────
 
-// Usa a Edge Function brasilnfe-proxy do Supabase como proxy confiável
-// (sem dependência de serviços externos de CORS)
-const SUPABASE_URL = typeof import.meta !== "undefined"
-  ? (import.meta as any).env?.VITE_SUPABASE_URL ?? ""
-  : "";
-
-const PROXY_FUNCTION_URL = SUPABASE_URL
-  ? `${SUPABASE_URL}/functions/v1/brasilnfe-proxy`
-  : "";
+// Edge Function do Supabase como proxy CORS confiável
+const PROXY_FUNCTION_URL = "https://mpbmssohpjwijkyhtucm.supabase.co/functions/v1/brasilnfe-proxy";
 
 async function brasilNFeRequest<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
-  if (!PROXY_FUNCTION_URL) {
-    throw new Error("VITE_SUPABASE_URL não configurada. Verifique as variáveis de ambiente.");
-  }
-
   const response = await fetch(PROXY_FUNCTION_URL, {
     ...options,
     headers: {
