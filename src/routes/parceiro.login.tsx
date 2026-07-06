@@ -46,8 +46,14 @@ function LoginParceiro() {
 
       if (signInError) throw signInError;
 
-      // Sucesso! Redireciona para o dashboard
-      navigate({ to: "/parceiro/dashboard" });
+      // Sucesso! Redireciona para onde o usuário tentou ir (ou dashboard)
+      const redirectUrl = sessionStorage.getItem("parceiro_redirect");
+      if (redirectUrl) {
+        sessionStorage.removeItem("parceiro_redirect");
+        window.location.href = redirectUrl;
+      } else {
+        navigate({ to: "/parceiro/dashboard" });
+      }
     } catch (err: any) {
       setError("Credenciais inválidas. Tente novamente.");
     } finally {

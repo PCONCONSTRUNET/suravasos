@@ -17,6 +17,8 @@ export const Route = createFileRoute("/parceiro")({
         data: { session },
       } = await supabase.auth.getSession();
       if (!session) {
+        // Salva a URL destino para redirecionar após o login
+        sessionStorage.setItem("parceiro_redirect", window.location.href);
         throw redirect({ to: "/parceiro/login" });
       }
 

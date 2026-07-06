@@ -73,7 +73,7 @@ function ParceiroPDV() {
         const telParam = params.get("tel");
 
         if (eParam || cnjParam) {
-          setCliente((prev) => ({
+          setClientForm((prev) => ({
             ...prev,
             nome: eParam || "",
             documento: cnjParam || "",
