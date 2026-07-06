@@ -203,7 +203,7 @@ function Fiscal() {
 
       const { data: vData, error: vErr } = await supabase
         .from("vendas")
-        .select("*, clientes(nome, cidade)");
+        .select("*, clientes(nome, cidade, cpf_cnpj, endereco, uf)");
 
       if (vErr) console.error("Erro vendas:", vErr.message);
 
@@ -262,14 +262,38 @@ function Fiscal() {
 
     // Pré-preencher dados do destinatário
     const cli = venda.clientes;
+    let parsedEndereco = cli?.endereco || "";
+    let parsedNumero = "S/N";
+    let parsedBairro = "Centro";
+    let parsedCep = "";
+
+    if (parsedEndereco) {
+      const parts = parsedEndereco.split(",").map((p: string) => p.trim());
+      const newEnderecoParts: string[] = [];
+      for (const part of parts) {
+        if (part.startsWith("nº ")) {
+          parsedNumero = part.substring(3);
+        } else if (part.startsWith("Bairro ")) {
+          parsedBairro = part.substring(7);
+        } else if (part.startsWith("CEP ")) {
+          parsedCep = part.substring(4);
+        } else {
+          newEnderecoParts.push(part);
+        }
+      }
+      parsedEndereco = newEnderecoParts.join(", ");
+    }
+
     setConfigEmissao((prev) => ({
       ...prev,
       cpfCnpj: cli?.cpf_cnpj?.replace(/\D/g, "") || "",
       xNome: cli?.nome || "CONSUMIDOR FINAL",
-      logradouro: cli?.endereco || "",
+      logradouro: parsedEndereco || "",
+      numero: parsedNumero,
+      bairro: parsedBairro,
       nomeMunicipio: cli?.cidade || "",
       uf: cli?.uf || "",
-      cep: cli?.cep?.replace(/\D/g, "") || "",
+      cep: parsedCep.replace(/\D/g, "") || "",
     }));
 
     setModalOpen(true);
