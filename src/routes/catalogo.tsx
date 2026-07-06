@@ -50,7 +50,12 @@ function PublicCatalogo() {
   const [empresaData, setEmpresaData] = useState({
     nome: "",
     cnpj: "",
+    cep: "",
     endereco: "",
+    numero: "",
+    bairro: "",
+    cidade: "",
+    uf: "",
     telefone: "",
   });
 
@@ -165,7 +170,10 @@ function PublicCatalogo() {
     mensagem += `*DADOS DA EMPRESA:*\n`;
     mensagem += `Nome: ${empresaData.nome}\n`;
     mensagem += `CNPJ: ${empresaData.cnpj}\n`;
-    if (empresaData.endereco) mensagem += `Endereço: ${empresaData.endereco}\n`;
+    if (empresaData.cep) mensagem += `CEP: ${empresaData.cep}\n`;
+    if (empresaData.endereco) mensagem += `Endereço: ${empresaData.endereco}, ${empresaData.numero}\n`;
+    if (empresaData.bairro) mensagem += `Bairro: ${empresaData.bairro}\n`;
+    if (empresaData.cidade) mensagem += `Cidade/UF: ${empresaData.cidade}/${empresaData.uf}\n`;
     if (empresaData.telefone) mensagem += `Telefone: ${empresaData.telefone}\n`;
     mensagem += `\n`;
 
@@ -184,7 +192,7 @@ function PublicCatalogo() {
     mensagem += `Qual o procedimento para finalização e pagamento?`;
 
     let telefoneDestino = "5519997331112"; // Telefone padrão do dono
-    const companyParams = `&e=${encodeURIComponent(empresaData.nome)}&cnpj=${encodeURIComponent(empresaData.cnpj)}&end=${encodeURIComponent(empresaData.endereco)}&tel=${encodeURIComponent(empresaData.telefone)}`;
+    const companyParams = `&e=${encodeURIComponent(empresaData.nome)}&cnpj=${encodeURIComponent(empresaData.cnpj)}&cep=${encodeURIComponent(empresaData.cep)}&end=${encodeURIComponent(empresaData.endereco)}&num=${encodeURIComponent(empresaData.numero)}&bairro=${encodeURIComponent(empresaData.bairro)}&cid=${encodeURIComponent(empresaData.cidade)}&uf=${encodeURIComponent(empresaData.uf)}&tel=${encodeURIComponent(empresaData.telefone)}`;
 
     if (partner && partner.telefone) {
       const numLimpo = partner.telefone.replace(/\D/g, "");
@@ -544,16 +552,74 @@ function PublicCatalogo() {
                   placeholder="00.000.000/0000-00"
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium" htmlFor="endereco">
-                  Endereço
-                </label>
-                <Input
-                  id="endereco"
-                  value={empresaData.endereco}
-                  onChange={(e) => setEmpresaData({ ...empresaData, endereco: e.target.value })}
-                  placeholder="Rua, Número, Bairro, Cidade"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium" htmlFor="cep">
+                    CEP
+                  </label>
+                  <Input
+                    id="cep"
+                    value={empresaData.cep}
+                    onChange={(e) => setEmpresaData({ ...empresaData, cep: e.target.value })}
+                    placeholder="00000-000"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium" htmlFor="endereco">
+                    Rua / Logradouro
+                  </label>
+                  <Input
+                    id="endereco"
+                    value={empresaData.endereco}
+                    onChange={(e) => setEmpresaData({ ...empresaData, endereco: e.target.value })}
+                    placeholder="Rua Exemplo"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium" htmlFor="numero">
+                    Número
+                  </label>
+                  <Input
+                    id="numero"
+                    value={empresaData.numero}
+                    onChange={(e) => setEmpresaData({ ...empresaData, numero: e.target.value })}
+                    placeholder="123"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium" htmlFor="bairro">
+                    Bairro
+                  </label>
+                  <Input
+                    id="bairro"
+                    value={empresaData.bairro}
+                    onChange={(e) => setEmpresaData({ ...empresaData, bairro: e.target.value })}
+                    placeholder="Centro"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium" htmlFor="cidade">
+                    Cidade
+                  </label>
+                  <Input
+                    id="cidade"
+                    value={empresaData.cidade}
+                    onChange={(e) => setEmpresaData({ ...empresaData, cidade: e.target.value })}
+                    placeholder="Sua Cidade"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium" htmlFor="uf">
+                    Estado (UF)
+                  </label>
+                  <Input
+                    id="uf"
+                    value={empresaData.uf}
+                    onChange={(e) => setEmpresaData({ ...empresaData, uf: e.target.value })}
+                    placeholder="SP"
+                    maxLength={2}
+                  />
+                </div>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium" htmlFor="telefone">

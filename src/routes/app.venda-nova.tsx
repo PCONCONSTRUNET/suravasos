@@ -64,7 +64,12 @@ function NovaVenda() {
     nome: "",
     cpf_cnpj: "",
     telefone: "",
+    cep: "",
     endereco: "",
+    numero: "",
+    bairro: "",
+    cidade: "",
+    uf: "",
   });
   const [loadingCliente, setLoadingCliente] = useState(false);
 
@@ -140,7 +145,12 @@ function NovaVenda() {
         nome: novoCliente.nome,
         cpf_cnpj: novoCliente.cpf_cnpj,
         telefone: novoCliente.telefone,
+        cep: novoCliente.cep,
         endereco: novoCliente.endereco,
+        numero: novoCliente.numero,
+        bairro: novoCliente.bairro,
+        cidade: novoCliente.cidade,
+        uf: novoCliente.uf,
         status: "Ativo",
       };
 
@@ -476,13 +486,56 @@ function NovaVenda() {
                 placeholder="(00) 00000-0000"
               />
             </div>
-            <div className="space-y-2">
-              <Label>Endereço / Cidade</Label>
-              <Input
-                value={novoCliente.endereco}
-                onChange={(e) => setNovoCliente({ ...novoCliente, endereco: e.target.value })}
-                placeholder="Endereço completo"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>CEP</Label>
+                <Input
+                  value={novoCliente.cep}
+                  onChange={(e) => setNovoCliente({ ...novoCliente, cep: e.target.value })}
+                  placeholder="00000-000"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Rua / Logradouro</Label>
+                <Input
+                  value={novoCliente.endereco}
+                  onChange={(e) => setNovoCliente({ ...novoCliente, endereco: e.target.value })}
+                  placeholder="Rua Exemplo"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Número</Label>
+                <Input
+                  value={novoCliente.numero}
+                  onChange={(e) => setNovoCliente({ ...novoCliente, numero: e.target.value })}
+                  placeholder="123"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Bairro</Label>
+                <Input
+                  value={novoCliente.bairro}
+                  onChange={(e) => setNovoCliente({ ...novoCliente, bairro: e.target.value })}
+                  placeholder="Centro"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Cidade</Label>
+                <Input
+                  value={novoCliente.cidade}
+                  onChange={(e) => setNovoCliente({ ...novoCliente, cidade: e.target.value })}
+                  placeholder="Sua Cidade"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>UF</Label>
+                <Input
+                  value={novoCliente.uf}
+                  onChange={(e) => setNovoCliente({ ...novoCliente, uf: e.target.value })}
+                  placeholder="SP"
+                  maxLength={2}
+                />
+              </div>
             </div>
           </div>
           <DialogFooter>

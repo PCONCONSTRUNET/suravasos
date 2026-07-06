@@ -138,24 +138,18 @@ function NovoCliente() {
 
     setLoading(true);
     try {
-      const enderecoCompleto = [
-        cliente.endereco,
-        cliente.numero && `nº ${cliente.numero}`,
-        cliente.bairro && `Bairro ${cliente.bairro}`,
-        cliente.cep && `CEP ${cliente.cep}`,
-      ]
-        .filter(Boolean)
-        .join(", ");
-
       // Envia apenas as colunas conhecidas da tabela clientes
-      const payload = {
+      const payload: any = {
         nome: cliente.nome,
         cpf_cnpj: cliente.cpf_cnpj || null,
         telefone: cliente.telefone || null,
         cidade: cliente.cidade || null,
         uf: cliente.uf || null,
         status: cliente.status,
-        endereco: enderecoCompleto || null,
+        endereco: cliente.endereco || null,
+        numero: cliente.numero || null,
+        bairro: cliente.bairro || null,
+        cep: cliente.cep || null,
       };
 
       let error;

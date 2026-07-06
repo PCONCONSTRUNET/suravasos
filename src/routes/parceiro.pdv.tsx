@@ -30,9 +30,14 @@ function ParceiroPDV() {
     nome: "",
     documento: "",
     telefone: "",
+    cep: "",
     endereco: "",
-    frete: "Retirada",
+    numero: "",
+    bairro: "",
+    cidade: "",
+    uf: "",
     pagamento: "Dinheiro / Pix",
+    frete: "Retirada",
     observacoes: "",
   });
   const [vendedorInfo, setVendedorInfo] = useState<{ id: string; nome: string } | null>(null);
@@ -69,7 +74,12 @@ function ParceiroPDV() {
 
         const eParam = params.get("e");
         const cnjParam = params.get("cnpj");
+        const cepParam = params.get("cep");
         const endParam = params.get("end");
+        const numParam = params.get("num");
+        const bairroParam = params.get("bairro");
+        const cidParam = params.get("cid");
+        const ufParam = params.get("uf");
         const telParam = params.get("tel");
 
         if (eParam || cnjParam) {
@@ -77,7 +87,12 @@ function ParceiroPDV() {
             ...prev,
             nome: eParam || "",
             documento: cnjParam || "",
+            cep: cepParam || "",
             endereco: endParam || "",
+            numero: numParam || "",
+            bairro: bairroParam || "",
+            cidade: cidParam || "",
+            uf: ufParam || "",
             telefone: telParam || "",
           }));
         }
@@ -225,11 +240,25 @@ function ParceiroPDV() {
         if (clientForm.telefone && clientForm.telefone.trim() !== "") {
           payload.telefone = clientForm.telefone.trim();
         }
+        if (clientForm.cep && clientForm.cep.trim() !== "") {
+          payload.cep = clientForm.cep.trim();
+        }
         if (clientForm.endereco && clientForm.endereco.trim() !== "") {
           payload.endereco = clientForm.endereco.trim();
         }
+        if (clientForm.numero && clientForm.numero.trim() !== "") {
+          payload.numero = clientForm.numero.trim();
+        }
+        if (clientForm.bairro && clientForm.bairro.trim() !== "") {
+          payload.bairro = clientForm.bairro.trim();
+        }
+        if (clientForm.cidade && clientForm.cidade.trim() !== "") {
+          payload.cidade = clientForm.cidade.trim();
+        }
+        if (clientForm.uf && clientForm.uf.trim() !== "") {
+          payload.uf = clientForm.uf.trim();
+        }
         payload.status = "Ativo";
-        payload.cidade = "Indefinida";
 
         const { data: clienteData, error: clienteError } = await supabase
           .from("clientes")
@@ -538,13 +567,56 @@ function ParceiroPDV() {
                     onChange={(e) => setClientForm({ ...clientForm, telefone: e.target.value })}
                   />
                 </div>
-                <div className="grid gap-2">
-                  <label className="text-sm font-medium">Endereço Completo</label>
-                  <Input
-                    placeholder="Rua, número, bairro, cidade - UF"
-                    value={clientForm.endereco}
-                    onChange={(e) => setClientForm({ ...clientForm, endereco: e.target.value })}
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <label className="text-sm font-medium">CEP</label>
+                    <Input
+                      placeholder="00000-000"
+                      value={clientForm.cep}
+                      onChange={(e) => setClientForm({ ...clientForm, cep: e.target.value })}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <label className="text-sm font-medium">Endereço (Rua)</label>
+                    <Input
+                      placeholder="Rua Exemplo"
+                      value={clientForm.endereco}
+                      onChange={(e) => setClientForm({ ...clientForm, endereco: e.target.value })}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <label className="text-sm font-medium">Número</label>
+                    <Input
+                      placeholder="123"
+                      value={clientForm.numero}
+                      onChange={(e) => setClientForm({ ...clientForm, numero: e.target.value })}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <label className="text-sm font-medium">Bairro</label>
+                    <Input
+                      placeholder="Centro"
+                      value={clientForm.bairro}
+                      onChange={(e) => setClientForm({ ...clientForm, bairro: e.target.value })}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <label className="text-sm font-medium">Cidade</label>
+                    <Input
+                      placeholder="Sua Cidade"
+                      value={clientForm.cidade}
+                      onChange={(e) => setClientForm({ ...clientForm, cidade: e.target.value })}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <label className="text-sm font-medium">Estado (UF)</label>
+                    <Input
+                      placeholder="SP"
+                      value={clientForm.uf}
+                      onChange={(e) => setClientForm({ ...clientForm, uf: e.target.value })}
+                      maxLength={2}
+                    />
+                  </div>
                 </div>
               </div>
 

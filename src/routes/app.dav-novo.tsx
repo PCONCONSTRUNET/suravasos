@@ -42,7 +42,7 @@ function NovoDAV() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  const [cliente, setCliente] = useState({ nome: "", cnpj: "", endereco: "", telefone: "" });
+  const [cliente, setCliente] = useState({ nome: "", cnpj: "", cep: "", endereco: "", numero: "", bairro: "", cidade: "", uf: "", telefone: "" });
   const [emissor, setEmissor] = useState({
     nome: "VIVAVERDE",
     cnpj: "",
@@ -76,7 +76,7 @@ function NovoDAV() {
     }
     const { data } = await supabase
       .from("clientes")
-      .select("id, nome, cpf_cnpj, telefone, endereco")
+      .select("id, nome, cpf_cnpj, telefone, endereco, numero, bairro, cidade, uf, cep")
       .ilike("nome", `%${q}%`)
       .limit(10);
     setClientesBuscaLista(data || []);
@@ -129,7 +129,12 @@ function NovoDAV() {
 
       const eParam = params.get("e");
       const cnjParam = params.get("cnpj");
+      const cepParam = params.get("cep");
       const endParam = params.get("end");
+      const numParam = params.get("num");
+      const bairroParam = params.get("bairro");
+      const cidParam = params.get("cid");
+      const ufParam = params.get("uf");
       const telParam = params.get("tel");
 
       if (eParam || cnjParam) {
@@ -137,7 +142,12 @@ function NovoDAV() {
           ...prev,
           nome: eParam || "",
           cnpj: cnjParam || "",
+          cep: cepParam || "",
           endereco: endParam || "",
+          numero: numParam || "",
+          bairro: bairroParam || "",
+          cidade: cidParam || "",
+          uf: ufParam || "",
           telefone: telParam || "",
         }));
       }
@@ -211,7 +221,12 @@ function NovoDAV() {
             nome: cliente.nome,
             cpf_cnpj: cliente.cnpj,
             telefone: cliente.telefone,
+            cep: cliente.cep,
             endereco: cliente.endereco,
+            numero: cliente.numero,
+            bairro: cliente.bairro,
+            cidade: cliente.cidade,
+            uf: cliente.uf,
             status: "Ativo"
           }).select("id").single();
           if (newClient) cliente_id = newClient.id;
@@ -314,12 +329,55 @@ function NovoDAV() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Endereço Completo</Label>
+              <Label>CEP</Label>
+              <Input
+                value={cliente.cep}
+                onChange={(e) => setCliente({ ...cliente, cep: e.target.value })}
+                placeholder="00000-000"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Rua / Logradouro</Label>
               <Input
                 value={cliente.endereco}
                 onChange={(e) => setCliente({ ...cliente, endereco: e.target.value })}
-                placeholder="Rua, Número, Bairro, Cidade - UF"
+                placeholder="Rua Exemplo"
               />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-2">
+                <Label>Número</Label>
+                <Input
+                  value={cliente.numero}
+                  onChange={(e) => setCliente({ ...cliente, numero: e.target.value })}
+                  placeholder="123"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Bairro</Label>
+                <Input
+                  value={cliente.bairro}
+                  onChange={(e) => setCliente({ ...cliente, bairro: e.target.value })}
+                  placeholder="Centro"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Cidade</Label>
+                <Input
+                  value={cliente.cidade}
+                  onChange={(e) => setCliente({ ...cliente, cidade: e.target.value })}
+                  placeholder="Sua Cidade"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>UF</Label>
+                <Input
+                  value={cliente.uf}
+                  onChange={(e) => setCliente({ ...cliente, uf: e.target.value })}
+                  placeholder="SP"
+                  maxLength={2}
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Telefone</Label>
@@ -610,7 +668,12 @@ function NovoDAV() {
                     setCliente({
                       nome: c.nome,
                       cnpj: c.cpf_cnpj || "",
+                      cep: c.cep || "",
                       endereco: c.endereco || "",
+                      numero: c.numero || "",
+                      bairro: c.bairro || "",
+                      cidade: c.cidade || "",
+                      uf: c.uf || "",
                       telefone: c.telefone || ""
                     });
                     setIsClientModalOpen(false);
