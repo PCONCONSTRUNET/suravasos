@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { VivaverdeLogo } from "@/components/vivaverde-logo";
 import { ColorDock } from "@/components/color-dock";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Command,
@@ -44,6 +45,14 @@ function PublicCatalogo() {
   const [openCategoria, setOpenCategoria] = useState(false);
   const [cart, setCart] = useState<{ produto: any; qtd: number }[]>([]);
   const [partner, setPartner] = useState<any>(null);
+  
+  const [modalOpen, setModalOpen] = useState(false);
+  const [empresaData, setEmpresaData] = useState({
+    nome: "",
+    cnpj: "",
+    endereco: "",
+    telefone: "",
+  });
 
   const addToCart = (produto: any) => {
     setCart((prev) => {
@@ -138,10 +147,27 @@ function PublicCatalogo() {
     return gradients[index % gradients.length];
   };
 
-  const finalizeOrder = () => {
+  const handleOpenModal = () => {
     if (cart.length === 0) return;
+    setModalOpen(true);
+  };
+
+  const finalizeOrder = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (cart.length === 0) return;
+    if (!empresaData.nome || !empresaData.cnpj) {
+      alert("Preencha os campos obrigatórios (Nome da Empresa e CNPJ).");
+      return;
+    }
 
     let mensagem = `Olá! Gostaria de fazer o pedido dos seguintes itens do catálogo:\n\n`;
+
+    mensagem += `*DADOS DA EMPRESA:*\n`;
+    mensagem += `Nome: ${empresaData.nome}\n`;
+    mensagem += `CNPJ: ${empresaData.cnpj}\n`;
+    if (empresaData.endereco) mensagem += `Endereço: ${empresaData.endereco}\n`;
+    if (empresaData.telefone) mensagem += `Telefone: ${empresaData.telefone}\n`;
+    mensagem += `\n`;
 
     cart.forEach((item) => {
       const p = item.produto;
@@ -158,19 +184,22 @@ function PublicCatalogo() {
     mensagem += `Qual o procedimento para finalização e pagamento?`;
 
     let telefoneDestino = "5519997331112"; // Telefone padrão do dono
+    const companyParams = `&e=${encodeURIComponent(empresaData.nome)}&cnpj=${encodeURIComponent(empresaData.cnpj)}&end=${encodeURIComponent(empresaData.endereco)}&tel=${encodeURIComponent(empresaData.telefone)}`;
+
     if (partner && partner.telefone) {
       const numLimpo = partner.telefone.replace(/\D/g, "");
       if (numLimpo.length >= 10) telefoneDestino = `55${numLimpo}`;
 
       const magicParams = cart.map((c) => `${c.produto.id}:${c.qtd}`).join(",");
-      mensagem += `\n\n_Link do Pedido (Apenas Vendedor):_\n${window.location.origin}/parceiro/pdv?c=${magicParams}`;
+      mensagem += `\n\n_Link do Pedido (Apenas Vendedor):_\n${window.location.origin}/parceiro/pdv?c=${magicParams}${companyParams}`;
     } else {
       const magicParams = cart.map((c) => `${c.produto.id}:${c.qtd}`).join(",");
-      mensagem += `\n\n_Link do Pedido (Administrador):_\n${window.location.origin}/app/dav-novo?c=${magicParams}`;
+      mensagem += `\n\n_Link do Pedido (Administrador):_\n${window.location.origin}/app/dav-novo?c=${magicParams}${companyParams}`;
     }
 
     const text = encodeURIComponent(mensagem);
     window.open(`https://wa.me/${telefoneDestino}?text=${text}`, "_blank");
+    setModalOpen(false);
   };
 
   return (
@@ -469,17 +498,87 @@ function PublicCatalogo() {
                   </span>
                 </div>
                 <Button
-                  onClick={finalizeOrder}
+                  onClick={handleOpenModal}
                   className="w-full h-14 bg-success hover:bg-success/90 text-success-foreground text-lg shadow-md rounded-xl font-bold"
                 >
                   <WhatsAppIcon className="mr-2 h-6 w-6" />
-                  Enviar Pedido
+                  Continuar Pedido
                 </Button>
               </div>
             </SheetContent>
           </Sheet>
         </div>
       )}
+
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Dados da Empresa</DialogTitle>
+            <DialogDescription>
+              Preencha os dados da sua empresa para enviar o pedido.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={finalizeOrder}>
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium" htmlFor="nome">
+                  Nome da Empresa <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  id="nome"
+                  required
+                  value={empresaData.nome}
+                  onChange={(e) => setEmpresaData({ ...empresaData, nome: e.target.value })}
+                  placeholder="Sua Empresa"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium" htmlFor="cnpj">
+                  CNPJ <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  id="cnpj"
+                  required
+                  value={empresaData.cnpj}
+                  onChange={(e) => setEmpresaData({ ...empresaData, cnpj: e.target.value })}
+                  placeholder="00.000.000/0000-00"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium" htmlFor="endereco">
+                  Endereço
+                </label>
+                <Input
+                  id="endereco"
+                  value={empresaData.endereco}
+                  onChange={(e) => setEmpresaData({ ...empresaData, endereco: e.target.value })}
+                  placeholder="Rua, Número, Bairro, Cidade"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium" htmlFor="telefone">
+                  Telefone / WhatsApp
+                </label>
+                <Input
+                  id="telefone"
+                  value={empresaData.telefone}
+                  onChange={(e) => setEmpresaData({ ...empresaData, telefone: e.target.value })}
+                  placeholder="(00) 00000-0000"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" className="bg-success text-success-foreground hover:bg-success/90">
+                <WhatsAppIcon className="mr-2 h-4 w-4" />
+                Enviar Pedido
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

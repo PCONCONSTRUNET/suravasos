@@ -66,6 +66,22 @@ function ParceiroPDV() {
 
         // Verifica se veio um produto mágico pela URL (formato antigo)
         const params = new URLSearchParams(window.location.search);
+
+        const eParam = params.get("e");
+        const cnjParam = params.get("cnpj");
+        const endParam = params.get("end");
+        const telParam = params.get("tel");
+
+        if (eParam || cnjParam) {
+          setCliente((prev) => ({
+            ...prev,
+            nome: eParam || "",
+            documento: cnjParam || "",
+            endereco: endParam || "",
+            telefone: telParam || "",
+          }));
+        }
+
         const produtoIdMagic = params.get("produto");
         if (produtoIdMagic) {
           const magicProduct = data.find((p) => p.id === produtoIdMagic);

@@ -126,6 +126,22 @@ function NovoDAV() {
     const loadCartFromURL = async () => {
       const params = new URLSearchParams(window.location.search);
       const cartMagic = params.get("c");
+
+      const eParam = params.get("e");
+      const cnjParam = params.get("cnpj");
+      const endParam = params.get("end");
+      const telParam = params.get("tel");
+
+      if (eParam || cnjParam) {
+        setCliente((prev) => ({
+          ...prev,
+          nome: eParam || "",
+          cnpj: cnjParam || "",
+          endereco: endParam || "",
+          telefone: telParam || "",
+        }));
+      }
+
       if (!cartMagic) {
         if (itens.length === 0) {
           setItens([{ id: Date.now(), codigo: "", produto: "", qtd: 1, vlrUnit: 0, openSearch: false }]);
