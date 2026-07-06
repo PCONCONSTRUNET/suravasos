@@ -34,6 +34,7 @@ function ParceiroDashboard() {
   const [isEditingClient, setIsEditingClient] = useState(false);
   const [editClientData, setEditClientData] = useState({ nome: "", cpf_cnpj: "", telefone: "" });
   const [savingClient, setSavingClient] = useState(false);
+  const [deletingOrder, setDeletingOrder] = useState(false);
 
   const openSaleDetails = async (venda: any) => {
     setSelectedSaleForDetails(venda);
@@ -590,6 +591,32 @@ function ParceiroDashboard() {
                   ✏️ Editar Informações do Cliente
                 </Button>
               </>
+            )}
+            {selectedSaleForDetails?.status_aprovacao === "Pendente" && (
+              <Button
+                variant="outline"
+                className="w-full border-red-200 text-red-600 hover:bg-red-50 font-semibold"
+                disabled={deletingOrder}
+                onClick={async () => {
+                  if (!confirm("Tem certeza que deseja excluir este pedido? Esta ação não pode ser desfeita.")) return;
+                  setDeletingOrder(true);
+                  try {
+                    // Exclui os itens primeiro
+                    await supabase.from("vendas_itens").delete().eq("venda_id", selectedSaleForDetails.id);
+                    // Exclui a venda
+                    const { error } = await supabase.from("vendas").delete().eq("id", selectedSaleForDetails.id);
+                    if (error) throw error;
+                    setVendas((prev) => prev.filter(v => v.id !== selectedSaleForDetails.id));
+                    setIsSaleDetailsOpen(false);
+                  } catch (err: any) {
+                    alert("Erro ao excluir pedido: " + err.message);
+                  } finally {
+                    setDeletingOrder(false);
+                  }
+                }}
+              >
+                {deletingOrder ? "Excluindo..." : "🗑️ Excluir Pedido"}
+              </Button>
             )}
             <Button
               variant="outline"
