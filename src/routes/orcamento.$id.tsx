@@ -115,7 +115,7 @@ function ImprimirDAV() {
             <p className="font-bold text-slate-900">{dav.emissor_nome || "VIVAVERDE VASOS"}</p>
             {dav.emissor_cnpj && <p>CNPJ: {dav.emissor_cnpj}</p>}
             {dav.emissor_endereco && <p>{dav.emissor_endereco}</p>}
-            {dav.emissor_telefone && <p>Tel: {dav.emissor_telefone}</p>}
+            {dav.emissor_telefone && <p>Tel: {dav.emissor_telefone.replace(/99733-?1112/g, '99714-1112').replace('997331112', '997141112')}</p>}
           </div>
         </div>
         <div className="text-right">

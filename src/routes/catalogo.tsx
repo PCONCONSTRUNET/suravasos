@@ -191,7 +191,7 @@ function PublicCatalogo() {
     mensagem += `*VALOR TOTAL: R$ ${total.toFixed(2).replace(".", ",")}*\n\n`;
     mensagem += `Qual o procedimento para finalização e pagamento?`;
 
-    let telefoneDestino = "5519997331112"; // Telefone padrão do dono
+    let telefoneDestino = "5519997141112"; // Telefone padrão do dono
     const companyParams = `&e=${encodeURIComponent(empresaData.nome)}&cnpj=${encodeURIComponent(empresaData.cnpj)}&cep=${encodeURIComponent(empresaData.cep)}&end=${encodeURIComponent(empresaData.endereco)}&num=${encodeURIComponent(empresaData.numero)}&bairro=${encodeURIComponent(empresaData.bairro)}&cid=${encodeURIComponent(empresaData.cidade)}&uf=${encodeURIComponent(empresaData.uf)}&tel=${encodeURIComponent(empresaData.telefone)}`;
 
     if (partner && partner.telefone) {
