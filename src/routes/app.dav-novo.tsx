@@ -34,13 +34,19 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/app/dav-novo")({
+  validateSearch: (search: Record<string, unknown>): { id?: string } => ({
+    id: search.id as string | undefined,
+  }),
   head: () => ({ meta: [{ title: "Novo DAV — VIVAVERDE ERP" }] }),
   component: NovoDAV,
 });
 
 function NovoDAV() {
   const navigate = useNavigate();
+  const search = Route.useSearch();
+  const isEditing = !!search.id;
   const [loading, setLoading] = useState(false);
+  const [isFetchingInfo, setIsFetchingInfo] = useState(isEditing);
 
   const [cliente, setCliente] = useState({ nome: "", cnpj: "", cep: "", endereco: "", numero: "", bairro: "", cidade: "", uf: "", telefone: "" });
   const [emissor, setEmissor] = useState({
@@ -112,6 +118,78 @@ function NovoDAV() {
       }
     };
     fetchConfigs();
+
+    // Se estiver editando, carrega os dados existentes do DAV
+    if (isEditing && search.id) {
+      const fetchDav = async () => {
+        try {
+          const { data: dav, error: davError } = await supabase
+            .from("davs")
+            .select("*")
+            .eq("id", search.id)
+            .single();
+          if (davError) throw davError;
+
+          if (dav) {
+            setCliente({
+              nome: dav.cliente_nome || "",
+              cnpj: dav.cliente_cnpj || "",
+              cep: "",
+              endereco: dav.cliente_endereco || "",
+              numero: "",
+              bairro: "",
+              cidade: "",
+              uf: "",
+              telefone: dav.cliente_telefone || "",
+            });
+            setEmissor({
+              nome: dav.emissor_nome || "VIVAVERDE",
+              cnpj: dav.emissor_cnpj || "",
+              endereco: dav.emissor_endereco || "",
+              telefone: dav.emissor_telefone || "",
+            });
+            setCondicoes({
+              vendedor: dav.vendedor || "",
+              pagamento: dav.condicao_pagamento || "Dinheiro / Pix",
+              frete: dav.frete_tipo || "Retirada",
+              prazo: dav.prazo_entrega || "Imediato",
+            });
+            setDescontoPerc(dav.desconto_percentual || 0);
+            setFreteValor(dav.frete_valor || 0);
+            setObservacoes(dav.observacoes || "");
+          }
+
+          // Carrega os itens do DAV
+          const { data: davItens, error: itensError } = await supabase
+            .from("dav_items")
+            .select("*, produtos(imagem)")
+            .eq("dav_id", search.id);
+          if (itensError) throw itensError;
+
+          if (davItens && davItens.length > 0) {
+            setItens(davItens.map((i: any, idx: number) => ({
+              id: Date.now() + idx,
+              produto_id: i.produto_id || undefined,
+              codigo: i.codigo || "",
+              produto: i.produto || "",
+              qtd: i.qtd,
+              vlrUnit: Number(i.valor_unitario),
+              openSearch: false,
+              imagem: i.produtos?.imagem || "",
+            })));
+          } else {
+            setItens([{ id: Date.now(), codigo: "", produto: "", qtd: 1, vlrUnit: 0, openSearch: false, imagem: "" }]);
+          }
+        } catch (err: any) {
+          console.error(err);
+          alert("Erro ao carregar orçamento: " + err.message);
+        } finally {
+          setIsFetchingInfo(false);
+        }
+      };
+      fetchDav();
+      return;
+    }
 
     const fetchProdutos = async () => {
       const { data } = await supabase
@@ -234,39 +312,55 @@ function NovoDAV() {
         }
       }
 
-      // 1. Salvar o DAV principal
-      const { data: dav, error: davError } = await supabase
-        .from("davs")
-        .insert({
-          cliente_id: cliente_id,
-          cliente_nome: cliente.nome,
-          cliente_cnpj: cliente.cnpj,
-          cliente_endereco: cliente.endereco,
-          cliente_telefone: cliente.telefone,
-          emissor_nome: emissor.nome,
-          emissor_cnpj: emissor.cnpj,
-          emissor_endereco: emissor.endereco,
-          emissor_telefone: emissor.telefone,
-          vendedor: condicoes.vendedor,
-          condicao_pagamento: condicoes.pagamento,
-          frete_tipo: condicoes.frete,
-          prazo_entrega: condicoes.prazo,
-          subtotal: subtotal,
-          desconto_percentual: descontoPerc,
-          desconto_valor: descontoValor,
-          frete_valor: freteValor,
-          total: total,
-          observacoes: observacoes,
-          validade: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // +7 dias
-        })
-        .select("id")
-        .single();
+      const davPayload = {
+        cliente_id: cliente_id,
+        cliente_nome: cliente.nome,
+        cliente_cnpj: cliente.cnpj,
+        cliente_endereco: cliente.endereco,
+        cliente_telefone: cliente.telefone,
+        emissor_nome: emissor.nome,
+        emissor_cnpj: emissor.cnpj,
+        emissor_endereco: emissor.endereco,
+        emissor_telefone: emissor.telefone,
+        vendedor: condicoes.vendedor,
+        condicao_pagamento: condicoes.pagamento,
+        frete_tipo: condicoes.frete,
+        prazo_entrega: condicoes.prazo,
+        subtotal: subtotal,
+        desconto_percentual: descontoPerc,
+        desconto_valor: descontoValor,
+        frete_valor: freteValor,
+        total: total,
+        observacoes: observacoes,
+      };
 
-      if (davError) throw davError;
+      let davId: string;
 
-      // 2. Salvar os itens
+      if (isEditing && search.id) {
+        // EDITAR: atualiza o DAV existente
+        const { error: updateError } = await supabase
+          .from("davs")
+          .update(davPayload)
+          .eq("id", search.id);
+        if (updateError) throw updateError;
+        davId = search.id;
+
+        // Remove os itens antigos e insere os novos
+        await supabase.from("dav_items").delete().eq("dav_id", davId);
+      } else {
+        // NOVO: insere o DAV
+        const { data: dav, error: davError } = await supabase
+          .from("davs")
+          .insert({ ...davPayload, validade: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() })
+          .select("id")
+          .single();
+        if (davError) throw davError;
+        davId = dav.id;
+      }
+
+      // Salvar os itens
       const itensToInsert = itens.map((i) => ({
-        dav_id: dav.id,
+        dav_id: davId,
         produto_id: i.produto_id || null,
         codigo: i.codigo,
         produto: i.produto,
@@ -279,7 +373,7 @@ function NovoDAV() {
       if (itemsError) throw itemsError;
 
       // Sucesso! Redirecionar para a visualização do DAV
-      navigate({ to: "/app/dav", search: { id: dav.id } });
+      navigate({ to: "/app/dav" });
     } catch (err: any) {
       console.error(err);
       alert("Erro ao salvar o DAV: " + err.message);
@@ -288,18 +382,22 @@ function NovoDAV() {
     }
   };
 
+  if (isFetchingInfo) {
+    return <div className="p-8 text-center text-muted-foreground">Carregando orçamento...</div>;
+  }
+
   return (
     <>
       <PageHeader
-        title="Novo Orçamento (DAV)"
-        subtitle="Preencha os dados para gerar um Documento Auxiliar de Venda"
+        title={isEditing ? "Editar Orçamento (DAV)" : "Novo Orçamento (DAV)"}
+        subtitle={isEditing ? "Atualize os dados do orçamento" : "Preencha os dados para gerar um Documento Auxiliar de Venda"}
         actions={
           <Button
             className="bg-gradient-brand text-primary-foreground"
             onClick={handleSalvar}
             disabled={loading}
           >
-            <Save className="mr-2 h-4 w-4" /> {loading ? "Salvando..." : "Salvar DAV"}
+            <Save className="mr-2 h-4 w-4" /> {loading ? "Salvando..." : isEditing ? "Salvar Alterações" : "Salvar DAV"}
           </Button>
         }
       />

@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, FileText, Download, Printer, Trash2 } from "lucide-react";
+import { Plus, Search, FileText, Download, Printer, Trash2, Pencil } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useConfirm } from "@/contexts/ConfirmContext";
@@ -337,6 +337,13 @@ function DAVList() {
               <Button className="flex-1 bg-gradient-brand text-primary-foreground" asChild>
                 <Link to="/orcamento/$id" params={{ id: selectedDav?.id }}>
                   <Printer className="h-4 w-4 mr-2" /> Imprimir / PDF
+                </Link>
+              </Button>
+            </div>
+            <div className="pt-2">
+              <Button className="w-full" variant="outline" asChild>
+                <Link to="/app/dav-novo" search={{ id: selectedDav?.id }}>
+                  <Pencil className="h-4 w-4 mr-2" /> Editar Orçamento
                 </Link>
               </Button>
             </div>
