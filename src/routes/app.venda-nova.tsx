@@ -103,6 +103,7 @@ function NovaVenda() {
       valor_unitario: Number(prod.valor),
       quantidade: quantidade,
       subtotal: Number(prod.valor) * quantidade,
+      imagem: prod.imagem,
     };
 
     setItens([...itens, novoItem]);
@@ -354,8 +355,12 @@ function NovaVenda() {
                                   "mr-2 h-4 w-4",
                                   produtoSelecionado === p.id ? "opacity-100" : "opacity-0",
                                 )}
-                              />
-                              {p.nome} - R$ {Number(p.valor).toFixed(2)} (Estoque: {p.estoque})
+                              <div className="flex flex-col">
+                                <span className="font-medium">{p.nome} - R$ {Number(p.valor).toFixed(2)} (Estoque: {p.estoque})</span>
+                                {p.imagem && (
+                                  <img src={p.imagem} className="h-5 w-5 rounded object-cover mt-1" />
+                                )}
+                              </div>
                             </CommandItem>
                           ))}
                         </CommandGroup>
@@ -382,6 +387,7 @@ function NovaVenda() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-12"></TableHead>
                     <TableHead>Produto</TableHead>
                     <TableHead className="text-right">Qtd</TableHead>
                     <TableHead className="text-right">Unitário</TableHead>
@@ -392,13 +398,22 @@ function NovaVenda() {
                 <TableBody>
                   {itens.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
+                      <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">
                         Nenhum item adicionado ao carrinho.
                       </TableCell>
                     </TableRow>
                   ) : (
                     itens.map((item, index) => (
                       <TableRow key={index}>
+                        <TableCell>
+                          <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-md bg-accent text-lg">
+                            {item.imagem ? (
+                              <img src={item.imagem} alt={item.nome} className="h-full w-full object-cover" />
+                            ) : (
+                              <span className="opacity-50">📦</span>
+                            )}
+                          </div>
+                        </TableCell>
                         <TableCell className="font-semibold">{item.nome}</TableCell>
                         <TableCell className="text-right">{item.quantidade}</TableCell>
                         <TableCell className="text-right">

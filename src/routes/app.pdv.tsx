@@ -412,9 +412,14 @@ function PDV() {
                     onClick={() => addToCart(p)}
                     variant="outline"
                     size="sm"
-                    className="rounded-full"
+                    className="rounded-full pl-2 pr-3 h-9"
                   >
-                    {p.emoji} {p.nome}
+                    {p.imagem ? (
+                      <img src={p.imagem} className="h-6 w-6 rounded-full object-cover mr-2" alt="" />
+                    ) : (
+                      <span className="mr-1">{p.emoji}</span>
+                    )}
+                    {p.nome}
                   </Button>
                 ))}
               </div>

@@ -109,6 +109,7 @@ function ParceiroPDV() {
                 u: Number(magicProduct.valor),
                 t: Number(magicProduct.valor),
                 emoji: magicProduct.emoji,
+                imagem: magicProduct.imagem,
               },
             ]);
             // Limpa a URL para não adicionar de novo num refresh
@@ -133,6 +134,7 @@ function ParceiroPDV() {
                 u: Number(prod.valor),
                 t: qty * Number(prod.valor),
                 emoji: prod.emoji,
+                imagem: prod.imagem,
               });
             }
           });
@@ -163,6 +165,7 @@ function ParceiroPDV() {
           u: Number(produto.valor),
           t: Number(produto.valor),
           emoji: produto.emoji,
+          imagem: produto.imagem,
         },
       ];
     });
@@ -415,7 +418,13 @@ function ParceiroPDV() {
               onClick={() => addToCart(p)}
               className="flex-shrink-0 snap-center w-28 bg-white p-3 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center gap-2 active:scale-95 transition-transform"
             >
-              <div className="text-3xl">{p.emoji || "🪴"}</div>
+              <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-md bg-accent text-3xl">
+                {p.imagem ? (
+                  <img src={p.imagem} alt={p.nome} className="h-full w-full object-cover" />
+                ) : (
+                  <span className="opacity-50">{p.emoji || "🪴"}</span>
+                )}
+              </div>
               <div className="text-center">
                 <p className="text-xs font-semibold text-slate-800 line-clamp-2 leading-tight">
                   {p.nome}
@@ -444,7 +453,13 @@ function ParceiroPDV() {
             ) : (
               cart.map((i) => (
                 <div key={i.id} className="flex items-center gap-3 p-3">
-                  <div className="text-2xl">{i.emoji}</div>
+                  <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-md bg-accent text-2xl">
+                    {i.imagem ? (
+                      <img src={i.imagem} alt={i.p} className="h-full w-full object-cover" />
+                    ) : (
+                      <span className="opacity-50">{i.emoji || "🪴"}</span>
+                    )}
+                  </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-slate-800 truncate">{i.p}</p>
                     <p className="text-xs text-brand font-bold">R$ {i.t.toFixed(2)}</p>

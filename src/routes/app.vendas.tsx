@@ -76,7 +76,7 @@ function Vendas() {
     try {
       const { data, error } = await supabase
         .from("vendas_itens")
-        .select("*, produtos(nome)")
+        .select("*, produtos(nome, imagem)")
         .eq("venda_id", venda.id);
       if (!error && data) setVendaItens(data);
     } catch (err) {
@@ -344,15 +344,24 @@ function Vendas() {
                       key={item.id}
                       className="flex justify-between items-center p-3 rounded-lg border border-border/50 bg-background hover:bg-muted/20 transition-colors"
                     >
-                      <div>
-                        <div className="font-semibold text-sm">
-                          {item.produtos?.nome || "Produto Desconhecido"}
+                      <div className="flex items-center gap-3">
+                        <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-md bg-accent text-lg">
+                          {item.produtos?.imagem ? (
+                            <img src={item.produtos.imagem} alt={item.produtos.nome} className="h-full w-full object-cover" />
+                          ) : (
+                            <span className="opacity-50">📦</span>
+                          )}
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          {item.quantidade}x R${" "}
-                          {Number(item.valor_unitario).toLocaleString("pt-BR", {
-                            minimumFractionDigits: 2,
-                          })}
+                        <div>
+                          <div className="font-semibold text-sm">
+                            {item.produtos?.nome || "Produto Desconhecido"}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {item.quantidade}x R${" "}
+                            {Number(item.valor_unitario).toLocaleString("pt-BR", {
+                              minimumFractionDigits: 2,
+                            })}
+                          </div>
                         </div>
                       </div>
                       <div className="text-right font-medium text-sm">

@@ -455,8 +455,12 @@ function PublicCatalogo() {
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
-                    <div className="w-16 h-16 bg-slate-50 rounded-lg flex items-center justify-center text-3xl shrink-0">
-                      {item.produto.emoji || "🪴"}
+                    <div className="w-16 h-16 bg-slate-50 rounded-lg flex items-center justify-center text-3xl shrink-0 overflow-hidden relative">
+                      {item.produto.imagem ? (
+                        <img src={item.produto.imagem} alt={item.produto.nome} className="w-full h-full object-cover" />
+                      ) : (
+                        item.produto.emoji || "🪴"
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="font-bold text-slate-800 text-sm leading-tight mb-1">
