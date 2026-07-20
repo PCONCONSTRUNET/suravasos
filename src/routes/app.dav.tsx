@@ -292,17 +292,18 @@ function DAVList() {
                     >
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded bg-muted overflow-hidden relative flex items-center justify-center text-lg flex-shrink-0">
-                           {item.produtos?.imagem ? <img src={item.produtos.imagem} className="absolute inset-0 w-full h-full object-cover" /> : "📦"}
+                          {item.produtos?.imagem ? <img src={item.produtos.imagem} className="absolute inset-0 w-full h-full object-cover" /> : "📦"}
                         </div>
                         <div>
                           <div className="font-semibold text-sm">
                             {item.produto || "Produto Desconhecido"}
                           </div>
                           <div className="text-xs text-muted-foreground">
-                          {item.qtd}x R${" "}
-                          {Number(item.valor_unitario).toLocaleString("pt-BR", {
-                            minimumFractionDigits: 2,
-                          })}
+                            {item.qtd}x R${" "}
+                            {Number(item.valor_unitario).toLocaleString("pt-BR", {
+                              minimumFractionDigits: 2,
+                            })}
+                          </div>
                         </div>
                       </div>
                       <div className="text-right font-medium text-sm">
