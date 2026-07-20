@@ -39,14 +39,23 @@ function ImprimirDAV() {
           .single();
         
         if (v) {
+          const cli = v.cliente;
+          const enderecoPartes = [
+            cli?.endereco,
+            cli?.numero ? `Nº ${cli.numero}` : null,
+            cli?.bairro,
+            cli?.cidade && cli?.uf ? `${cli.cidade}/${cli.uf}` : cli?.cidade || cli?.uf || null,
+            cli?.cep ? `CEP: ${cli.cep}` : null,
+          ].filter(Boolean).join(", ");
+
           d = {
              id: v.id,
              numero: v.numero_venda || v.numero,
              created_at: v.created_at,
-             cliente_nome: v.cliente?.nome,
-             cliente_cnpj: v.cliente?.cpf_cnpj,
-             cliente_telefone: v.cliente?.telefone,
-             cliente_endereco: v.cliente?.endereco,
+             cliente_nome: cli?.nome,
+             cliente_cnpj: cli?.cpf_cnpj,
+             cliente_telefone: cli?.telefone,
+             cliente_endereco: enderecoPartes || null,
              condicao_pagamento: v.metodo_pagamento,
              subtotal: v.valor_total,
              total: v.valor_total,

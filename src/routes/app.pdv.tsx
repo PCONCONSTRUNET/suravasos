@@ -145,7 +145,7 @@ function PDV() {
       if (orcamento.isNovoDav) {
         const { data, error } = await supabase
           .from("dav_items")
-          .select("*, produtos(nome, estoque, valor, emoji)")
+          .select("*, produtos(nome, estoque, valor, emoji, imagem)")
           .eq("dav_id", orcamento.id);
 
         if (error) {
@@ -161,6 +161,7 @@ function PDV() {
             u: Number(item.valor_unitario),
             t: Number(item.total),
             emoji: item.produtos?.emoji || "📦",
+            imagem: item.produtos?.imagem || null,
             max: item.produtos?.estoque || 0,
             hasDbId: !!item.produto_id
           }));
@@ -177,7 +178,7 @@ function PDV() {
       } else {
         const { data, error } = await supabase
           .from("vendas_itens")
-          .select("*, produto:produtos(nome, estoque, valor, emoji)")
+          .select("*, produto:produtos(nome, estoque, valor, emoji, imagem)")
           .eq("venda_id", orcamento.id);
 
         if (error) {
@@ -194,6 +195,7 @@ function PDV() {
             u: Number(item.valor_unitario),
             t: Number(item.subtotal),
             emoji: item.produto?.emoji || "📦",
+            imagem: item.produto?.imagem || null,
             max: item.produto?.estoque || 0,
             hasDbId: true
           }));
@@ -246,6 +248,7 @@ function PDV() {
           u: Number(produto.valor),
           t: Number(produto.valor),
           emoji: produto.emoji,
+          imagem: produto.imagem,
           max: produto.estoque,
         },
       ];
@@ -442,8 +445,12 @@ function PDV() {
                       key={i.id}
                       className="grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-3 px-6 py-3"
                     >
-                      <div className="grid h-12 w-12 place-items-center rounded-lg bg-accent text-2xl">
-                        {i.emoji}
+                      <div className="grid h-12 w-12 place-items-center rounded-lg bg-accent text-2xl overflow-hidden relative">
+                        {i.imagem ? (
+                          <img src={i.imagem} alt={i.p} className="absolute inset-0 w-full h-full object-cover" />
+                        ) : (
+                          i.emoji || "📦"
+                        )}
                       </div>
                       <div className="min-w-0">
                         <p className="font-semibold truncate">{i.p}</p>

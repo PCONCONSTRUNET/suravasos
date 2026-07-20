@@ -58,7 +58,7 @@ function NovoDAV() {
   const [observacoes, setObservacoes] = useState("");
 
   const [itens, setItens] = useState<
-    { id: number; produto_id?: string; codigo: string; produto: string; qtd: number; vlrUnit: number; openSearch: boolean }[]
+    { id: number; produto_id?: string; codigo: string; produto: string; qtd: number; vlrUnit: number; openSearch: boolean; imagem?: string }[]
   >([]);
   const [descontoPerc, setDescontoPerc] = useState(0);
   const [freteValor, setFreteValor] = useState(0);
@@ -83,7 +83,7 @@ function NovoDAV() {
   };
 
   const addItem = () =>
-    setItens([...itens, { id: Date.now(), codigo: "", produto: "", qtd: 1, vlrUnit: 0, openSearch: false }]);
+    setItens([...itens, { id: Date.now(), codigo: "", produto: "", qtd: 1, vlrUnit: 0, openSearch: false, imagem: "" }]);
 
   const removeItem = (id: number) => setItens(itens.filter((i) => i.id !== id));
 
@@ -177,6 +177,7 @@ function NovoDAV() {
                 qtd: qty,
                 vlrUnit: Number(prod.valor),
                 openSearch: false,
+                imagem: prod.imagem,
               });
           }
         });
@@ -184,7 +185,7 @@ function NovoDAV() {
           setItens(parsedItens);
           window.history.replaceState({}, "", "/app/dav-novo");
         } else if (itens.length === 0) {
-          setItens([{ id: Date.now(), codigo: "", produto: "", qtd: 1, vlrUnit: 0, openSearch: false }]);
+          setItens([{ id: Date.now(), codigo: "", produto: "", qtd: 1, vlrUnit: 0, openSearch: false, imagem: "" }]);
         }
       }
     };
@@ -474,6 +475,7 @@ function NovoDAV() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-12 pr-0"></TableHead>
                   <TableHead className="w-24">Código</TableHead>
                   <TableHead>Produto</TableHead>
                   <TableHead className="w-24 text-right">Qtd</TableHead>
@@ -485,6 +487,11 @@ function NovoDAV() {
               <TableBody>
                 {itens.map((i) => (
                   <TableRow key={i.id}>
+                    <TableCell className="w-12 pr-0">
+                      <div className="h-8 w-8 rounded bg-muted overflow-hidden relative flex items-center justify-center text-xs">
+                        {i.imagem ? <img src={i.imagem} alt="" className="object-cover w-full h-full" /> : "📦"}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <Input
                         className="h-8"
@@ -535,6 +542,7 @@ function NovoDAV() {
                                                 produto: p.nome,
                                                 vlrUnit: Number(p.valor),
                                                 openSearch: false,
+                                                imagem: p.imagem,
                                               }
                                             : it
                                         )
@@ -549,8 +557,9 @@ function NovoDAV() {
                                     />
                                     <div className="flex flex-col">
                                       <span className="font-medium">{p.nome}</span>
-                                      <span className="text-xs text-muted-foreground">
-                                        {p.codigo ? `Cód: ${p.codigo} · ` : ""}R$ {Number(p.valor).toFixed(2)}
+                                      <span className="text-xs text-muted-foreground flex items-center gap-2 mt-0.5">
+                                        {p.imagem && <img src={p.imagem} className="h-5 w-5 rounded object-cover" />}
+                                        <span>{p.codigo ? `Cód: ${p.codigo} · ` : ""}R$ {Number(p.valor).toFixed(2)}</span>
                                       </span>
                                     </div>
                                   </CommandItem>

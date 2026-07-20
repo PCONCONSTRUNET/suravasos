@@ -67,7 +67,7 @@ function DAVList() {
     try {
       const { data, error } = await supabase
         .from("dav_items")
-        .select("*")
+        .select("*, produtos(imagem)")
         .eq("dav_id", dav.id);
       if (!error && data) setDavItens(data);
     } catch (err) {
@@ -290,11 +290,15 @@ function DAVList() {
                       key={item.id}
                       className="flex justify-between items-center p-3 rounded-lg border border-border/50 bg-background hover:bg-muted/20 transition-colors"
                     >
-                      <div>
-                        <div className="font-semibold text-sm">
-                          {item.produto || "Produto Desconhecido"}
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded bg-muted overflow-hidden relative flex items-center justify-center text-lg flex-shrink-0">
+                           {item.produtos?.imagem ? <img src={item.produtos.imagem} className="absolute inset-0 w-full h-full object-cover" /> : "📦"}
                         </div>
-                        <div className="text-xs text-muted-foreground">
+                        <div>
+                          <div className="font-semibold text-sm">
+                            {item.produto || "Produto Desconhecido"}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
                           {item.qtd}x R${" "}
                           {Number(item.valor_unitario).toLocaleString("pt-BR", {
                             minimumFractionDigits: 2,
