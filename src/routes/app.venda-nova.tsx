@@ -355,6 +355,7 @@ function NovaVenda() {
                                   "mr-2 h-4 w-4",
                                   produtoSelecionado === p.id ? "opacity-100" : "opacity-0",
                                 )}
+                              />
                               <div className="flex flex-col">
                                 <span className="font-medium">{p.nome} - R$ {Number(p.valor).toFixed(2)} (Estoque: {p.estoque})</span>
                                 {p.imagem && (
