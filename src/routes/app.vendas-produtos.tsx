@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, Save, Pencil } from "lucide-react";
+import { Search, Save, Pencil, Printer } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import {
@@ -125,7 +125,18 @@ function VendasProdutos() {
       <PageHeader
         title="Desempenho de Produtos"
         subtitle="Acompanhe e ajuste o número de vendas por produto"
+        actions={
+          <Button variant="outline" onClick={() => window.print()} className="print:hidden">
+            <Printer className="mr-2 h-4 w-4" />
+            Imprimir Relatório
+          </Button>
+        }
       />
+      
+      <div className="hidden print:block mb-6">
+        <h1 className="text-2xl font-bold font-display">Relatório de Desempenho de Produtos</h1>
+        <p className="text-muted-foreground">Impresso em {new Date().toLocaleDateString()}</p>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-3 mb-6">
         <Card className="shadow-card">
@@ -143,7 +154,7 @@ function VendasProdutos() {
       </div>
 
       <Card className="shadow-card">
-        <div className="flex flex-wrap items-center gap-3 border-b p-4">
+        <div className="flex flex-wrap items-center gap-3 border-b p-4 print:hidden">
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -180,7 +191,7 @@ function VendasProdutos() {
                 <TableHead className="text-right">Sistema</TableHead>
                 <TableHead className="text-right">Ajuste</TableHead>
                 <TableHead className="text-right">Total Vendas</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+                <TableHead className="text-right print:hidden">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -233,7 +244,7 @@ function VendasProdutos() {
                         {p.quantidade_vendas > 0 ? "+" : ""}{p.quantidade_vendas || 0}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right print:hidden">
                       {editingId === p.id ? (
                         <div className="flex justify-end">
                           <Input 
