@@ -37,38 +37,74 @@ function VendasProdutos() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<number>(0);
 
-  const fetchProducts = async () => {
+  const fetchProductsAndSales = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: prods, error: pError } = await supabase
         .from("produtos")
         .select("*")
         .order("created_at", { ascending: false });
-      if (error) throw error;
-      setProducts(data || []);
+      if (pError) throw pError;
+
+      // Fetch all items from valid sales to compute system sales
+      const { data: itens, error: iError } = await supabase
+        .from("vendas_itens")
+        .select("produto_id, quantidade, vendas(status)");
+      if (iError) throw iError;
+
+      const validItens = (itens || []).filter((item: any) => {
+        const status = item.vendas?.status;
+        return status !== "Cancelado" && status !== "Rejeitado";
+      });
+
+      const salesMap: Record<string, number> = {};
+      validItens.forEach((item: any) => {
+        if (item.produto_id) {
+          if (!salesMap[item.produto_id]) salesMap[item.produto_id] = 0;
+          salesMap[item.produto_id] += Number(item.quantidade || 0);
+        }
+      });
+
+      const mapped = (prods || []).map((p) => {
+        const vs = salesMap[p.id] || 0;
+        return {
+          ...p,
+          vendas_sistema: vs,
+          total_calculado: vs + Number(p.quantidade_vendas || 0),
+        };
+      });
+
+      setProducts(mapped);
     } catch (err: any) {
       console.error(err);
-      toast.error("Erro ao buscar produtos.");
+      toast.error("Erro ao buscar produtos e vendas.");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchProducts();
+    fetchProductsAndSales();
   }, []);
 
   const handleSave = async (id: string) => {
     try {
+      const p = products.find(prod => prod.id === id);
+      if (!p) return;
+
+      const vs = p.vendas_sistema || 0;
+      const novo_ajuste = editValue - vs;
+
       const { error } = await supabase
         .from("produtos")
-        .update({ quantidade_vendas: editValue })
+        .update({ quantidade_vendas: novo_ajuste })
         .eq("id", id);
       
       if (error) throw error;
       
       toast.success("Quantidade atualizada com sucesso!");
       setEditingId(null);
-      fetchProducts();
+      fetchProductsAndSales();
+
     } catch (err: any) {
       toast.error("Erro ao salvar: " + err.message);
     }
@@ -82,7 +118,7 @@ function VendasProdutos() {
     return matchBusca && matchCat;
   });
 
-  const totalVendasGlobais = products.reduce((acc, p) => acc + (p.quantidade_vendas || 0), 0);
+  const totalVendasGlobais = products.reduce((acc, p) => acc + (p.total_calculado || 0), 0);
 
   return (
     <>
@@ -141,7 +177,9 @@ function VendasProdutos() {
                 <TableHead>Produto</TableHead>
                 <TableHead>Categoria</TableHead>
                 <TableHead className="text-right">Valor</TableHead>
-                <TableHead className="text-right">Qtd. Vendas</TableHead>
+                <TableHead className="text-right">Sistema</TableHead>
+                <TableHead className="text-right">Ajuste</TableHead>
+                <TableHead className="text-right">Total Vendas</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -188,6 +226,14 @@ function VendasProdutos() {
                       R$ {Number(p.valor).toFixed(2).replace(".", ",")}
                     </TableCell>
                     <TableCell className="text-right">
+                      <span className="text-muted-foreground">{p.vendas_sistema || 0}</span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Badge variant={p.quantidade_vendas > 0 ? "default" : p.quantidade_vendas < 0 ? "destructive" : "secondary"}>
+                        {p.quantidade_vendas > 0 ? "+" : ""}{p.quantidade_vendas || 0}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
                       {editingId === p.id ? (
                         <div className="flex justify-end">
                           <Input 
@@ -200,7 +246,7 @@ function VendasProdutos() {
                           />
                         </div>
                       ) : (
-                        <span className="font-semibold text-lg">{p.quantidade_vendas || 0}</span>
+                        <span className="font-semibold text-lg text-primary">{p.total_calculado || 0}</span>
                       )}
                     </TableCell>
                     <TableCell className="text-right">
@@ -220,7 +266,7 @@ function VendasProdutos() {
                           variant="outline"
                           onClick={() => {
                             setEditingId(p.id);
-                            setEditValue(p.quantidade_vendas || 0);
+                            setEditValue(p.total_calculado || 0);
                           }}
                         >
                           <Pencil className="h-4 w-4 mr-2" />
