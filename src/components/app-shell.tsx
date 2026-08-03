@@ -29,6 +29,7 @@ import {
   LogOut,
   PlusCircle,
   CheckCheck,
+  TrendingUp,
 } from "lucide-react";
 import { VivaverdeLogo } from "./vivaverde-logo";
 import { cn } from "@/lib/utils";
@@ -57,6 +58,7 @@ const NAV = [
     items: [
       { to: "/app/estoque", label: "Estoque", icon: Boxes },
       { to: "/app/produtos", label: "Produtos", icon: Package },
+      { to: "/app/vendas-produtos", label: "Vendas Produtos", icon: TrendingUp },
       { to: "/app/clientes", label: "Clientes", icon: Users },
       { to: "/app/fornecedores", label: "Fornecedores", icon: Truck },
     ],
