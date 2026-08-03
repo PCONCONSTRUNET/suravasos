@@ -33,9 +33,10 @@ function VendasProdutos() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [busca, setBusca] = useState("");
-  const [categoriaFilter, setCategoriaFilter] = useState("Todas");
+  const [categoriaFilter, setCategoriaFilter] = useState<string>("Todas");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<number>(0);
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
 
   const fetchProductsAndSales = async () => {
     try {
@@ -120,6 +121,20 @@ function VendasProdutos() {
 
   const totalVendasGlobais = products.reduce((acc, p) => acc + (p.total_calculado || 0), 0);
 
+  const toggleSelection = (id: string) => {
+    setSelectedProducts((prev) => 
+      prev.includes(id) ? prev.filter((pId) => pId !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedProducts.length === filteredProducts.length && filteredProducts.length > 0) {
+      setSelectedProducts([]);
+    } else {
+      setSelectedProducts(filteredProducts.map(p => p.id));
+    }
+  };
+
   return (
     <>
       <PageHeader
@@ -179,6 +194,15 @@ function VendasProdutos() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12 print:hidden">
+                  <input 
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                    checked={filteredProducts.length > 0 && selectedProducts.length === filteredProducts.length}
+                    onChange={toggleSelectAll}
+                    title="Selecionar todos"
+                  />
+                </TableHead>
                 <TableHead>Código</TableHead>
                 <TableHead>Produto</TableHead>
                 <TableHead className="print:hidden">Categoria</TableHead>
@@ -204,7 +228,18 @@ function VendasProdutos() {
                 </TableRow>
               ) : (
                 filteredProducts.map((p) => (
-                  <TableRow key={p.id}>
+                  <TableRow 
+                    key={p.id}
+                    className={selectedProducts.length > 0 && !selectedProducts.includes(p.id) ? "print:hidden" : ""}
+                  >
+                    <TableCell className="print:hidden">
+                      <input 
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                        checked={selectedProducts.includes(p.id)}
+                        onChange={() => toggleSelection(p.id)}
+                      />
+                    </TableCell>
                     <TableCell className="font-mono text-xs">{p.codigo}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-3">
