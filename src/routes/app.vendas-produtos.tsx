@@ -133,12 +133,7 @@ function VendasProdutos() {
         }
       />
       
-      <div className="hidden print:block mb-6">
-        <h1 className="text-2xl font-bold font-display">Relatório de Desempenho de Produtos</h1>
-        <p className="text-muted-foreground">Impresso em {new Date().toLocaleDateString()}</p>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-3 mb-6">
+      <div className="grid gap-4 sm:grid-cols-3 mb-6 print:hidden">
         <Card className="shadow-card">
           <CardContent className="p-5">
             <p className="text-sm text-muted-foreground">Total de Produtos</p>
