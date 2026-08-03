@@ -628,7 +628,7 @@ function NovoDAV() {
                                 {produtos.map((p) => (
                                   <CommandItem
                                     key={p.id}
-                                    value={p.nome + " " + (p.codigo || "")}
+                                    value={`${p.codigo || ""} ${p.nome} ${p.id}`}
                                     onSelect={() => {
                                       setItens((prev) =>
                                         prev.map((it) =>

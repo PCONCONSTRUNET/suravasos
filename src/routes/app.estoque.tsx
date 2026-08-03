@@ -367,7 +367,7 @@ function Estoque() {
                         {produtos.map((p) => (
                           <CommandItem
                             key={p.id}
-                            value={p.nome} // CommandItem matches against the value prop
+                            value={`${p.codigo || ""} ${p.nome} ${p.id}`} // CommandItem matches against the value prop
                             onSelect={() => {
                               setProdutoSelecionado(p.id);
                               setComboboxOpen(false);

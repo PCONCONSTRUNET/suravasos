@@ -134,7 +134,7 @@ function PublicCatalogo() {
   ) as string[];
 
   const filtrados = produtos.filter((p) => {
-    const matchBusca = p.nome.toLowerCase().includes(busca.toLowerCase());
+    const matchBusca = p.nome.toLowerCase().includes(busca.toLowerCase()) || (p.codigo && p.codigo.toLowerCase().includes(busca.toLowerCase()));
     const matchCategoria = categoriaAtiva === "Todas" || p.categoria === categoriaAtiva;
     return matchBusca && matchCategoria;
   });

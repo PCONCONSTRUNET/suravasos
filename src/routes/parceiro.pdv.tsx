@@ -411,7 +411,7 @@ function ParceiroPDV() {
 
       <div className="flex overflow-x-auto pb-2 gap-2 snap-x">
         {produtos
-          .filter((p) => p.nome.toLowerCase().includes(searchTerm.toLowerCase()))
+          .filter((p) => p.nome.toLowerCase().includes(searchTerm.toLowerCase()) || (p.codigo && p.codigo.toLowerCase().includes(searchTerm.toLowerCase())))
           .map((p) => (
             <button
               key={p.id}

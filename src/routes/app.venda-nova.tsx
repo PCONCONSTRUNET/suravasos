@@ -344,7 +344,7 @@ function NovaVenda() {
                           {produtos.map((p) => (
                             <CommandItem
                               key={p.id}
-                              value={p.nome + " " + p.id}
+                              value={`${p.codigo || ""} ${p.nome} ${p.id}`}
                               onSelect={() => {
                                 setProdutoSelecionado(p.id === produtoSelecionado ? "" : p.id);
                                 setOpenProduto(false);
