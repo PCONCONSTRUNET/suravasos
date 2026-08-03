@@ -186,10 +186,10 @@ function VendasProdutos() {
               <TableRow>
                 <TableHead>Código</TableHead>
                 <TableHead>Produto</TableHead>
-                <TableHead>Categoria</TableHead>
-                <TableHead className="text-right">Valor</TableHead>
-                <TableHead className="text-right">Sistema</TableHead>
-                <TableHead className="text-right">Ajuste</TableHead>
+                <TableHead className="print:hidden">Categoria</TableHead>
+                <TableHead className="text-right print:hidden">Valor</TableHead>
+                <TableHead className="text-right print:hidden">Sistema</TableHead>
+                <TableHead className="text-right print:hidden">Ajuste</TableHead>
                 <TableHead className="text-right">Total Vendas</TableHead>
                 <TableHead className="text-right print:hidden">Ações</TableHead>
               </TableRow>
@@ -230,21 +230,21 @@ function VendasProdutos() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="print:hidden">
                       <Badge variant="secondary">{p.categoria}</Badge>
                     </TableCell>
-                    <TableCell className="text-right font-semibold">
+                    <TableCell className="text-right font-semibold print:hidden">
                       R$ {Number(p.valor).toFixed(2).replace(".", ",")}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right print:hidden">
                       <span className="text-muted-foreground">{p.vendas_sistema || 0}</span>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right print:hidden">
                       <Badge variant={p.quantidade_vendas > 0 ? "default" : p.quantidade_vendas < 0 ? "destructive" : "secondary"}>
                         {p.quantidade_vendas > 0 ? "+" : ""}{p.quantidade_vendas || 0}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right print:hidden">
+                    <TableCell className="text-right">
                       {editingId === p.id ? (
                         <div className="flex justify-end">
                           <Input 
@@ -260,7 +260,7 @@ function VendasProdutos() {
                         <span className="font-semibold text-lg text-primary">{p.total_calculado || 0}</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right print:hidden">
                       {editingId === p.id ? (
                         <div className="flex justify-end gap-2">
                           <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}>
