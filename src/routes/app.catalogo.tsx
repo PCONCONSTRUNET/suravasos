@@ -84,6 +84,7 @@ function Catalogo() {
     const colWidth = (pageWidth - margin * 2) / cols;
     const imgSize = colWidth - 6;
     const cardHeight = imgSize + 28;
+    const titleH = 16; // espaço reservado para o título da categoria
 
     // Fetch imagem como base64
     const toBase64 = (url: string): Promise<string | null> =>
@@ -110,6 +111,13 @@ function Catalogo() {
         }),
     );
 
+    // Helper: desenha título da categoria
+    const drawTitle = (label: string, y: number) => {
+      doc.setFontSize(13);
+      doc.setTextColor(22, 163, 74);
+      doc.text(label.toUpperCase(), margin, y);
+    };
+
     // Cabeçalho
     let yPos = 15;
     doc.setFontSize(18);
@@ -123,19 +131,36 @@ function Catalogo() {
       const prodsCat = filtrados.filter((p) => (p.categoria || "Outros") === cat);
       if (!prodsCat.length) continue;
 
-      // Título da categoria
-      if (yPos + 10 > pageHeight - 10) { doc.addPage(); yPos = 15; }
-      doc.setFontSize(13);
-      doc.setTextColor(22, 163, 74);
-      doc.text(cat.toUpperCase(), margin, yPos);
-      yPos += 8;
+      // ─── Fix 1: título orphan ────────────────────────────────────────────────
+      // Só escreve o título se houver espaço para ele + pelo menos 1 linha de cards.
+      // Se não couber, quebra página antes de escrever o título.
+      if (yPos + titleH + cardHeight > pageHeight - 10) {
+        doc.addPage();
+        yPos = 15;
+      }
+
+      drawTitle(cat, yPos);
+      yPos += titleH;
 
       let col = 0;
       let rowStartY = yPos;
 
       for (const p of prodsCat) {
-        if (col === cols) { col = 0; rowStartY += cardHeight + 6; }
-        if (rowStartY + cardHeight > pageHeight - 10) { doc.addPage(); rowStartY = 15; col = 0; }
+        if (col === cols) {
+          col = 0;
+          rowStartY += cardHeight + 6;
+        }
+
+        // ─── Fix 2: continuação sem título ──────────────────────────────────────
+        // Quando uma nova linha de cards não cabe, quebra página e re-escreve
+        // o título com "(cont.)" para o leitor saber de qual categoria se trata.
+        if (rowStartY + cardHeight > pageHeight - 10) {
+          doc.addPage();
+          rowStartY = 15;
+          col = 0;
+          drawTitle(`${cat} (cont.)`, rowStartY);
+          rowStartY += titleH;
+        }
 
         const xPos = margin + col * colWidth;
 
