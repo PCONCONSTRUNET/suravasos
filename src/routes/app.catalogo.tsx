@@ -13,12 +13,13 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Check, ChevronsUpDown, Search, Heart, ShoppingCart } from "lucide-react";
+import { Check, ChevronsUpDown, Search, Heart, ShoppingCart, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { ColorDock } from "@/components/color-dock";
-
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 const WhatsAppIcon = ({ className }: { className?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -75,6 +76,53 @@ function Catalogo() {
     return matchBusca && matchCategoria;
   });
 
+  const gerarPDF = () => {
+    const doc = new jsPDF();
+    let yPos = 15;
+    
+    doc.setFontSize(20);
+    doc.text("Catálogo de Produtos - VivaVerde", 14, yPos);
+    yPos += 10;
+    
+    const categoriasParaPDF = Array.from(new Set(filtrados.map((p) => p.categoria || "Outros")));
+    
+    categoriasParaPDF.forEach((cat) => {
+      const prodCat = filtrados.filter(p => (p.categoria || "Outros") === cat);
+      if (prodCat.length === 0) return;
+      
+      doc.setFontSize(16);
+      doc.text(cat, 14, yPos + 5);
+      yPos += 5;
+      
+      const tableData = prodCat.map(p => [
+        p.nome, 
+        p.codigo || "-", 
+        `R$ ${Number(p.valor).toFixed(2).replace('.', ',')}`, 
+        p.dimensao || "-", 
+        p.cores && p.cores.length > 0 ? p.cores.join(", ") : "-"
+      ]);
+      
+      autoTable(doc, {
+        startY: yPos + 5,
+        head: [['Produto', 'Ref/Código', 'Preço', 'Dimensões', 'Cores']],
+        body: tableData,
+        theme: 'grid',
+        headStyles: { fillColor: [22, 163, 74] }, // Verde similar ao bg-success
+        margin: { top: 10, right: 14, bottom: 10, left: 14 },
+        didDrawPage: (data) => {
+          yPos = data.cursor ? data.cursor.y : yPos;
+        }
+      });
+      yPos = (doc as any).lastAutoTable.finalY + 10;
+      if (yPos > 270) {
+        doc.addPage();
+        yPos = 15;
+      }
+    });
+    
+    doc.save("catalogo-vivaverde.pdf");
+  };
+
   const categoriasUnicas = [
     "Todos",
     ...Array.from(new Set(produtos.map((p) => p.categoria))).filter(Boolean),
@@ -100,13 +148,23 @@ function Catalogo() {
         title="Catálogo Digital"
         subtitle="Compartilhe seus produtos pelo WhatsApp, link público ou QR Code"
         actions={
-          <Button
-            onClick={handleShareCatalog}
-            className="bg-success text-success-foreground hover:bg-success/90"
-          >
-            <WhatsAppIcon className="mr-2 h-4 w-4" />
-            Compartilhar catálogo
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={gerarPDF}
+              variant="outline"
+              className="border-slate-200"
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              Gerar PDF
+            </Button>
+            <Button
+              onClick={handleShareCatalog}
+              className="bg-success text-success-foreground hover:bg-success/90"
+            >
+              <WhatsAppIcon className="mr-2 h-4 w-4" />
+              Compartilhar catálogo
+            </Button>
+          </div>
         }
       />
 
@@ -165,95 +223,105 @@ function Catalogo() {
         </div>
       </Card>
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+      <div className="space-y-10">
         {loading ? (
-          <p className="col-span-full text-center text-muted-foreground py-8">
+          <p className="text-center text-muted-foreground py-8">
             Carregando catálogo...
           </p>
         ) : filtrados.length === 0 ? (
-          <p className="col-span-full text-center text-muted-foreground py-8">
+          <p className="text-center text-muted-foreground py-8">
             Nenhum produto encontrado na busca.
           </p>
         ) : (
-          filtrados.map((p, index) => (
-            <Card
-              key={p.id}
-              className="overflow-hidden shadow-card hover:shadow-elevated transition-all group"
-            >
-              <div
-                className={`relative aspect-square overflow-hidden bg-gradient-to-br ${getGradient(index)} grid place-items-center text-7xl`}
-              >
-                {p.imagem ? (
-                  <img src={p.imagem} alt={p.nome} className="w-full h-full object-cover" />
-                ) : (
-                  p.emoji || "🪴"
-                )}
-                <button className="absolute top-3 right-3 z-10 grid h-9 w-9 place-items-center rounded-full bg-white/80 backdrop-blur hover:bg-white">
-                  <Heart className="h-4 w-4 text-destructive" />
-                </button>
-                {p.estoque < 10 && (
-                  <Badge className="absolute top-3 left-3 bg-warning text-warning-foreground border-0">
-                    Últimas unidades
-                  </Badge>
-                )}
+          Array.from(new Set(filtrados.map(p => p.categoria || "Outros"))).map((cat) => {
+            const produtosDaCategoria = filtrados.filter(p => (p.categoria || "Outros") === cat);
+            return (
+              <div key={cat} className="space-y-4">
+                <h2 className="text-2xl font-display font-bold text-slate-800 border-b pb-2">{cat}</h2>
+                <div className="grid grid-cols-2 gap-3 sm:gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                  {produtosDaCategoria.map((p, index) => (
+                    <Card
+                      key={p.id}
+                      className="overflow-hidden shadow-card hover:shadow-elevated transition-all group"
+                    >
+                      <div
+                        className={`relative aspect-square overflow-hidden bg-gradient-to-br ${getGradient(index)} grid place-items-center text-7xl`}
+                      >
+                        {p.imagem ? (
+                          <img src={p.imagem} alt={p.nome} className="w-full h-full object-cover" />
+                        ) : (
+                          p.emoji || "🪴"
+                        )}
+                        <button className="absolute top-3 right-3 z-10 grid h-9 w-9 place-items-center rounded-full bg-white/80 backdrop-blur hover:bg-white">
+                          <Heart className="h-4 w-4 text-destructive" />
+                        </button>
+                        {p.estoque < 10 && (
+                          <Badge className="absolute top-3 left-3 bg-warning text-warning-foreground border-0">
+                            Últimas unidades
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="p-4 flex flex-col h-full">
+                        <h3 className="font-display text-base font-bold mt-0.5 truncate">{p.nome}</h3>
+
+                        <div className="mt-2 flex items-baseline justify-between border-b pb-2 mb-2">
+                          <p className="text-primary font-display text-xl font-extrabold">
+                            R$ {Number(p.valor).toFixed(2).replace(".", ",")}
+                          </p>
+                          <span className="text-xs text-muted-foreground">{p.estoque} disp.</span>
+                        </div>
+
+                        {/* Especificações Sura */}
+                        <div className="py-1 text-xs text-muted-foreground space-y-1 border-b pb-3 mb-3 flex-1">
+                          {p.numero && (
+                            <p>
+                              <span className="font-semibold text-foreground">Número:</span> {p.numero}
+                            </p>
+                          )}
+                          {p.dimensao && (
+                            <p>
+                              <span className="font-semibold text-foreground">Dimensões:</span> {p.dimensao}
+                            </p>
+                          )}
+                          {p.volume && (
+                            <p>
+                              <span className="font-semibold text-foreground">Volume:</span> {p.volume} L
+                            </p>
+                          )}
+                          {p.comprimento && (
+                            <p>
+                              <span className="font-semibold text-foreground">Comprimento:</span>{" "}
+                              {p.comprimento} cm
+                            </p>
+                          )}
+                          {p.cores && p.cores.length > 0 && (
+                            <div className="pt-2">
+                              <p className="font-semibold text-foreground mb-1">Cores:</p>
+                              <ColorDock colors={p.cores} />
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="mt-3 grid grid-cols-[1fr_auto] gap-2">
+                          <Button
+                            onClick={() => handleShare(p.nome)}
+                            size="sm"
+                            className="bg-success text-success-foreground hover:bg-success/90"
+                          >
+                            <WhatsAppIcon className="mr-1.5 h-3.5 w-3.5" />
+                            WhatsApp
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            <ShoppingCart className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
               </div>
-              <div className="p-4">
-                <h3 className="font-display text-base font-bold mt-0.5 truncate">{p.nome}</h3>
-
-                <div className="mt-2 flex items-baseline justify-between border-b pb-2 mb-2">
-                  <p className="text-primary font-display text-xl font-extrabold">
-                    R$ {Number(p.valor).toFixed(2)}
-                  </p>
-                  <span className="text-xs text-muted-foreground">{p.estoque} disp.</span>
-                </div>
-
-                {/* Especificações Sura */}
-                <div className="py-1 text-xs text-muted-foreground space-y-1 border-b pb-3 mb-3">
-                  {p.numero && (
-                    <p>
-                      <span className="font-semibold text-foreground">Número:</span> {p.numero}
-                    </p>
-                  )}
-                  {p.dimensao && (
-                    <p>
-                      <span className="font-semibold text-foreground">Dimensões:</span> {p.dimensao}
-                    </p>
-                  )}
-                  {p.volume && (
-                    <p>
-                      <span className="font-semibold text-foreground">Volume:</span> {p.volume} L
-                    </p>
-                  )}
-                  {p.comprimento && (
-                    <p>
-                      <span className="font-semibold text-foreground">Comprimento:</span>{" "}
-                      {p.comprimento} cm
-                    </p>
-                  )}
-                  {p.cores && p.cores.length > 0 && (
-                    <div className="pt-2">
-                      <p className="font-semibold text-foreground mb-1">Cores:</p>
-                      <ColorDock colors={p.cores} />
-                    </div>
-                  )}
-                </div>
-
-                <div className="mt-3 grid grid-cols-[1fr_auto] gap-2">
-                  <Button
-                    onClick={() => handleShare(p.nome)}
-                    size="sm"
-                    className="bg-success text-success-foreground hover:bg-success/90"
-                  >
-                    <WhatsAppIcon className="mr-1.5 h-3.5 w-3.5" />
-                    WhatsApp
-                  </Button>
-                  <Button size="sm" variant="outline">
-                    <ShoppingCart className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))
+            );
+          })
         )}
       </div>
     </>

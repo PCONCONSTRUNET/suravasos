@@ -305,113 +305,123 @@ function PublicCatalogo() {
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-4 sm:gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+        <div className="space-y-12">
           {loading ? (
-            <p className="col-span-full text-center text-muted-foreground py-8">
+            <p className="text-center text-muted-foreground py-8">
               Carregando catálogo...
             </p>
           ) : filtrados.length === 0 ? (
-            <p className="col-span-full text-center text-muted-foreground py-8">
+            <p className="text-center text-muted-foreground py-8">
               Nenhum produto encontrado com essa busca.
             </p>
           ) : (
-            filtrados.map((p, index) => (
-              <Card
-                key={p.id}
-                className="overflow-hidden shadow-card hover:shadow-elevated transition-all flex flex-col bg-white border-0 ring-1 ring-slate-900/5"
-              >
-                <div
-                  className={`relative aspect-square overflow-hidden bg-gradient-to-br ${getGradient(index)} grid place-items-center text-7xl`}
-                >
-                  {p.imagem ? (
-                    <img src={p.imagem} alt={p.nome} className="w-full h-full object-cover" />
-                  ) : (
-                    p.emoji || "🪴"
-                  )}
-                  {p.estoque < 10 && (
-                    <Badge className="absolute top-3 left-3 bg-warning text-warning-foreground border-0 shadow-sm">
-                      Últimas unidades
-                    </Badge>
-                  )}
-                </div>
-                <div className="p-5 flex flex-col flex-1">
-                  <h3 className="font-display text-lg font-bold text-slate-800 leading-tight">
-                    {p.nome}
-                  </h3>
-                  <p className="text-primary font-display text-2xl font-extrabold mt-2">
-                    R$ {Number(p.valor).toFixed(2).replace(".", ",")}
-                  </p>
-
-                  <div className="py-3 text-xs text-slate-500 space-y-1.5 border-b mb-4">
-                    {p.numero && (
-                      <p>
-                        <span className="font-medium text-slate-700">Número:</span> {p.numero}
-                      </p>
-                    )}
-                    {p.dimensao && (
-                      <p>
-                        <span className="font-medium text-slate-700">Dimensões:</span> {p.dimensao}
-                      </p>
-                    )}
-                    {p.volume && (
-                      <p>
-                        <span className="font-medium text-slate-700">Volume:</span> {p.volume} L
-                      </p>
-                    )}
-                    {p.comprimento && (
-                      <p>
-                        <span className="font-medium text-slate-700">Comprimento:</span>{" "}
-                        {p.comprimento} cm
-                      </p>
-                    )}
-                    {p.cores && p.cores.length > 0 && (
-                      <div className="mt-2">
-                        <p className="font-medium text-slate-700 mb-1">Cores disponíveis:</p>
-                        <ColorDock colors={p.cores} />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="mt-auto">
-                    {cart.find((c) => c.produto.id === p.id) ? (
-                      <div className="flex items-center justify-between bg-slate-100 rounded-lg p-1.5 h-11 border border-slate-200">
-                        <Button
-                          onClick={() => updateQuantity(p.id, -1)}
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8 bg-white shadow-sm shrink-0 hover:bg-white text-lg font-medium"
-                        >
-                          −
-                        </Button>
-                        <input
-                          type="number"
-                          min="1"
-                          value={cart.find((c) => c.produto.id === p.id)?.qtd || ""}
-                          onChange={(e) => setQuantity(p.id, parseInt(e.target.value) || 1)}
-                          className="w-full text-center font-bold bg-transparent border-0 outline-none p-0 focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        />
-                        <Button
-                          onClick={() => updateQuantity(p.id, 1)}
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8 bg-white shadow-sm shrink-0 hover:bg-white text-lg font-medium"
-                        >
-                          +
-                        </Button>
-                      </div>
-                    ) : (
-                      <Button
-                        onClick={() => addToCart(p)}
-                        className="w-full bg-success text-success-foreground hover:bg-success/90 h-11 text-base font-semibold shadow-sm"
+            Array.from(new Set(filtrados.map(p => p.categoria || "Outros"))).map((cat) => {
+              const produtosDaCategoria = filtrados.filter(p => (p.categoria || "Outros") === cat);
+              return (
+                <div key={cat} className="space-y-5">
+                  <h2 className="text-2xl md:text-3xl font-display font-bold text-slate-800 border-b pb-2">{cat}</h2>
+                  <div className="grid grid-cols-2 gap-4 sm:gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                    {produtosDaCategoria.map((p, index) => (
+                      <Card
+                        key={p.id}
+                        className="overflow-hidden shadow-card hover:shadow-elevated transition-all flex flex-col bg-white border-0 ring-1 ring-slate-900/5"
                       >
-                        <ShoppingCart className="mr-2 h-5 w-5" />
-                        Adicionar
-                      </Button>
-                    )}
+                        <div
+                          className={`relative aspect-square overflow-hidden bg-gradient-to-br ${getGradient(index)} grid place-items-center text-7xl`}
+                        >
+                          {p.imagem ? (
+                            <img src={p.imagem} alt={p.nome} className="w-full h-full object-cover" />
+                          ) : (
+                            p.emoji || "🪴"
+                          )}
+                          {p.estoque < 10 && (
+                            <Badge className="absolute top-3 left-3 bg-warning text-warning-foreground border-0 shadow-sm">
+                              Últimas unidades
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="p-5 flex flex-col flex-1">
+                          <h3 className="font-display text-lg font-bold text-slate-800 leading-tight">
+                            {p.nome}
+                          </h3>
+                          <p className="text-primary font-display text-2xl font-extrabold mt-2">
+                            R$ {Number(p.valor).toFixed(2).replace(".", ",")}
+                          </p>
+
+                          <div className="py-3 text-xs text-slate-500 space-y-1.5 border-b mb-4 flex-1">
+                            {p.numero && (
+                              <p>
+                                <span className="font-medium text-slate-700">Número:</span> {p.numero}
+                              </p>
+                            )}
+                            {p.dimensao && (
+                              <p>
+                                <span className="font-medium text-slate-700">Dimensões:</span> {p.dimensao}
+                              </p>
+                            )}
+                            {p.volume && (
+                              <p>
+                                <span className="font-medium text-slate-700">Volume:</span> {p.volume} L
+                              </p>
+                            )}
+                            {p.comprimento && (
+                              <p>
+                                <span className="font-medium text-slate-700">Comprimento:</span>{" "}
+                                {p.comprimento} cm
+                              </p>
+                            )}
+                            {p.cores && p.cores.length > 0 && (
+                              <div className="mt-2">
+                                <p className="font-medium text-slate-700 mb-1">Cores disponíveis:</p>
+                                <ColorDock colors={p.cores} />
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="mt-auto">
+                            {cart.find((c) => c.produto.id === p.id) ? (
+                              <div className="flex items-center justify-between bg-slate-100 rounded-lg p-1.5 h-11 border border-slate-200">
+                                <Button
+                                  onClick={() => updateQuantity(p.id, -1)}
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8 bg-white shadow-sm shrink-0 hover:bg-white text-lg font-medium"
+                                >
+                                  −
+                                </Button>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  value={cart.find((c) => c.produto.id === p.id)?.qtd || ""}
+                                  onChange={(e) => setQuantity(p.id, parseInt(e.target.value) || 1)}
+                                  className="w-full text-center font-bold bg-transparent border-0 outline-none p-0 focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                />
+                                <Button
+                                  onClick={() => updateQuantity(p.id, 1)}
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8 bg-white shadow-sm shrink-0 hover:bg-white text-lg font-medium"
+                                >
+                                  +
+                                </Button>
+                              </div>
+                            ) : (
+                              <Button
+                                onClick={() => addToCart(p)}
+                                className="w-full bg-success text-success-foreground hover:bg-success/90 h-11 text-base font-semibold shadow-sm"
+                              >
+                                <ShoppingCart className="mr-2 h-5 w-5" />
+                                Adicionar
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
                   </div>
                 </div>
-              </Card>
-            ))
+              );
+            })
           )}
         </div>
       </main>

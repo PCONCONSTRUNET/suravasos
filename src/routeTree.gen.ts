@@ -21,6 +21,7 @@ import { Route as ParceiroCadastroRouteImport } from './routes/parceiro.cadastro
 import { Route as OrcamentoIdRouteImport } from './routes/orcamento.$id'
 import { Route as DeclaracaoIdRouteImport } from './routes/declaracao.$id'
 import { Route as AppVendedoresRouteImport } from './routes/app.vendedores'
+import { Route as AppVendasProdutosRouteImport } from './routes/app.vendas-produtos'
 import { Route as AppVendasParceirosRouteImport } from './routes/app.vendas-parceiros'
 import { Route as AppVendasRouteImport } from './routes/app.vendas'
 import { Route as AppVendaNovaRouteImport } from './routes/app.venda-nova'
@@ -104,6 +105,11 @@ const DeclaracaoIdRoute = DeclaracaoIdRouteImport.update({
 const AppVendedoresRoute = AppVendedoresRouteImport.update({
   id: '/vendedores',
   path: '/vendedores',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppVendasProdutosRoute = AppVendasProdutosRouteImport.update({
+  id: '/vendas-produtos',
+  path: '/vendas-produtos',
   getParentRoute: () => AppRoute,
 } as any)
 const AppVendasParceirosRoute = AppVendasParceirosRouteImport.update({
@@ -256,6 +262,7 @@ export interface FileRoutesByFullPath {
   '/app/venda-nova': typeof AppVendaNovaRoute
   '/app/vendas': typeof AppVendasRoute
   '/app/vendas-parceiros': typeof AppVendasParceirosRoute
+  '/app/vendas-produtos': typeof AppVendasProdutosRoute
   '/app/vendedores': typeof AppVendedoresRoute
   '/declaracao/$id': typeof DeclaracaoIdRoute
   '/orcamento/$id': typeof OrcamentoIdRoute
@@ -293,6 +300,7 @@ export interface FileRoutesByTo {
   '/app/venda-nova': typeof AppVendaNovaRoute
   '/app/vendas': typeof AppVendasRoute
   '/app/vendas-parceiros': typeof AppVendasParceirosRoute
+  '/app/vendas-produtos': typeof AppVendasProdutosRoute
   '/app/vendedores': typeof AppVendedoresRoute
   '/declaracao/$id': typeof DeclaracaoIdRoute
   '/orcamento/$id': typeof OrcamentoIdRoute
@@ -332,6 +340,7 @@ export interface FileRoutesById {
   '/app/venda-nova': typeof AppVendaNovaRoute
   '/app/vendas': typeof AppVendasRoute
   '/app/vendas-parceiros': typeof AppVendasParceirosRoute
+  '/app/vendas-produtos': typeof AppVendasProdutosRoute
   '/app/vendedores': typeof AppVendedoresRoute
   '/declaracao/$id': typeof DeclaracaoIdRoute
   '/orcamento/$id': typeof OrcamentoIdRoute
@@ -372,6 +381,7 @@ export interface FileRouteTypes {
     | '/app/venda-nova'
     | '/app/vendas'
     | '/app/vendas-parceiros'
+    | '/app/vendas-produtos'
     | '/app/vendedores'
     | '/declaracao/$id'
     | '/orcamento/$id'
@@ -409,6 +419,7 @@ export interface FileRouteTypes {
     | '/app/venda-nova'
     | '/app/vendas'
     | '/app/vendas-parceiros'
+    | '/app/vendas-produtos'
     | '/app/vendedores'
     | '/declaracao/$id'
     | '/orcamento/$id'
@@ -447,6 +458,7 @@ export interface FileRouteTypes {
     | '/app/venda-nova'
     | '/app/vendas'
     | '/app/vendas-parceiros'
+    | '/app/vendas-produtos'
     | '/app/vendedores'
     | '/declaracao/$id'
     | '/orcamento/$id'
@@ -550,6 +562,13 @@ declare module '@tanstack/react-router' {
       path: '/vendedores'
       fullPath: '/app/vendedores'
       preLoaderRoute: typeof AppVendedoresRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/vendas-produtos': {
+      id: '/app/vendas-produtos'
+      path: '/vendas-produtos'
+      fullPath: '/app/vendas-produtos'
+      preLoaderRoute: typeof AppVendasProdutosRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/vendas-parceiros': {
@@ -748,6 +767,7 @@ interface AppRouteChildren {
   AppVendaNovaRoute: typeof AppVendaNovaRoute
   AppVendasRoute: typeof AppVendasRoute
   AppVendasParceirosRoute: typeof AppVendasParceirosRoute
+  AppVendasProdutosRoute: typeof AppVendasProdutosRoute
   AppVendedoresRoute: typeof AppVendedoresRoute
   AppIndexRoute: typeof AppIndexRoute
 }
@@ -777,6 +797,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppVendaNovaRoute: AppVendaNovaRoute,
   AppVendasRoute: AppVendasRoute,
   AppVendasParceirosRoute: AppVendasParceirosRoute,
+  AppVendasProdutosRoute: AppVendasProdutosRoute,
   AppVendedoresRoute: AppVendedoresRoute,
   AppIndexRoute: AppIndexRoute,
 }
