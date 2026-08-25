@@ -19,7 +19,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { ColorDock } from "@/components/color-dock";
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 const WhatsAppIcon = ({ className }: { className?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -76,50 +75,128 @@ function Catalogo() {
     return matchBusca && matchCategoria;
   });
 
-  const gerarPDF = () => {
+  const gerarPDF = async () => {
     const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 14;
+    const cols = 3;
+    const colWidth = (pageWidth - margin * 2) / cols;
+    const imgSize = colWidth - 6;
+    const cardHeight = imgSize + 28;
+
+    // Fetch imagem como base64
+    const toBase64 = (url: string): Promise<string | null> =>
+      fetch(url)
+        .then((r) => r.blob())
+        .then(
+          (blob) =>
+            new Promise<string | null>((resolve) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result as string);
+              reader.onerror = () => resolve(null);
+              reader.readAsDataURL(blob);
+            }),
+        )
+        .catch(() => null);
+
+    // Pré-carrega todas as imagens em paralelo
+    const imageCache: Record<string, string | null> = {};
+    await Promise.all(
+      filtrados
+        .filter((p) => p.imagem)
+        .map(async (p) => {
+          imageCache[p.id] = await toBase64(p.imagem);
+        }),
+    );
+
+    // Cabeçalho
     let yPos = 15;
-    
-    doc.setFontSize(20);
-    doc.text("Catálogo de Produtos - VivaVerde", 14, yPos);
-    yPos += 10;
-    
-    const categoriasParaPDF = Array.from(new Set(filtrados.map((p) => p.categoria || "Outros")));
-    
-    categoriasParaPDF.forEach((cat) => {
-      const prodCat = filtrados.filter(p => (p.categoria || "Outros") === cat);
-      if (prodCat.length === 0) return;
-      
-      doc.setFontSize(16);
-      doc.text(cat, 14, yPos + 5);
-      yPos += 5;
-      
-      const tableData = prodCat.map(p => [
-        p.nome, 
-        p.codigo || "-", 
-        `R$ ${Number(p.valor).toFixed(2).replace('.', ',')}`, 
-        p.dimensao || "-", 
-        p.cores && p.cores.length > 0 ? p.cores.join(", ") : "-"
-      ]);
-      
-      autoTable(doc, {
-        startY: yPos + 5,
-        head: [['Produto', 'Ref/Código', 'Preço', 'Dimensões', 'Cores']],
-        body: tableData,
-        theme: 'grid',
-        headStyles: { fillColor: [22, 163, 74] }, // Verde similar ao bg-success
-        margin: { top: 10, right: 14, bottom: 10, left: 14 },
-        didDrawPage: (data) => {
-          yPos = data.cursor ? data.cursor.y : yPos;
+    doc.setFontSize(18);
+    doc.setTextColor(22, 163, 74);
+    doc.text("Catálogo de Produtos — VivaVerde", margin, yPos);
+    yPos += 12;
+
+    const categorias = Array.from(new Set(filtrados.map((p) => p.categoria || "Outros")));
+
+    for (const cat of categorias) {
+      const prodsCat = filtrados.filter((p) => (p.categoria || "Outros") === cat);
+      if (!prodsCat.length) continue;
+
+      // Título da categoria
+      if (yPos + 10 > pageHeight - 10) { doc.addPage(); yPos = 15; }
+      doc.setFontSize(13);
+      doc.setTextColor(22, 163, 74);
+      doc.text(cat.toUpperCase(), margin, yPos);
+      yPos += 8;
+
+      let col = 0;
+      let rowStartY = yPos;
+
+      for (const p of prodsCat) {
+        if (col === cols) { col = 0; rowStartY += cardHeight + 6; }
+        if (rowStartY + cardHeight > pageHeight - 10) { doc.addPage(); rowStartY = 15; col = 0; }
+
+        const xPos = margin + col * colWidth;
+
+        // Borda do card
+        doc.setDrawColor(220, 220, 220);
+        doc.setFillColor(250, 250, 250);
+        doc.roundedRect(xPos, rowStartY, colWidth - 2, cardHeight, 2, 2, "FD");
+
+        // Imagem ou placeholder
+        const imgX = xPos + 3;
+        const imgY = rowStartY + 3;
+        const imgW = imgSize - 2;
+        const imgH = imgSize - 2;
+
+        if (p.imagem && imageCache[p.id]) {
+          try {
+            doc.addImage(imageCache[p.id]!, "JPEG", imgX, imgY, imgW, imgH);
+          } catch {
+            doc.setFillColor(230, 230, 230);
+            doc.rect(imgX, imgY, imgW, imgH, "F");
+            doc.setFontSize(6);
+            doc.setTextColor(160, 160, 160);
+            doc.text("Sem foto", imgX + imgW / 2, imgY + imgH / 2, { align: "center" });
+          }
+        } else {
+          doc.setFillColor(230, 230, 230);
+          doc.rect(imgX, imgY, imgW, imgH, "F");
+          doc.setFontSize(6);
+          doc.setTextColor(160, 160, 160);
+          doc.text("Sem foto", imgX + imgW / 2, imgY + imgH / 2, { align: "center" });
         }
-      });
-      yPos = (doc as any).lastAutoTable.finalY + 10;
-      if (yPos > 270) {
-        doc.addPage();
-        yPos = 15;
+
+        // Nome do produto
+        const textY = rowStartY + imgSize + 5;
+        const maxChars = Math.floor((colWidth - 6) / 2.1);
+        const nomeTrunc = p.nome.length > maxChars ? p.nome.slice(0, maxChars - 1) + "…" : p.nome;
+        doc.setFontSize(6.5);
+        doc.setTextColor(40, 40, 40);
+        doc.text(nomeTrunc, xPos + 3, textY);
+
+        // Código
+        doc.setFontSize(5.5);
+        doc.setTextColor(120, 120, 120);
+        doc.text(`Cód: ${p.codigo || "-"}`, xPos + 3, textY + 5);
+
+        // Preço
+        doc.setFontSize(8);
+        doc.setTextColor(22, 163, 74);
+        doc.text(
+          `R$ ${Number(p.valor).toFixed(2).replace(".", ",")}`,
+          xPos + 3,
+          textY + 11,
+        );
+
+        col++;
       }
-    });
-    
+
+      yPos = rowStartY + cardHeight + 12;
+      if (yPos > pageHeight - 10) { doc.addPage(); yPos = 15; }
+    }
+
     doc.save("catalogo-vivaverde.pdf");
   };
 
