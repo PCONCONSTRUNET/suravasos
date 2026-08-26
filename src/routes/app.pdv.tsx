@@ -299,6 +299,20 @@ function PDV() {
     setLoading(true);
 
     try {
+      // Pega o último número gerado para evitar pulos
+      let nextNumero = 1;
+      const { data: maxVenda } = await supabase
+        .from("vendas")
+        .select("numero")
+        .not("numero", "is", null)
+        .order("numero", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (maxVenda && maxVenda.numero) {
+        nextNumero = Number(maxVenda.numero) + 1;
+      }
+
       // Cria a venda
       const { data: vendaData, error: vendaError } = await supabase
         .from("vendas")
@@ -309,6 +323,7 @@ function PDV() {
             valor_total: subtotal,
             cliente_id: clienteSelecionado?.id === "avulso" ? null : clienteSelecionado?.id || null,
             metodo_pagamento: metodoPagamento,
+            numero: nextNumero,
           },
         ])
         .select()
