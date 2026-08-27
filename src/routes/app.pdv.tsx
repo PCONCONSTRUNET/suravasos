@@ -33,6 +33,7 @@ function PDV() {
   const [cart, setCart] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [metodoPagamento, setMetodoPagamento] = useState("Cartão");
+  const [descontoValor, setDescontoValor] = useState(0);
 
   const [orcamentos, setOrcamentos] = useState<any[]>([]);
   const [isOrcamentoModalOpen, setIsOrcamentoModalOpen] = useState(false);
@@ -220,6 +221,7 @@ function PDV() {
     setOrcamentoIdSelecionado(null);
     setOrcamentoOrigem(null);
     setClienteSelecionado(null);
+    setDescontoValor(0);
   };
 
   const addToCart = (produto: any) => {
@@ -305,6 +307,7 @@ function PDV() {
   };
 
   const subtotal = cart.reduce((s, i) => s + i.t, 0);
+  const totalPagamento = Math.max(0, subtotal - descontoValor);
 
   const handleFinalizar = async () => {
     if (cart.length === 0) return;
@@ -332,7 +335,7 @@ function PDV() {
           {
             tipo: "PDV",
             status: "Pago",
-            valor_total: subtotal,
+            valor_total: totalPagamento,
             cliente_id: clienteSelecionado?.id === "avulso" ? null : clienteSelecionado?.id || null,
             metodo_pagamento: metodoPagamento,
             numero: nextNumero,
@@ -362,7 +365,7 @@ function PDV() {
         {
           venda_id: vendaId,
           descricao: `Venda PDV #${vendaData.numero ? String(vendaData.numero).padStart(3, "0") : vendaData.numero_venda || vendaId.substring(0, 8).toUpperCase()}`,
-          valor: subtotal,
+          valor: totalPagamento,
           vencimento: dataAtual,
           status: "Recebido",
           data_pagamento: dataAtual,
@@ -572,14 +575,24 @@ function PDV() {
                 <span className="text-muted-foreground">Subtotal</span>
                 <span>R$ {subtotal.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center text-sm">
                 <span className="text-muted-foreground">Desconto</span>
-                <span>R$ 0,00</span>
+                <div className="flex items-center gap-1 font-semibold text-destructive">
+                  <span>- R$</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={descontoValor}
+                    onChange={(e) => setDescontoValor(parseFloat(e.target.value) || 0)}
+                    className="w-20 text-right bg-transparent border-b border-dashed border-destructive/50 outline-none focus:border-destructive p-0 m-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                </div>
               </div>
             </div>
             <div className="rounded-xl bg-gradient-brand p-5 text-primary-foreground">
               <p className="text-xs uppercase tracking-widest opacity-80">Total a pagar</p>
-              <p className="font-display text-4xl font-extrabold mt-1">R$ {subtotal.toFixed(2)}</p>
+              <p className="font-display text-4xl font-extrabold mt-1">R$ {totalPagamento.toFixed(2)}</p>
             </div>
             <div>
               <p className="text-xs font-semibold uppercase text-muted-foreground tracking-wider mb-2">

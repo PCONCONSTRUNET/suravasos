@@ -55,7 +55,7 @@ function NovaVenda() {
   const [produtoSelecionado, setProdutoSelecionado] = useState("");
   const [quantidade, setQuantidade] = useState(1);
   const [openProduto, setOpenProduto] = useState(false);
-  const [descontoPerc, setDescontoPerc] = useState(0);
+  const [descontoValor, setDescontoValor] = useState(0);
   const [freteValor, setFreteValor] = useState(0);
 
   // States for new client modal
@@ -182,7 +182,6 @@ function NovaVenda() {
     setLoading(true);
     try {
       const subtotal = itens.reduce((acc, i) => acc + i.subtotal, 0);
-      const descontoValor = subtotal * (descontoPerc / 100);
       const totalVenda = subtotal - descontoValor + freteValor;
 
       // Pega o último número gerado para evitar pulos
@@ -483,15 +482,25 @@ function NovaVenda() {
                 <span className="text-muted-foreground">Subtotal ({itens.length} itens)</span>
                 <span className="font-semibold">R$ {valorTotal.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm items-center">
                 <span className="text-muted-foreground">Descontos</span>
-                <span className="font-semibold">R$ 0,00</span>
+                <div className="flex items-center gap-1 font-semibold text-destructive">
+                  <span>- R$</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={descontoValor}
+                    onChange={(e) => setDescontoValor(parseFloat(e.target.value) || 0)}
+                    className="w-20 text-right bg-transparent border-b border-dashed border-destructive/50 outline-none focus:border-destructive p-0 m-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                </div>
               </div>
               <div className="h-px w-full bg-border my-2" />
               <div className="flex justify-between items-center">
                 <span className="font-semibold text-lg">Total</span>
                 <span className="font-display text-2xl font-bold text-brand">
-                  R$ {valorTotal.toFixed(2)}
+                  R$ {Math.max(0, valorTotal - descontoValor).toFixed(2)}
                 </span>
               </div>
             </div>
