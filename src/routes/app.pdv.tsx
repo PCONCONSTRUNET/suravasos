@@ -288,6 +288,18 @@ function PDV() {
     );
   };
 
+  const setUnitPrice = (id: string, newU: number) => {
+    setCart((prev) =>
+      prev.map((i) => {
+        if (i.id === id) {
+          if (newU < 0) return i;
+          return { ...i, u: newU, t: i.q * newU };
+        }
+        return i;
+      }),
+    );
+  };
+
   const removeFromCart = (id: string) => {
     setCart((prev) => prev.filter((i) => i.id !== id));
   };
@@ -474,7 +486,18 @@ function PDV() {
                       </div>
                       <div className="min-w-0">
                         <p className="font-semibold truncate">{i.p}</p>
-                        <p className="text-xs text-muted-foreground">R$ {i.u.toFixed(2)} un</p>
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
+                          R$ 
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={i.u}
+                            onChange={(e) => setUnitPrice(i.id, parseFloat(e.target.value) || 0)}
+                            className="w-16 bg-transparent border-b border-dashed border-slate-300 outline-none focus:border-brand p-0 m-0 text-slate-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          />
+                          un
+                        </div>
                       </div>
                       <div className="flex items-center gap-1">
                         <Button

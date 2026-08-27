@@ -117,6 +117,13 @@ function NovaVenda() {
     setItens(novosItens);
   };
 
+  const handleUpdateValorUnitario = (index: number, novoValor: number) => {
+    const novosItens = [...itens];
+    novosItens[index].valor_unitario = novoValor;
+    novosItens[index].subtotal = novoValor * novosItens[index].quantidade;
+    setItens(novosItens);
+  };
+
   const valorTotal = itens.reduce((acc, item) => acc + item.subtotal, 0);
 
   const handleSalvar = async () => {
@@ -433,7 +440,17 @@ function NovaVenda() {
                         <TableCell className="font-semibold">{item.nome}</TableCell>
                         <TableCell className="text-right">{item.quantidade}</TableCell>
                         <TableCell className="text-right">
-                          R$ {item.valor_unitario.toFixed(2)}
+                          <div className="flex items-center justify-end gap-1">
+                            R$ 
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={item.valor_unitario}
+                              onChange={(e) => handleUpdateValorUnitario(index, parseFloat(e.target.value) || 0)}
+                              className="w-20 text-right bg-transparent border-b border-dashed border-slate-300 outline-none focus:border-brand p-0 m-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            />
+                          </div>
                         </TableCell>
                         <TableCell className="text-right font-bold">
                           R$ {item.subtotal.toFixed(2)}

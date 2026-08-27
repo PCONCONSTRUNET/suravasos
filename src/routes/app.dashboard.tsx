@@ -86,46 +86,130 @@ function Dashboard() {
     clientesAtivos: 0,
     entregasPendentes: 0,
     recent: [] as any[],
+    ticketMedio: 0,
+    margemLiquida: 0,
+    otif: 0,
+    maisVendidos: [] as any[],
+    mixCategorias: [] as any[],
+    vendasVsCompras: [] as any[],
   });
 
   useEffect(() => {
     async function loadData() {
       const { data: vendasData } = await supabase
         .from("vendas")
-        .select("*")
+        .select("*, vendas_itens(*, produto:produtos(nome, categoria)), clientes(nome)")
         .in("tipo", ["VENDA", "PDV", "Afiliado"])
         .or("status_aprovacao.neq.Pendente,status_aprovacao.is.null");
+      
       const { count: produtosCount } = await supabase
         .from("produtos")
         .select("*", { count: "exact", head: true })
         .eq("status", "Ativo");
+        
       const { count: clientesCount } = await supabase
         .from("clientes")
         .select("*", { count: "exact", head: true });
-      const { data: vendasRecentes } = await supabase
-        .from("vendas")
-        .select("*, clientes(nome)")
-        .in("tipo", ["VENDA", "PDV", "Afiliado"])
-        .or("status_aprovacao.neq.Pendente,status_aprovacao.is.null")
-        .order("created_at", { ascending: false })
-        .limit(5);
+        
+      const { data: receitasData } = await supabase
+        .from("contas_receber")
+        .select("valor, created_at")
+        .eq("status", "Recebido");
+        
+      const { data: despesasData } = await supabase
+        .from("contas_pagar")
+        .select("valor, created_at")
+        .eq("status", "Pago");
 
       let fat = 0;
       let pedHoje = 0;
       let entPend = 0;
-      const hoje = new Date().toISOString().split("T")[0];
+      let vendasValidasMes = 0;
+      let entreguesMes = 0;
+      let validVendasCount = 0;
+      
+      const hojeStr = new Date().toISOString().split("T")[0];
+      const inicioMesAtual = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+
+      const produtoQtds: Record<string, number> = {};
+      const catValores: Record<string, number> = {};
 
       vendasData?.forEach((v) => {
-        if (
-          v.status !== "Cancelada" &&
-          v.status !== "Rejeitada" &&
-          v.status_aprovacao !== "Rejeitada"
-        ) {
+        const isValida = v.status !== "Cancelada" && v.status !== "Rejeitada" && v.status_aprovacao !== "Rejeitada";
+        const dataVenda = new Date(v.created_at);
+        
+        if (isValida) {
           fat += Number(v.valor_total || v.total || 0);
+          validVendasCount++;
+          
+          if (dataVenda >= inicioMesAtual) {
+            vendasValidasMes++;
+            if (v.status === "Entregue" || v.status === "Pago" || v.status === "Faturado") {
+                entreguesMes++;
+            }
+            
+            v.vendas_itens?.forEach((i: any) => {
+               const pName = i.produto?.nome || "Avulso";
+               const pCat = i.produto?.categoria || "Outros";
+               const q = Number(i.quantidade || 1);
+               const subt = Number(i.subtotal || i.valor_unitario * q || 0);
+               
+               produtoQtds[pName] = (produtoQtds[pName] || 0) + q;
+               catValores[pCat] = (catValores[pCat] || 0) + subt;
+            });
+          }
         }
-        if (v.created_at?.startsWith(hoje)) pedHoje++;
+        if (v.created_at?.startsWith(hojeStr)) pedHoje++;
         if (v.status === "PENDENTE" || v.status === "Pendente" || v.status === "EM_ROTA") entPend++;
       });
+      
+      const ticketMedio = validVendasCount > 0 ? fat / validVendasCount : 0;
+      const otif = vendasValidasMes > 0 ? (entreguesMes / vendasValidasMes) * 100 : 0;
+
+      const receitasMes = receitasData?.filter(r => new Date(r.created_at) >= inicioMesAtual).reduce((acc, curr) => acc + Number(curr.valor), 0) || 0;
+      const despesasMes = despesasData?.filter(r => new Date(r.created_at) >= inicioMesAtual).reduce((acc, curr) => acc + Number(curr.valor), 0) || 0;
+      const margemLiquida = receitasMes > 0 ? ((receitasMes - despesasMes) / receitasMes) * 100 : 0;
+      
+      const maisVendidos = Object.entries(produtoQtds)
+        .map(([name, v]) => ({ name: name.substring(0, 15) + (name.length > 15 ? "..." : ""), v }))
+        .sort((a, b) => b.v - a.v)
+        .slice(0, 5);
+        
+      const COLORS = ["#22C55E", "#3B82F6", "#F59E0B", "#8B5CF6", "#EC4899", "#64748B"];
+      const mixCategorias = Object.entries(catValores)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([name, value], idx) => ({ name, value, fill: COLORS[idx % COLORS.length] }));
+
+      const vendasVsCompras = [];
+      for (let i = 11; i >= 0; i--) {
+        const d = new Date();
+        d.setMonth(d.getMonth() - i);
+        const mes = d.getMonth();
+        const ano = d.getFullYear();
+        const label = d.toLocaleString('pt-BR', { month: 'short' });
+        
+        const recMes = receitasData?.filter(r => {
+            const dt = new Date(r.created_at);
+            return dt.getMonth() === mes && dt.getFullYear() === ano;
+        }).reduce((acc, curr) => acc + Number(curr.valor), 0) || 0;
+        
+        const despMes = despesasData?.filter(r => {
+            const dt = new Date(r.created_at);
+            return dt.getMonth() === mes && dt.getFullYear() === ano;
+        }).reduce((acc, curr) => acc + Number(curr.valor), 0) || 0;
+        
+        vendasVsCompras.push({
+            m: label,
+            v: recMes,
+            c: despMes
+        });
+      }
+      
+      const vendasRecentes = vendasData
+          ?.filter(v => v.status !== "Cancelada" && v.status !== "Rejeitada")
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+          .slice(0, 5) || [];
 
       setStats({
         faturamento: fat,
@@ -133,7 +217,13 @@ function Dashboard() {
         produtosEstoque: produtosCount || 0,
         clientesAtivos: clientesCount || 0,
         entregasPendentes: entPend,
-        recent: vendasRecentes || [],
+        recent: vendasRecentes,
+        ticketMedio,
+        margemLiquida,
+        otif,
+        maisVendidos,
+        mixCategorias,
+        vendasVsCompras
       });
     }
     loadData();
@@ -250,7 +340,7 @@ function Dashboard() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={280}>
-              <AreaChart data={[]}>
+              <AreaChart data={stats.vendasVsCompras}>
                 <defs>
                   <linearGradient id="gv" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#166534" stopOpacity={0.4} />
@@ -305,7 +395,7 @@ function Dashboard() {
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
                 <Pie
-                  data={[]}
+                  data={stats.mixCategorias}
                   dataKey="value"
                   innerRadius={55}
                   outerRadius={85}
@@ -315,7 +405,19 @@ function Dashboard() {
               </PieChart>
             </ResponsiveContainer>
             <ul className="mt-2 space-y-1.5 text-sm text-center text-muted-foreground">
-              <li>Sem dados suficientes.</li>
+              {stats.mixCategorias.length === 0 ? (
+                <li>Sem dados suficientes.</li>
+              ) : (
+                stats.mixCategorias.map((c: any) => (
+                  <li key={c.name} className="flex items-center justify-between px-4">
+                    <span className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: c.fill }} />
+                      {c.name}
+                    </span>
+                    <span className="font-semibold">R$ {c.value.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                  </li>
+                ))
+              )}
             </ul>
           </CardContent>
         </Card>
@@ -350,7 +452,7 @@ function Dashboard() {
                     <div className="text-right">
                       <p className="text-sm font-semibold">
                         R${" "}
-                        {Number(r.total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        {Number(r.valor_total || r.total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                       </p>
                       <Badge variant="secondary" className="mt-0.5 text-[10px]">
                         {r.status}
@@ -370,7 +472,7 @@ function Dashboard() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={230}>
-              <BarChart data={[]} layout="vertical" margin={{ left: 10 }}>
+              <BarChart data={stats.maisVendidos} layout="vertical" margin={{ left: 10 }}>
                 <CartesianGrid horizontal={false} stroke="#e2e8f0" />
                 <XAxis
                   type="number"
@@ -398,9 +500,9 @@ function Dashboard() {
 
       <div className="mt-6 grid gap-6 md:grid-cols-3">
         {[
-          { title: "Margem líquida", value: "0,0%", icon: TrendingUp, tone: "text-success" },
-          { title: "Ticket médio", value: "R$ 0,00", icon: DollarSign, tone: "text-primary" },
-          { title: "OTIF (entregas no prazo)", value: "0,0%", icon: Truck, tone: "text-info" },
+          { title: "Margem líquida", value: `${stats.margemLiquida.toFixed(1)}%`, icon: TrendingUp, tone: "text-success" },
+          { title: "Ticket médio", value: `R$ ${stats.ticketMedio.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, icon: DollarSign, tone: "text-primary" },
+          { title: "OTIF (entregas no prazo)", value: `${stats.otif.toFixed(1)}%`, icon: Truck, tone: "text-info" },
         ].map((s) => (
           <Card key={s.title} className="shadow-card">
             <CardContent className="flex items-center justify-between p-6">
