@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Calculator, Trash2 } from "lucide-react";
+import { Plus, Calculator, Trash2, Check, X, Pencil } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useConfirm } from "@/contexts/ConfirmContext";
@@ -45,6 +45,9 @@ function Vendas() {
   const [openSheet, setOpenSheet] = useState(false);
   const [vendaItens, setVendaItens] = useState<any[]>([]);
   const [loadingItens, setLoadingItens] = useState(false);
+  
+  const [isEditingTotal, setIsEditingTotal] = useState(false);
+  const [newTotalValue, setNewTotalValue] = useState("");
 
   const fetchVendas = async () => {
     try {
@@ -72,6 +75,7 @@ function Vendas() {
   const handleOpenDetails = async (venda: any) => {
     setSelectedVenda(venda);
     setOpenSheet(true);
+    setIsEditingTotal(false);
     setLoadingItens(true);
     try {
       const { data, error } = await supabase
@@ -175,6 +179,33 @@ function Vendas() {
       setVendas((prev) => prev.map((v) => (v.id === id ? { ...v, status: newStatus } : v)));
     } catch (err: any) {
       alert("Erro ao atualizar status: " + err.message);
+    }
+  };
+
+  const handleEditTotal = () => {
+    setNewTotalValue(selectedVenda?.valor_total?.toString() || "0");
+    setIsEditingTotal(true);
+  };
+
+  const handleSaveTotal = async () => {
+    const val = parseFloat(newTotalValue);
+    if (isNaN(val) || val < 0) {
+      alert("Valor inválido");
+      return;
+    }
+    try {
+      const { error: err1 } = await supabase.from("vendas").update({ valor_total: val }).eq("id", selectedVenda.id);
+      if (err1) throw err1;
+      
+      // Also update contas_receber if it exists
+      const { error: err2 } = await supabase.from("contas_receber").update({ valor: val }).eq("venda_id", selectedVenda.id);
+      if (err2) throw err2;
+      
+      setSelectedVenda((prev: any) => ({ ...prev, valor_total: val }));
+      setVendas((prev) => prev.map((v) => (v.id === selectedVenda.id ? { ...v, valor_total: val } : v)));
+      setIsEditingTotal(false);
+    } catch (err: any) {
+      alert("Erro ao atualizar valor: " + err.message);
     }
   };
 
@@ -316,15 +347,39 @@ function Vendas() {
                 </Select>
               </div>
               <div>
-                <span className="text-muted-foreground block text-xs uppercase tracking-wider">
+                <span className="text-muted-foreground block text-xs uppercase tracking-wider mb-1">
                   Total
                 </span>
-                <span className="font-bold text-base">
-                  R${" "}
-                  {Number(selectedVenda?.valor_total || 0).toLocaleString("pt-BR", {
-                    minimumFractionDigits: 2,
-                  })}
-                </span>
+                {isEditingTotal ? (
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-base">R$</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={newTotalValue}
+                      onChange={(e) => setNewTotalValue(e.target.value)}
+                      className="w-24 border-b border-dashed border-slate-400 outline-none bg-transparent font-semibold"
+                    />
+                    <Button size="icon" variant="ghost" className="h-6 w-6 text-success" onClick={handleSaveTotal}>
+                      <Check className="h-4 w-4" />
+                    </Button>
+                    <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => setIsEditingTotal(false)}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-base">
+                      R${" "}
+                      {Number(selectedVenda?.valor_total || 0).toLocaleString("pt-BR", {
+                        minimumFractionDigits: 2,
+                      })}
+                    </span>
+                    <Button size="icon" variant="ghost" className="h-6 w-6 opacity-40 hover:opacity-100" onClick={handleEditTotal}>
+                      <Pencil className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
 
