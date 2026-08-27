@@ -66,7 +66,7 @@ function NovoDAV() {
   const [itens, setItens] = useState<
     { id: number; produto_id?: string; codigo: string; produto: string; qtd: number; vlrUnit: number; openSearch: boolean; imagem?: string }[]
   >([]);
-  const [descontoPerc, setDescontoPerc] = useState(0);
+  const [descontoValor, setDescontoValor] = useState(0);
   const [freteValor, setFreteValor] = useState(0);
   const [produtos, setProdutos] = useState<any[]>([]);
 
@@ -154,7 +154,7 @@ function NovoDAV() {
               frete: dav.frete_tipo || "Retirada",
               prazo: dav.prazo_entrega || "Imediato",
             });
-            setDescontoPerc(dav.desconto_percentual || 0);
+            setDescontoValor(dav.desconto_valor || 0);
             setFreteValor(dav.frete_valor || 0);
             setObservacoes(dav.observacoes || "");
           }
@@ -271,8 +271,7 @@ function NovoDAV() {
   }, []);
 
   const subtotal = itens.reduce((acc, item) => acc + item.qtd * item.vlrUnit, 0);
-  const descontoValor = subtotal * (descontoPerc / 100);
-  const total = subtotal - descontoValor + freteValor;
+  const total = Math.max(0, subtotal - descontoValor) + freteValor;
 
   const handleSalvar = async () => {
     if (!cliente.nome) {
@@ -327,7 +326,7 @@ function NovoDAV() {
         frete_tipo: condicoes.frete,
         prazo_entrega: condicoes.prazo,
         subtotal: subtotal,
-        desconto_percentual: descontoPerc,
+        desconto_percentual: 0,
         desconto_valor: descontoValor,
         frete_valor: freteValor,
         total: total,
@@ -723,14 +722,14 @@ function NovoDAV() {
               <span className="font-medium">R$ {subtotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Desc. (%)</span>
+              <span className="text-sm text-muted-foreground">Desconto (R$)</span>
               <Input
-                className="w-20 h-8 text-right"
+                className="w-24 h-8 text-right text-destructive font-semibold"
                 type="number"
                 min="0"
-                max="100"
-                value={descontoPerc}
-                onChange={(e) => setDescontoPerc(Number(e.target.value))}
+                step="0.01"
+                value={descontoValor}
+                onChange={(e) => setDescontoValor(Number(e.target.value))}
               />
             </div>
             <div className="flex justify-between items-center">
