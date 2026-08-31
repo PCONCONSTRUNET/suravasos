@@ -130,7 +130,12 @@ function Produtos() {
       let valA = a[sortColumn];
       let valB = b[sortColumn];
 
-      if (sortColumn === "codigo" || sortColumn === "nome" || sortColumn === "categoria" || sortColumn === "status") {
+      if (sortColumn === "codigo") {
+        const strA = valA ? String(valA) : "";
+        const strB = valB ? String(valB) : "";
+        const compare = strA.localeCompare(strB, undefined, { numeric: true, sensitivity: 'base' });
+        return sortDirection === "asc" ? compare : -compare;
+      } else if (sortColumn === "nome" || sortColumn === "categoria" || sortColumn === "status") {
         valA = valA ? String(valA).toLowerCase() : "";
         valB = valB ? String(valB).toLowerCase() : "";
       } else if (sortColumn === "estoque" || sortColumn === "valor") {
