@@ -12,8 +12,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Filter, Plus, Search, Pencil, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Filter, Plus, Search, Pencil, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import {
@@ -35,6 +35,12 @@ function Produtos() {
   const [loading, setLoading] = useState(true);
   const [busca, setBusca] = useState("");
   const [categoriaFilter, setCategoriaFilter] = useState("Todas");
+
+  // Sorting state
+  type SortColumn = "codigo" | "nome" | "categoria" | "estoque" | "valor" | "status" | "created_at";
+  type SortDirection = "asc" | "desc";
+  const [sortColumn, setSortColumn] = useState<SortColumn>("created_at");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
   const fetchProducts = async () => {
     try {
@@ -77,13 +83,80 @@ function Produtos() {
   const criticos = products.filter((p) => p.status === "Crítico").length;
   const inativos = products.filter((p) => p.status === "Inativo").length;
 
-  const filteredProducts = products.filter((p) => {
-    const matchBusca =
-      p.nome.toLowerCase().includes(busca.toLowerCase()) ||
-      (p.codigo && p.codigo.toLowerCase().includes(busca.toLowerCase()));
-    const matchCat = categoriaFilter === "Todas" || p.categoria === categoriaFilter;
-    return matchBusca && matchCat;
-  });
+  const handleSort = (column: SortColumn) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+  };
+
+  const filteredProducts = useMemo(() => {
+    let result = products.filter((p) => {
+      const matchBusca =
+        p.nome.toLowerCase().includes(busca.toLowerCase()) ||
+        (p.codigo && String(p.codigo).toLowerCase().includes(busca.toLowerCase()));
+      const matchCat = categoriaFilter === "Todas" || p.categoria === categoriaFilter;
+      return matchBusca && matchCat;
+    });
+
+    result.sort((a, b) => {
+      // Se há busca e não mudamos a ordenação padrão, prioriza a busca exata
+      if (busca && sortColumn === "created_at" && sortDirection === "desc") {
+        const bLower = busca.toLowerCase();
+
+        const aExactCode = a.codigo && String(a.codigo).toLowerCase() === bLower;
+        const bExactCode = b.codigo && String(b.codigo).toLowerCase() === bLower;
+        if (aExactCode && !bExactCode) return -1;
+        if (!aExactCode && bExactCode) return 1;
+
+        const aStartsCode = a.codigo && String(a.codigo).toLowerCase().startsWith(bLower);
+        const bStartsCode = b.codigo && String(b.codigo).toLowerCase().startsWith(bLower);
+        if (aStartsCode && !bStartsCode) return -1;
+        if (!aStartsCode && bStartsCode) return 1;
+
+        const aExactName = a.nome && a.nome.toLowerCase() === bLower;
+        const bExactName = b.nome && b.nome.toLowerCase() === bLower;
+        if (aExactName && !bExactName) return -1;
+        if (!aExactName && bExactName) return 1;
+
+        const aStartsName = a.nome && a.nome.toLowerCase().startsWith(bLower);
+        const bStartsName = b.nome && b.nome.toLowerCase().startsWith(bLower);
+        if (aStartsName && !bStartsName) return -1;
+        if (!aStartsName && bStartsName) return 1;
+      }
+
+      let valA = a[sortColumn];
+      let valB = b[sortColumn];
+
+      if (sortColumn === "codigo" || sortColumn === "nome" || sortColumn === "categoria" || sortColumn === "status") {
+        valA = valA ? String(valA).toLowerCase() : "";
+        valB = valB ? String(valB).toLowerCase() : "";
+      } else if (sortColumn === "estoque" || sortColumn === "valor") {
+        valA = Number(valA || 0);
+        valB = Number(valB || 0);
+      } else if (sortColumn === "created_at") {
+        valA = new Date(valA || 0).getTime();
+        valB = new Date(valB || 0).getTime();
+      }
+
+      if (valA < valB) return sortDirection === "asc" ? -1 : 1;
+      if (valA > valB) return sortDirection === "asc" ? 1 : -1;
+      return 0;
+    });
+
+    return result;
+  }, [products, busca, categoriaFilter, sortColumn, sortDirection]);
+
+  const SortIcon = ({ column }: { column: SortColumn }) => {
+    if (sortColumn !== column) return <ArrowUpDown className="ml-1 h-3 w-3 inline-block opacity-50" />;
+    return sortDirection === "asc" ? (
+      <ArrowUp className="ml-1 h-3 w-3 inline-block" />
+    ) : (
+      <ArrowDown className="ml-1 h-3 w-3 inline-block" />
+    );
+  };
 
   return (
     <>
@@ -156,12 +229,24 @@ function Produtos() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Código</TableHead>
-                <TableHead>Produto</TableHead>
-                <TableHead>Categoria</TableHead>
-                <TableHead className="text-right">Estoque</TableHead>
-                <TableHead className="text-right">Valor</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead className="cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort("codigo")}>
+                  Código <SortIcon column="codigo" />
+                </TableHead>
+                <TableHead className="cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort("nome")}>
+                  Produto <SortIcon column="nome" />
+                </TableHead>
+                <TableHead className="cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort("categoria")}>
+                  Categoria <SortIcon column="categoria" />
+                </TableHead>
+                <TableHead className="text-right cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort("estoque")}>
+                  Estoque <SortIcon column="estoque" />
+                </TableHead>
+                <TableHead className="text-right cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort("valor")}>
+                  Valor <SortIcon column="valor" />
+                </TableHead>
+                <TableHead className="cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort("status")}>
+                  Status <SortIcon column="status" />
+                </TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>

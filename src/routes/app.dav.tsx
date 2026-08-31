@@ -11,8 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, FileText, Download, Printer, Trash2, Pencil } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Plus, Search, FileText, Download, Printer, Trash2, Pencil, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import {
@@ -32,6 +32,12 @@ function DAVList() {
   const confirm = useConfirm();
   const [davs, setDavs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Sorting state
+  type SortColumn = "numero" | "cliente_nome" | "created_at" | "total" | "status";
+  type SortDirection = "asc" | "desc";
+  const [sortColumn, setSortColumn] = useState<SortColumn>("created_at");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
   // States for Details Sheet
   const [selectedDav, setSelectedDav] = useState<any>(null);
@@ -132,6 +138,52 @@ function DAVList() {
     return "bg-info/15 text-info border-0"; // Orçamento Aberto
   };
 
+  const handleSort = (column: SortColumn) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+  };
+
+  const sortedDavs = useMemo(() => {
+    return [...davs].sort((a, b) => {
+      let valA = a[sortColumn];
+      let valB = b[sortColumn];
+
+      if (sortColumn === "numero") {
+        valA = valA || a.id;
+        valB = valB || b.id;
+      } else if (sortColumn === "created_at") {
+        valA = new Date(valA).getTime();
+        valB = new Date(valB).getTime();
+      } else if (sortColumn === "total") {
+        valA = Number(valA || 0);
+        valB = Number(valB || 0);
+      } else if (sortColumn === "cliente_nome") {
+        valA = (valA || "").toLowerCase();
+        valB = (valB || "").toLowerCase();
+      } else if (sortColumn === "status") {
+        valA = (valA || "Aberto").toLowerCase();
+        valB = (valB || "Aberto").toLowerCase();
+      }
+
+      if (valA < valB) return sortDirection === "asc" ? -1 : 1;
+      if (valA > valB) return sortDirection === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [davs, sortColumn, sortDirection]);
+
+  const SortIcon = ({ column }: { column: SortColumn }) => {
+    if (sortColumn !== column) return <ArrowUpDown className="ml-1 h-3 w-3 inline-block opacity-50" />;
+    return sortDirection === "asc" ? (
+      <ArrowUp className="ml-1 h-3 w-3 inline-block" />
+    ) : (
+      <ArrowDown className="ml-1 h-3 w-3 inline-block" />
+    );
+  };
+
   return (
     <>
       <PageHeader
@@ -150,11 +202,21 @@ function DAVList() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nº</TableHead>
-              <TableHead>Cliente</TableHead>
-              <TableHead>Data</TableHead>
-              <TableHead className="text-right">Valor</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead className="cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort("numero")}>
+                Nº <SortIcon column="numero" />
+              </TableHead>
+              <TableHead className="cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort("cliente_nome")}>
+                Cliente <SortIcon column="cliente_nome" />
+              </TableHead>
+              <TableHead className="cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort("created_at")}>
+                Data <SortIcon column="created_at" />
+              </TableHead>
+              <TableHead className="text-right cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort("total")}>
+                Valor <SortIcon column="total" />
+              </TableHead>
+              <TableHead className="cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort("status")}>
+                Status <SortIcon column="status" />
+              </TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -172,7 +234,7 @@ function DAVList() {
                 </TableCell>
               </TableRow>
             ) : (
-              davs.map((v) => (
+              sortedDavs.map((v) => (
                 <TableRow
                   key={v.id}
                   className="cursor-pointer hover:bg-muted/50"
