@@ -4,7 +4,7 @@ import { supabaseParceiro as supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Trash2, ShoppingCart, CheckCircle2 } from "lucide-react";
+import { Search, Trash2, ShoppingCart, CheckCircle2, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -44,6 +44,8 @@ function ParceiroPDV() {
   const [searchTerm, setSearchTerm] = useState("");
   const [davGeradoId, setDavGeradoId] = useState<string | null>(null);
   const [davGeradoNumero, setDavGeradoNumero] = useState<string | number | null>(null);
+  const [cnpjLoading, setCnpjLoading] = useState(false);
+  const [cnpjErro, setCnpjErro] = useState("");
 
   useEffect(() => {
     const init = async () => {
@@ -201,6 +203,51 @@ function ParceiroPDV() {
   };
 
   const subtotal = cart.reduce((s, i) => s + i.t, 0);
+
+  const buscarCnpj = async () => {
+    const cnpjLimpo = clientForm.documento.replace(/\D/g, "");
+    if (cnpjLimpo.length !== 14) {
+      setCnpjErro("Digite um CNPJ válido com 14 dígitos.");
+      return;
+    }
+    setCnpjErro("");
+    setCnpjLoading(true);
+    try {
+      const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpjLimpo}`);
+      if (!res.ok) {
+        setCnpjErro("CNPJ não encontrado na Receita Federal.");
+        return;
+      }
+      const data = await res.json();
+      const tel = data.ddd_telefone_1
+        ? data.ddd_telefone_1.replace(/(\d{2})(\d{4,5})(\d{4})/, "($1) $2-$3")
+        : clientForm.telefone;
+      const cepFmt = data.cep
+        ? data.cep.replace(/\D/g, "").replace(/(\d{5})(\d{3})/, "$1-$2")
+        : "";
+      const tipoLogradouro = data.descricao_tipo_de_logradouro
+        ? data.descricao_tipo_de_logradouro + " "
+        : "";
+      const cidade = data.municipio
+        ? data.municipio.charAt(0) + data.municipio.slice(1).toLowerCase()
+        : clientForm.cidade;
+      setClientForm((prev) => ({
+        ...prev,
+        nome: data.razao_social || prev.nome,
+        telefone: tel,
+        cep: cepFmt,
+        endereco: tipoLogradouro + (data.logradouro || ""),
+        numero: data.numero || prev.numero,
+        bairro: data.bairro || prev.bairro,
+        cidade,
+        uf: data.uf || prev.uf,
+      }));
+    } catch {
+      setCnpjErro("Erro ao consultar o CNPJ. Tente novamente.");
+    } finally {
+      setCnpjLoading(false);
+    }
+  };
 
   const handleOpenClientModal = () => {
     if (cart.length === 0 || !vendedorInfo) return;
@@ -568,11 +615,34 @@ function ParceiroPDV() {
                 </div>
                 <div className="grid gap-2">
                   <label className="text-sm font-medium">CPF / CNPJ</label>
-                  <Input
-                    placeholder="Apenas números"
-                    value={clientForm.documento}
-                    onChange={(e) => setClientForm({ ...clientForm, documento: e.target.value })}
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Apenas números"
+                      value={clientForm.documento}
+                      onChange={(e) => {
+                        setCnpjErro("");
+                        setClientForm({ ...clientForm, documento: e.target.value });
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={buscarCnpj}
+                      disabled={cnpjLoading}
+                      title="Buscar dados pelo CNPJ"
+                      className="shrink-0"
+                    >
+                      {cnpjLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Search className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  {cnpjErro && (
+                    <p className="text-xs text-destructive">{cnpjErro}</p>
+                  )}
                 </div>
                 <div className="grid gap-2">
                   <label className="text-sm font-medium">Telefone / WhatsApp</label>
