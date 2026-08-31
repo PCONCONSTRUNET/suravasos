@@ -1,8 +1,9 @@
 import { createFileRoute, Outlet, redirect, Link, useRouterState } from "@tanstack/react-router";
 import { supabaseParceiro as supabase } from "@/lib/supabase";
 import { VivaverdeLogo } from "@/components/vivaverde-logo";
-import { Home, Calculator, LogOut } from "lucide-react";
+import { Home, Calculator, LogOut, Package, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 export const Route = createFileRoute("/parceiro")({
   beforeLoad: async ({ location }) => {
@@ -67,10 +68,17 @@ export const Route = createFileRoute("/parceiro")({
   component: ParceiroLayout,
 });
 
+const navItems = [
+  { to: "/parceiro/dashboard", icon: Home, label: "Início" },
+  { to: "/parceiro/catalogo", icon: Package, label: "Catálogo" },
+  { to: "/parceiro/pdv", icon: Calculator, label: "Nova Venda" },
+];
+
 function ParceiroLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // Se for a tela de login ou cadastro, não mostra o menu inferior
+  // Se for a tela de login ou cadastro, não mostra o menu
   if (pathname === "/parceiro/login" || pathname === "/parceiro/cadastro") {
     return <Outlet />;
   }
@@ -81,50 +89,121 @@ function ParceiroLayout() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50 pb-20">
-      <header className="sticky top-0 z-30 flex h-16 items-center justify-center border-b bg-white shadow-sm px-4">
-        <VivaverdeLogo size="small" />
-      </header>
+    <div className="flex min-h-screen bg-slate-50">
 
-      <main className="flex-1 p-4 max-w-md w-full mx-auto">
-        <Outlet />
-      </main>
+      {/* ── SIDEBAR DESKTOP (≥ lg) ── */}
+      <aside className="hidden lg:flex flex-col w-60 min-h-screen bg-white border-r shadow-sm sticky top-0 h-screen">
+        <div className="flex items-center justify-center h-16 border-b px-4">
+          <VivaverdeLogo size="small" />
+        </div>
 
-      <nav className="fixed bottom-0 w-full border-t bg-white px-6 py-3 flex justify-around items-center max-w-md left-1/2 -translate-x-1/2 z-40 rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-        <Link
-          to="/parceiro/dashboard"
-          className={cn(
-            "flex flex-col items-center gap-1 p-2 rounded-xl transition-all",
-            pathname.includes("dashboard")
-              ? "text-primary"
-              : "text-muted-foreground hover:text-slate-900",
-          )}
-        >
-          <Home className="h-6 w-6" />
-          <span className="text-[10px] font-medium">Início</span>
-        </Link>
-        <Link
-          to="/parceiro/pdv"
-          className={cn(
-            "flex flex-col items-center gap-1 p-2 rounded-xl transition-all",
-            pathname.includes("pdv")
-              ? "text-primary"
-              : "text-muted-foreground hover:text-slate-900",
-          )}
-        >
-          <div className="h-12 w-12 rounded-full bg-gradient-brand text-primary-foreground grid place-items-center -mt-8 shadow-lg ring-4 ring-slate-50">
-            <Calculator className="h-6 w-6" />
-          </div>
-          <span className="text-[10px] font-medium">Vender</span>
-        </Link>
-        <button
-          onClick={handleLogout}
-          className="flex flex-col items-center gap-1 p-2 rounded-xl transition-all text-muted-foreground hover:text-destructive"
-        >
-          <LogOut className="h-6 w-6" />
-          <span className="text-[10px] font-medium">Sair</span>
-        </button>
-      </nav>
+        <nav className="flex-1 p-4 space-y-1">
+          {navItems.map(({ to, icon: Icon, label }) => (
+            <Link
+              key={to}
+              to={to}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
+                pathname.startsWith(to)
+                  ? "bg-brand/10 text-brand font-semibold"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+              )}
+            >
+              <Icon className="h-5 w-5 shrink-0" />
+              {label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="p-4 border-t">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:bg-red-50 hover:text-destructive w-full transition-all"
+          >
+            <LogOut className="h-5 w-5 shrink-0" />
+            Sair
+          </button>
+        </div>
+      </aside>
+
+      {/* ── DRAWER MOBILE (< lg) ── */}
+      {/* Overlay */}
+      {drawerOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
+          onClick={() => setDrawerOpen(false)}
+        />
+      )}
+
+      {/* Drawer Panel */}
+      <div
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-2xl flex flex-col transition-transform duration-300 lg:hidden",
+          drawerOpen ? "translate-x-0" : "-translate-x-full",
+        )}
+      >
+        <div className="flex items-center justify-between h-16 border-b px-4">
+          <VivaverdeLogo size="small" />
+          <button
+            onClick={() => setDrawerOpen(false)}
+            className="p-2 rounded-lg text-muted-foreground hover:bg-slate-100"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <nav className="flex-1 p-4 space-y-1">
+          {navItems.map(({ to, icon: Icon, label }) => (
+            <Link
+              key={to}
+              to={to}
+              onClick={() => setDrawerOpen(false)}
+              className={cn(
+                "flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all",
+                pathname.startsWith(to)
+                  ? "bg-brand/10 text-brand font-semibold"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+              )}
+            >
+              <Icon className="h-5 w-5 shrink-0" />
+              {label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="p-4 border-t">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-slate-500 hover:bg-red-50 hover:text-destructive w-full transition-all"
+          >
+            <LogOut className="h-5 w-5 shrink-0" />
+            Sair
+          </button>
+        </div>
+      </div>
+
+      {/* ── MAIN CONTENT ── */}
+      <div className="flex flex-col flex-1 min-w-0">
+
+        {/* Mobile Header com botão ☰ */}
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-white shadow-sm px-4 lg:hidden">
+          <button
+            onClick={() => setDrawerOpen(true)}
+            className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
+            aria-label="Abrir menu"
+          >
+            <Menu className="h-6 w-6" />
+          </button>
+          <VivaverdeLogo size="small" />
+          {/* Spacer para centralizar o logo */}
+          <div className="w-10" />
+        </header>
+
+        {/* Page content */}
+        <main className="flex-1 p-4 max-w-2xl w-full mx-auto lg:max-w-4xl lg:px-8 lg:py-8">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }
