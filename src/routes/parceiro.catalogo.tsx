@@ -17,16 +17,29 @@ function ParceiroCatalogo() {
   const [addedId, setAddedId] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchProdutos = async () => {
-      const { data } = await supabase
+    // Garante sessão ativa antes de buscar produtos (igual ao PDV)
+    const init = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        navigate({ to: "/parceiro/login" });
+        return;
+      }
+
+      // Mesma query usada no parceiro.pdv.tsx
+      const { data, error } = await supabase
         .from("produtos")
-        .select("id, nome, valor, imagem, emoji, descricao, codigo, status")
+        .select("*")
         .eq("status", "Ativo")
         .order("nome");
+
+      if (error) console.error("[catalogo] erro ao buscar produtos:", error);
       if (data) setProdutos(data);
       setLoading(false);
     };
-    fetchProdutos();
+    init();
   }, []);
 
   const filtered = produtos.filter(
@@ -35,26 +48,30 @@ function ParceiroCatalogo() {
       (p.codigo && p.codigo.toLowerCase().includes(searchTerm.toLowerCase())),
   );
 
-  const handleAddToCart = (produto: any) => {
+  const handlePedir = (produto: any) => {
     setAddedId(produto.id);
-    setTimeout(() => setAddedId(null), 1200);
-    navigate({ to: "/parceiro/pdv", search: { produto: produto.id } as any });
+    setTimeout(() => {
+      setAddedId(null);
+      // Passa o produto pela URL query — igual ao PDV espera
+      window.location.href = `/parceiro/pdv?produto=${produto.id}`;
+    }, 600);
   };
 
   return (
     <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
-      {/* Header */}
+
+      {/* Page Title */}
       <div>
         <h1 className="text-2xl font-bold font-display text-slate-800 flex items-center gap-2">
           <Package className="h-6 w-6 text-brand" />
           Catálogo de Produtos
         </h1>
         <p className="text-sm text-muted-foreground mt-0.5">
-          Toque em um produto para adicioná-lo ao pedido.
+          Toque em um produto para iniciar um pedido.
         </p>
       </div>
 
-      {/* Search */}
+      {/* Search Bar */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
@@ -65,14 +82,14 @@ function ParceiroCatalogo() {
         />
       </div>
 
-      {/* Count */}
+      {/* Count badge */}
       {!loading && (
         <p className="text-xs text-muted-foreground font-medium">
-          {filtered.length} produto{filtered.length !== 1 ? "s" : ""} encontrado{filtered.length !== 1 ? "s" : ""}
+          {filtered.length} produto{filtered.length !== 1 ? "s" : ""}
         </p>
       )}
 
-      {/* Grid */}
+      {/* Loading skeleton */}
       {loading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -83,28 +100,37 @@ function ParceiroCatalogo() {
               <div className="bg-slate-100 aspect-square" />
               <div className="p-3 space-y-2">
                 <div className="h-3 bg-slate-100 rounded w-3/4" />
-                <div className="h-3 bg-slate-100 rounded w-1/2" />
+                <div className="h-4 bg-slate-100 rounded w-1/2" />
+                <div className="h-9 bg-slate-100 rounded-xl w-full mt-2" />
               </div>
             </div>
           ))}
         </div>
       ) : filtered.length === 0 ? (
+        /* Empty state */
         <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
           <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-3xl">
-            🔍
+            {searchTerm ? "🔍" : "📦"}
           </div>
-          <p className="font-semibold text-slate-700">Nenhum produto encontrado</p>
-          <p className="text-sm text-muted-foreground">Tente buscar por outro nome ou código.</p>
+          <p className="font-semibold text-slate-700">
+            {searchTerm ? "Nenhum produto encontrado" : "Nenhum produto cadastrado"}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {searchTerm
+              ? "Tente buscar por outro nome ou código."
+              : "Os produtos serão exibidos aqui quando cadastrados no sistema."}
+          </p>
         </div>
       ) : (
+        /* Product Grid */
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {filtered.map((p) => (
             <div
               key={p.id}
-              className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 overflow-hidden flex flex-col active:scale-[0.97] transition-transform"
+              className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 overflow-hidden flex flex-col"
             >
-              {/* Product Image */}
-              <div className="aspect-square bg-accent relative overflow-hidden">
+              {/* Imagem */}
+              <div className="aspect-square bg-slate-50 relative overflow-hidden">
                 {p.imagem ? (
                   <img
                     src={p.imagem}
@@ -113,44 +139,51 @@ function ParceiroCatalogo() {
                     loading="lazy"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-5xl opacity-60">
+                  <div className="w-full h-full flex items-center justify-center text-5xl select-none">
                     {p.emoji || "🪴"}
                   </div>
                 )}
+                {/* Código badge */}
                 {p.codigo && (
-                  <span className="absolute top-2 left-2 bg-black/40 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md backdrop-blur-sm">
+                  <span className="absolute top-2 left-2 bg-black/50 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md backdrop-blur-sm">
                     {p.codigo}
                   </span>
                 )}
               </div>
 
               {/* Info */}
-              <div className="p-3 flex flex-col flex-1 gap-2">
-                <p className="text-sm font-semibold text-slate-800 leading-tight line-clamp-2">
+              <div className="p-3 flex flex-col flex-1 gap-1.5">
+                {/* Nome — somente leitura, não editável */}
+                <p className="text-sm font-semibold text-slate-800 leading-tight line-clamp-2 select-none">
                   {p.nome}
                 </p>
+
                 {p.descricao && (
-                  <p className="text-[11px] text-muted-foreground line-clamp-2 leading-snug">
+                  <p className="text-[11px] text-muted-foreground line-clamp-2 leading-snug select-none">
                     {p.descricao}
                   </p>
                 )}
-                <p className="text-base font-extrabold text-brand mt-auto">
+
+                {/* Preço */}
+                <p className="text-base font-extrabold text-brand mt-auto select-none">
                   R$ {Number(p.valor).toFixed(2).replace(".", ",")}
                 </p>
 
-                {/* Add to Cart Button */}
+                {/* Botão Pedir */}
                 <button
-                  onClick={() => handleAddToCart(p)}
+                  onClick={() => handlePedir(p)}
+                  disabled={addedId === p.id}
                   className={`
-                    w-full flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-bold transition-all
+                    w-full flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-bold
+                    transition-all duration-200 active:scale-95 select-none
                     ${addedId === p.id
-                      ? "bg-emerald-500 text-white scale-95"
-                      : "bg-gradient-brand text-primary-foreground active:scale-95"
+                      ? "bg-emerald-500 text-white opacity-90 scale-95"
+                      : "bg-gradient-brand text-primary-foreground hover:opacity-90"
                     }
                   `}
                 >
                   <ShoppingCart className="h-4 w-4" />
-                  {addedId === p.id ? "Adicionado!" : "Pedir"}
+                  {addedId === p.id ? "Abrindo…" : "Pedir"}
                 </button>
               </div>
             </div>
