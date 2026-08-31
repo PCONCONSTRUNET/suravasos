@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, redirect, Link, useRouterState } from "@tanstack/react-router";
 import { supabaseParceiro as supabase } from "@/lib/supabase";
 import { VivaverdeLogo } from "@/components/vivaverde-logo";
-import { Home, Calculator, LogOut, Package, Menu, X } from "lucide-react";
+import { Home, Calculator, LogOut, Package, Menu, X, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
@@ -72,6 +72,7 @@ const navItems = [
   { to: "/parceiro/dashboard", icon: Home, label: "Início" },
   { to: "/parceiro/catalogo", icon: Package, label: "Catálogo" },
   { to: "/parceiro/pdv", icon: Calculator, label: "Nova Venda" },
+  { to: "/parceiro/pagamentos", icon: Wallet, label: "Pagamentos" },
 ];
 
 function ParceiroLayout() {
