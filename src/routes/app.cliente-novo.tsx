@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Save, ArrowLeft } from "lucide-react";
+import { Save, ArrowLeft, Search, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Link } from "@tanstack/react-router";
@@ -27,6 +27,8 @@ function NovoCliente() {
   const { id } = Route.useSearch();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [cnpjLoading, setCnpjLoading] = useState(false);
+  const [cnpjErro, setCnpjErro] = useState("");
 
   const [cliente, setCliente] = useState({
     nome: "",
@@ -125,6 +127,48 @@ function NovoCliente() {
     }
   };
 
+  const buscarCnpj = async () => {
+    const cnpjLimpo = cliente.cpf_cnpj.replace(/\D/g, "");
+    if (cnpjLimpo.length !== 14) {
+      setCnpjErro("Digite um CNPJ válido com 14 dígitos.");
+      return;
+    }
+    setCnpjErro("");
+    setCnpjLoading(true);
+    try {
+      const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpjLimpo}`);
+      if (!res.ok) {
+        setCnpjErro("CNPJ não encontrado na Receita Federal.");
+        return;
+      }
+      const data = await res.json();
+      const telefone = data.ddd_telefone_1
+        ? formatTelefone(data.ddd_telefone_1)
+        : cliente.telefone;
+      const cepLimpo = data.cep ? data.cep.replace(/\D/g, "") : "";
+      const tipoLogradouro = data.descricao_tipo_de_logradouro
+        ? data.descricao_tipo_de_logradouro + " "
+        : "";
+      setCliente((prev) => ({
+        ...prev,
+        nome: data.razao_social || prev.nome,
+        telefone,
+        cep: formatCep(cepLimpo),
+        endereco: tipoLogradouro + (data.logradouro || ""),
+        numero: data.numero || prev.numero,
+        bairro: data.bairro || prev.bairro,
+        cidade: data.municipio
+          ? data.municipio.charAt(0) + data.municipio.slice(1).toLowerCase()
+          : prev.cidade,
+        uf: data.uf || prev.uf,
+      }));
+    } catch {
+      setCnpjErro("Erro ao consultar CNPJ. Tente novamente.");
+    } finally {
+      setCnpjLoading(false);
+    }
+  };
+
   const formatCep = (v: string) => {
     v = v.replace(/\D/g, "");
     return v.replace(/(\d{5})(\d{3})/, "$1-$2").substring(0, 9);
@@ -208,13 +252,33 @@ function NovoCliente() {
             </div>
             <div className="space-y-2">
               <Label>CPF / CNPJ (Opcional)</Label>
-              <Input
-                value={cliente.cpf_cnpj}
-                onChange={(e) =>
-                  setCliente({ ...cliente, cpf_cnpj: formatCpfCnpj(e.target.value) })
-                }
-                placeholder="000.000.000-00 ou 00.000.000/0000-00"
-              />
+              <div className="flex gap-2">
+                <Input
+                  value={cliente.cpf_cnpj}
+                  onChange={(e) => {
+                    setCnpjErro("");
+                    setCliente({ ...cliente, cpf_cnpj: formatCpfCnpj(e.target.value) });
+                  }}
+                  placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={buscarCnpj}
+                  disabled={cnpjLoading}
+                  title="Buscar dados pelo CNPJ"
+                >
+                  {cnpjLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Search className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+              {cnpjErro && (
+                <p className="text-xs text-destructive mt-1">{cnpjErro}</p>
+              )}
             </div>
           </div>
 
