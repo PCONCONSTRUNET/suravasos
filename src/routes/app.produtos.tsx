@@ -94,9 +94,14 @@ function Produtos() {
 
   const filteredProducts = useMemo(() => {
     let result = products.filter((p) => {
-      const matchBusca =
-        p.nome.toLowerCase().includes(busca.toLowerCase()) ||
-        (p.codigo && String(p.codigo).toLowerCase().includes(busca.toLowerCase()));
+      const searchStr = busca.trim().toLowerCase();
+      const isNumericSearch = /^\d+$/.test(searchStr);
+
+      const matchBusca = isNumericSearch
+        ? p.codigo && String(p.codigo).toLowerCase() === searchStr
+        : p.nome.toLowerCase().includes(searchStr) ||
+          (p.codigo && String(p.codigo).toLowerCase().includes(searchStr));
+
       const matchCat = categoriaFilter === "Todas" || p.categoria === categoriaFilter;
       return matchBusca && matchCat;
     });
