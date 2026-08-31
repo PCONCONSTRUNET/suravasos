@@ -37,6 +37,7 @@ function ParceiroPDV() {
     cidade: "",
     uf: "",
     pagamento: "Dinheiro / Pix",
+    condicaoBoleto: "",
     frete: "Retirada",
     observacoes: "",
   });
@@ -46,6 +47,7 @@ function ParceiroPDV() {
   const [davGeradoNumero, setDavGeradoNumero] = useState<string | number | null>(null);
   const [cnpjLoading, setCnpjLoading] = useState(false);
   const [cnpjErro, setCnpjErro] = useState("");
+  const [descontoPercentual, setDescontoPercentual] = useState<number>(0);
 
   useEffect(() => {
     const init = async () => {
@@ -202,7 +204,11 @@ function ParceiroPDV() {
     setCart((prev) => prev.filter((i) => i.id !== id));
   };
 
-  const subtotal = cart.reduce((s, i) => s + i.t, 0);
+  const rawSubtotal = cart.reduce((s, i) => s + i.t, 0);
+  const subtotal = descontoPercentual > 0
+    ? rawSubtotal * (1 - descontoPercentual / 100)
+    : rawSubtotal;
+  const descontoAplicado = rawSubtotal - subtotal;
 
   const buscarCnpj = async () => {
     const cnpjLimpo = clientForm.documento.replace(/\D/g, "");
@@ -337,6 +343,9 @@ function ParceiroPDV() {
             valor_total: subtotal,
             vendedor_id: vendedorInfo?.id,
             cliente_id: finalClienteId,
+            desconto_valor: descontoAplicado,
+            desconto_percentual: descontoPercentual,
+            condicao_pagamento: clientForm.pagamento === "Boleto a Prazo" ? clientForm.condicaoBoleto || "Boleto a Prazo" : clientForm.pagamento,
           },
         ])
         .select()
@@ -367,6 +376,9 @@ function ParceiroPDV() {
             valor_total: subtotal,
             vendedor_id: vendedorInfo?.id,
             cliente_id: finalClienteId,
+            desconto_valor: descontoAplicado,
+            desconto_percentual: descontoPercentual,
+            condicao_pagamento: clientForm.pagamento === "Boleto a Prazo" ? clientForm.condicaoBoleto || "Boleto a Prazo" : clientForm.pagamento,
           },
         ])
         .select()
@@ -712,13 +724,39 @@ function ParceiroPDV() {
                   <select
                     className="flex h-10 w-full items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
                     value={clientForm.pagamento}
-                    onChange={(e) => setClientForm({ ...clientForm, pagamento: e.target.value })}
+                    onChange={(e) => {
+                      setClientForm({ ...clientForm, pagamento: e.target.value });
+                    }}
                   >
                     <option>Dinheiro / Pix</option>
                     <option>Cartão de Crédito</option>
                     <option>Cartão de Débito</option>
                     <option>Boleto a Prazo</option>
                   </select>
+                  {clientForm.pagamento === "Boleto a Prazo" && (
+                    <Input 
+                      placeholder="Ex: 30/60/90 Dias" 
+                      value={clientForm.condicaoBoleto}
+                      onChange={(e) => setClientForm({ ...clientForm, condicaoBoleto: e.target.value })}
+                      className="mt-1"
+                    />
+                  )}
+                  <div className="mt-2">
+                    <label className="text-sm font-medium">Aplicar Desconto (%)</label>
+                    <div className="flex items-center mt-1 border rounded-md px-3 bg-white focus-within:ring-1 focus-within:ring-brand">
+                      <input 
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        value={descontoPercentual}
+                        onChange={(e) => setDescontoPercentual(parseFloat(e.target.value) || 0)}
+                        className="flex h-10 w-full outline-none bg-transparent text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        placeholder="Ex: 5"
+                      />
+                      <span className="text-muted-foreground font-semibold">%</span>
+                    </div>
+                  </div>
                 </div>
                 <div className="grid gap-2">
                   <label className="text-sm font-medium">Forma do Frete</label>
@@ -742,14 +780,35 @@ function ParceiroPDV() {
                 </div>
               </div>
             </div>
-            <DialogFooter className="mt-4">
-              <Button type="button" variant="outline" onClick={() => setIsClientModalOpen(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={loading} className="bg-gradient-brand text-white">
-                {loading ? "Gerando..." : "Gerar Pedido e Orçamento"}
-              </Button>
-            </DialogFooter>
+            <div className="bg-slate-50 border-t -mx-4 -mb-4 mt-4 p-4 flex items-center justify-between shadow-[0_-4px_10px_rgba(0,0,0,0.02)] rounded-b-2xl">
+              <div>
+                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
+                  Total a Pagar
+                </p>
+                {descontoPercentual > 0 ? (
+                  <div className="flex flex-col">
+                    <span className="text-xs text-muted-foreground line-through">
+                      R$ {rawSubtotal.toFixed(2).replace(".", ",")}
+                    </span>
+                    <p className="text-2xl font-extrabold text-brand font-display">
+                      R$ {subtotal.toFixed(2).replace(".", ",")}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-2xl font-extrabold text-brand font-display">
+                    R$ {subtotal.toFixed(2).replace(".", ",")}
+                  </p>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" onClick={() => setIsClientModalOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={loading} className="bg-gradient-brand text-white">
+                  {loading ? "Processando..." : "Gerar Pedido"}
+                </Button>
+              </div>
+            </div>
           </form>
         </DialogContent>
       </Dialog>

@@ -33,6 +33,7 @@ function PDV() {
   const [cart, setCart] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [metodoPagamento, setMetodoPagamento] = useState("Cartão");
+  const [condicaoPagamento, setCondicaoPagamento] = useState("À vista");
   const [descontoValor, setDescontoValor] = useState(0);
 
   const [orcamentos, setOrcamentos] = useState<any[]>([]);
@@ -338,6 +339,8 @@ function PDV() {
             valor_total: totalPagamento,
             cliente_id: clienteSelecionado?.id === "avulso" ? null : clienteSelecionado?.id || null,
             metodo_pagamento: metodoPagamento,
+            condicao_pagamento: condicaoPagamento,
+            desconto_valor: descontoValor,
             numero: nextNumero,
           },
         ])
@@ -648,6 +651,34 @@ function PDV() {
                   <span className="text-xs">Boleto</span>
                 </Button>
               </div>
+              {metodoPagamento === "Boleto" && (
+                <div className="mt-3">
+                  <Input 
+                    placeholder="Prazos (Ex: 30/60/90 Dias)" 
+                    value={condicaoPagamento}
+                    onChange={(e) => setCondicaoPagamento(e.target.value)}
+                  />
+                </div>
+              )}
+              {(metodoPagamento === "Dinheiro" || metodoPagamento === "Pix") && (
+                <div className="mt-3">
+                  <label className="flex items-center gap-2 text-sm text-slate-700 bg-emerald-50 p-2.5 rounded-md border border-emerald-100 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={descontoValor > 0 && Math.abs(descontoValor - (subtotal * 0.05)) < 0.1}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setDescontoValor(subtotal * 0.05);
+                        } else {
+                          setDescontoValor(0);
+                        }
+                      }}
+                      className="rounded text-brand focus:ring-brand accent-brand w-4 h-4"
+                    />
+                    <span className="font-medium text-emerald-800">Aplicar 5% de desconto à vista</span>
+                  </label>
+                </div>
+              )}
             </div>
             <Button
               onClick={handleFinalizar}
