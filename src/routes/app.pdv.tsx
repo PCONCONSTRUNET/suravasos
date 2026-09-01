@@ -661,22 +661,26 @@ function PDV() {
                 </div>
               )}
               {(metodoPagamento === "Dinheiro" || metodoPagamento === "Pix") && (
-                <div className="mt-3">
-                  <label className="flex items-center gap-2 text-sm text-slate-700 bg-emerald-50 p-2.5 rounded-md border border-emerald-100 cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      checked={descontoValor > 0 && Math.abs(descontoValor - (subtotal * 0.05)) < 0.1}
+                <div className="mt-3 flex items-center justify-between bg-emerald-50 p-3 rounded-md border border-emerald-100">
+                  <span className="font-medium text-emerald-800 text-sm">Aplicar Desconto (%)</span>
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      placeholder="Ex: 5"
                       onChange={(e) => {
-                        if (e.target.checked) {
-                          setDescontoValor(subtotal * 0.05);
+                        const percent = parseFloat(e.target.value);
+                        if (!isNaN(percent)) {
+                          setDescontoValor(subtotal * (percent / 100));
                         } else {
                           setDescontoValor(0);
                         }
                       }}
-                      className="rounded text-brand focus:ring-brand accent-brand w-4 h-4"
+                      className="w-16 text-right bg-white border border-emerald-200 rounded p-1 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
-                    <span className="font-medium text-emerald-800">Aplicar 5% de desconto à vista</span>
-                  </label>
+                    <span className="text-emerald-800 font-medium text-sm">%</span>
+                  </div>
                 </div>
               )}
             </div>
