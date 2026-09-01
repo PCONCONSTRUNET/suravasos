@@ -238,6 +238,7 @@ function Vendas() {
               <TableHead>Nº</TableHead>
               <TableHead>Tipo</TableHead>
               <TableHead>Cliente</TableHead>
+              <TableHead>Pagamento</TableHead>
               <TableHead>Data</TableHead>
               <TableHead className="text-right">Valor</TableHead>
               <TableHead>Status</TableHead>
@@ -272,6 +273,12 @@ function Vendas() {
                   </TableCell>
                   <TableCell className="font-semibold">
                     {v.cliente_id ? v.clientes?.nome || "Cliente Removido" : "Venda Avulsa"}
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground max-w-[120px] truncate" title={v.metodo_pagamento || "Dinheiro / Pix" + (v.condicao_pagamento ? ` - ${v.condicao_pagamento}` : "")}>
+                    <span className="font-semibold text-foreground">{v.metodo_pagamento || "Não info."}</span>
+                    {v.condicao_pagamento && v.condicao_pagamento !== "Dinheiro / Pix" && v.condicao_pagamento !== "Cartão de Crédito" && v.condicao_pagamento !== "Cartão de Débito" && (
+                      <span className="ml-1 text-[10px] text-muted-foreground">- {v.condicao_pagamento}</span>
+                    )}
                   </TableCell>
                   <TableCell>{new Date(v.created_at).toLocaleDateString()}</TableCell>
                   <TableCell className="text-right font-semibold">

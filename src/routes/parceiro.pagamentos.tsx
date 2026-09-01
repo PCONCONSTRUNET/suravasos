@@ -10,6 +10,7 @@ import {
   Banknote,
   ChevronDown,
   ChevronUp,
+  CreditCard,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -255,7 +256,15 @@ function ParceiroPagamentos() {
                       <p className="font-semibold text-slate-800 mt-1 truncate">
                         {v.cliente?.nome || "Cliente não informado"}
                       </p>
-                      <p className="text-xs text-muted-foreground">{fmtData(v.created_at)}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <p className="text-xs text-muted-foreground">{fmtData(v.created_at)}</p>
+                        {v.condicao_pagamento && (
+                          <p className="text-[10px] font-medium text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded flex items-center gap-1">
+                            <CreditCard className="h-3 w-3" />
+                            {v.condicao_pagamento}
+                          </p>
+                        )}
+                      </div>
                     </div>
 
                     <div className="text-right shrink-0">
