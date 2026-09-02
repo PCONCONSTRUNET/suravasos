@@ -101,16 +101,17 @@ function PublicCatalogo() {
   useEffect(() => {
     const fetchProdutos = async () => {
       const { data } = await supabase.from("produtos").select("*").eq("status", "Ativo").order("nome");
-      if (data) setProdutos(data);
 
       const params = new URLSearchParams(window.location.search);
       const p = params.get("p");
       const v = params.get("v");
       const identifier = v || p;
 
+      let partnerData = null;
+
       if (identifier) {
         // Busca o parceiro pelo ID (formato antigo) ou pelo Nome (novo formato)
-        let query = supabase.from("vendedores").select("id, nome, telefone").eq("status", "Ativo");
+        let query = supabase.from("vendedores").select("id, nome, telefone, acrescimo_catalogo").eq("status", "Ativo");
 
         if (identifier.length === 8 && /^[0-9a-fA-F-]+$/.test(identifier)) {
           query = query.ilike("id", `${identifier}%`);
@@ -120,7 +121,20 @@ function PublicCatalogo() {
 
         const { data: parceiros } = await query.limit(1);
         if (parceiros && parceiros.length > 0) {
-          setPartner(parceiros[0]);
+          partnerData = parceiros[0];
+          setPartner(partnerData);
+        }
+      }
+
+      if (data) {
+        if (partnerData?.acrescimo_catalogo) {
+          const produtosComPreco = data.map((prod: any) => ({
+            ...prod,
+            valor: prod.valor * 1.2
+          }));
+          setProdutos(produtosComPreco);
+        } else {
+          setProdutos(data);
         }
       }
 
