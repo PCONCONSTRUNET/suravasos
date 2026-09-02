@@ -80,15 +80,19 @@ function ParceiroPDV() {
         data: { session },
       } = await supabase.auth.getSession();
       let aplicaAcrescimo = false;
+      let acrescimoPercentual = 20;
       if (session) {
         const { data: vData } = await supabase
           .from("vendedores")
-          .select("id, status, nome, acrescimo_catalogo")
+          .select("id, status, nome, acrescimo_catalogo, acrescimo_catalogo_percentual")
           .eq("user_id", session.user.id)
           .single();
         if (vData) {
           setVendedorInfo({ id: vData.id, nome: vData.nome });
           aplicaAcrescimo = vData.acrescimo_catalogo;
+          if (vData.acrescimo_catalogo_percentual !== null && vData.acrescimo_catalogo_percentual !== undefined) {
+            acrescimoPercentual = Number(vData.acrescimo_catalogo_percentual);
+          }
           if (vData.status === "Aguardando Aprovação") {
             navigate({ to: "/parceiro/dashboard" });
             return;
@@ -98,9 +102,10 @@ function ParceiroPDV() {
 
       const { data } = await supabase.from("produtos").select("*").eq("status", "Ativo").order("nome");
       if (data) {
+        const multiplier = 1 + (acrescimoPercentual / 100);
         const produtosComPreco = data.map((p: any) => ({
           ...p,
-          valor: aplicaAcrescimo ? p.valor * 1.2 : p.valor
+          valor: aplicaAcrescimo ? p.valor * multiplier : p.valor
         }));
         setProdutos(produtosComPreco);
         

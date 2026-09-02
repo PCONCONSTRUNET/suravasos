@@ -111,7 +111,7 @@ function PublicCatalogo() {
 
       if (identifier) {
         // Busca o parceiro pelo ID (formato antigo) ou pelo Nome (novo formato)
-        let query = supabase.from("vendedores").select("id, nome, telefone, acrescimo_catalogo").eq("status", "Ativo");
+        let query = supabase.from("vendedores").select("id, nome, telefone, acrescimo_catalogo, acrescimo_catalogo_percentual").eq("status", "Ativo");
 
         if (identifier.length === 8 && /^[0-9a-fA-F-]+$/.test(identifier)) {
           query = query.ilike("id", `${identifier}%`);
@@ -128,9 +128,14 @@ function PublicCatalogo() {
 
       if (data) {
         if (partnerData?.acrescimo_catalogo) {
+          const percentual = partnerData.acrescimo_catalogo_percentual !== null && partnerData.acrescimo_catalogo_percentual !== undefined 
+            ? Number(partnerData.acrescimo_catalogo_percentual) 
+            : 20;
+          const multiplier = 1 + (percentual / 100);
+          
           const produtosComPreco = data.map((prod: any) => ({
             ...prod,
-            valor: prod.valor * 1.2
+            valor: prod.valor * multiplier
           }));
           setProdutos(produtosComPreco);
         } else {

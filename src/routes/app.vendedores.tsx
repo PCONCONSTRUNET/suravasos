@@ -68,6 +68,7 @@ function VendedoresAdmin() {
   const [commissionType, setCommissionType] = useState("porcentagem");
   const [commissionValue, setCommissionValue] = useState("");
   const [acrescimoCatalogo, setAcrescimoCatalogo] = useState(false);
+  const [acrescimoPercentual, setAcrescimoPercentual] = useState("20");
 
   const [selectedSaleForDetails, setSelectedSaleForDetails] = useState<any>(null);
   const [saleItems, setSaleItems] = useState<any[]>([]);
@@ -254,6 +255,7 @@ function VendedoresAdmin() {
     setCommissionType(vendedor.tipo_comissao || "porcentagem");
     setCommissionValue(vendedor.valor_comissao ? String(vendedor.valor_comissao) : "");
     setAcrescimoCatalogo(vendedor.acrescimo_catalogo || false);
+    setAcrescimoPercentual(vendedor.acrescimo_catalogo_percentual ? String(vendedor.acrescimo_catalogo_percentual) : "20");
     setIsCommissionModalOpen(true);
   };
 
@@ -267,6 +269,12 @@ function VendedoresAdmin() {
       return;
     }
 
+    const ap = parseFloat(acrescimoPercentual.replace(",", "."));
+    if (acrescimoCatalogo && (isNaN(ap) || ap < 0)) {
+      alert("Percentual de acréscimo inválido.");
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from("vendedores")
@@ -275,6 +283,7 @@ function VendedoresAdmin() {
           tipo_comissao: commissionType,
           valor_comissao: v,
           acrescimo_catalogo: acrescimoCatalogo,
+          acrescimo_catalogo_percentual: acrescimoCatalogo ? ap : 20,
         })
         .eq("id", commissionTarget.id);
 
@@ -806,9 +815,9 @@ function VendedoresAdmin() {
               <div className="grid gap-2 mt-2 bg-slate-50 p-3 rounded-xl border">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5 pr-4">
-                    <label className="text-sm font-medium">Acréscimo de 20% no Catálogo</label>
+                    <label className="text-sm font-medium">Acréscimo no Catálogo</label>
                     <p className="text-xs text-muted-foreground">
-                      Aumenta o preço dos produtos no catálogo e PDV deste parceiro em 20%.
+                      Aumenta o preço dos produtos no catálogo e PDV deste parceiro.
                     </p>
                   </div>
                   <Switch 
@@ -816,6 +825,24 @@ function VendedoresAdmin() {
                     onCheckedChange={setAcrescimoCatalogo} 
                   />
                 </div>
+                {acrescimoCatalogo && (
+                  <div className="pt-3 border-t mt-1">
+                    <label className="text-sm font-medium">Porcentagem de Acréscimo</label>
+                    <div className="relative mt-1">
+                      <Input
+                        type="text"
+                        required
+                        value={acrescimoPercentual}
+                        onChange={(e) => setAcrescimoPercentual(e.target.value)}
+                        placeholder="Ex: 30"
+                        className="pr-8"
+                      />
+                      <span className="absolute right-3 top-2.5 text-muted-foreground text-sm">
+                        %
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             <DialogFooter>

@@ -29,14 +29,18 @@ function ParceiroCatalogo() {
       }
 
       let aplicaAcrescimo = false;
+      let percentual = 20;
       const { data: vData } = await supabase
         .from("vendedores")
-        .select("acrescimo_catalogo")
+        .select("acrescimo_catalogo, acrescimo_catalogo_percentual")
         .eq("user_id", session.user.id)
         .single();
       
       if (vData) {
         aplicaAcrescimo = vData.acrescimo_catalogo;
+        if (vData.acrescimo_catalogo_percentual !== null && vData.acrescimo_catalogo_percentual !== undefined) {
+          percentual = Number(vData.acrescimo_catalogo_percentual);
+        }
       }
 
       // Mesma query usada no parceiro.pdv.tsx
@@ -48,9 +52,10 @@ function ParceiroCatalogo() {
 
       if (error) console.error("[catalogo] erro ao buscar produtos:", error);
       if (data) {
-        const produtosComPreco = data.map((p: any) => ({
-          ...p,
-          valor: aplicaAcrescimo ? p.valor * 1.2 : p.valor
+        const multiplier = 1 + (percentual / 100);
+        const produtosComPreco = data.map((prod: any) => ({
+          ...prod,
+          valor: aplicaAcrescimo ? prod.valor * multiplier : prod.valor
         }));
         setProdutos(produtosComPreco);
       }
