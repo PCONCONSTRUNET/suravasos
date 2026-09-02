@@ -54,14 +54,16 @@ function ParceiroPDV() {
       const {
         data: { session },
       } = await supabase.auth.getSession();
+      let aplicaAcrescimo = false;
       if (session) {
         const { data: vData } = await supabase
           .from("vendedores")
-          .select("id, status, nome")
+          .select("id, status, nome, acrescimo_catalogo")
           .eq("user_id", session.user.id)
           .single();
         if (vData) {
           setVendedorInfo({ id: vData.id, nome: vData.nome });
+          aplicaAcrescimo = vData.acrescimo_catalogo;
           if (vData.status === "Aguardando Aprovação") {
             navigate({ to: "/parceiro/dashboard" });
             return;
@@ -71,9 +73,14 @@ function ParceiroPDV() {
 
       const { data } = await supabase.from("produtos").select("*").eq("status", "Ativo").order("nome");
       if (data) {
-        setProdutos(data);
-
+        const produtosComPreco = data.map((p: any) => ({
+          ...p,
+          valor: aplicaAcrescimo ? p.valor * 1.2 : p.valor
+        }));
+        setProdutos(produtosComPreco);
+        
         // Verifica se veio um produto mágico pela URL (formato antigo)
+        const dataForMagic = produtosComPreco;
         const params = new URLSearchParams(window.location.search);
 
         const eParam = params.get("e");
@@ -103,7 +110,7 @@ function ParceiroPDV() {
 
         const produtoIdMagic = params.get("produto");
         if (produtoIdMagic) {
-          const magicProduct = data.find((p) => p.id === produtoIdMagic);
+          const magicProduct = dataForMagic.find((p: any) => p.id === produtoIdMagic);
           if (magicProduct) {
             setCart([
               {
@@ -129,7 +136,7 @@ function ParceiroPDV() {
           items.forEach((item) => {
             const [id, qStr] = item.split(":");
             const qty = parseInt(qStr) || 1;
-            const prod = data.find((p) => p.id === id);
+            const prod = dataForMagic.find((p: any) => p.id === id);
             if (prod) {
               parsedCart.push({
                 id: prod.id,

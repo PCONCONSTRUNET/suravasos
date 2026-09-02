@@ -34,6 +34,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import {
@@ -66,6 +67,7 @@ function VendedoresAdmin() {
   const [commissionTarget, setCommissionTarget] = useState<any>(null);
   const [commissionType, setCommissionType] = useState("porcentagem");
   const [commissionValue, setCommissionValue] = useState("");
+  const [acrescimoCatalogo, setAcrescimoCatalogo] = useState(false);
 
   const [selectedSaleForDetails, setSelectedSaleForDetails] = useState<any>(null);
   const [saleItems, setSaleItems] = useState<any[]>([]);
@@ -251,6 +253,7 @@ function VendedoresAdmin() {
     setCommissionTarget(vendedor);
     setCommissionType(vendedor.tipo_comissao || "porcentagem");
     setCommissionValue(vendedor.valor_comissao ? String(vendedor.valor_comissao) : "");
+    setAcrescimoCatalogo(vendedor.acrescimo_catalogo || false);
     setIsCommissionModalOpen(true);
   };
 
@@ -271,6 +274,7 @@ function VendedoresAdmin() {
           status: "Ativo",
           tipo_comissao: commissionType,
           valor_comissao: v,
+          acrescimo_catalogo: acrescimoCatalogo,
         })
         .eq("id", commissionTarget.id);
 
@@ -797,6 +801,20 @@ function VendedoresAdmin() {
                       %
                     </span>
                   )}
+                </div>
+              </div>
+              <div className="grid gap-2 mt-2 bg-slate-50 p-3 rounded-xl border">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5 pr-4">
+                    <label className="text-sm font-medium">Acréscimo de 20% no Catálogo</label>
+                    <p className="text-xs text-muted-foreground">
+                      Aumenta o preço dos produtos no catálogo e PDV deste parceiro em 20%.
+                    </p>
+                  </div>
+                  <Switch 
+                    checked={acrescimoCatalogo} 
+                    onCheckedChange={setAcrescimoCatalogo} 
+                  />
                 </div>
               </div>
             </div>

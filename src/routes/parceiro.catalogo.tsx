@@ -28,6 +28,17 @@ function ParceiroCatalogo() {
         return;
       }
 
+      let aplicaAcrescimo = false;
+      const { data: vData } = await supabase
+        .from("vendedores")
+        .select("acrescimo_catalogo")
+        .eq("user_id", session.user.id)
+        .single();
+      
+      if (vData) {
+        aplicaAcrescimo = vData.acrescimo_catalogo;
+      }
+
       // Mesma query usada no parceiro.pdv.tsx
       const { data, error } = await supabase
         .from("produtos")
@@ -36,7 +47,13 @@ function ParceiroCatalogo() {
         .order("nome");
 
       if (error) console.error("[catalogo] erro ao buscar produtos:", error);
-      if (data) setProdutos(data);
+      if (data) {
+        const produtosComPreco = data.map((p: any) => ({
+          ...p,
+          valor: aplicaAcrescimo ? p.valor * 1.2 : p.valor
+        }));
+        setProdutos(produtosComPreco);
+      }
       setLoading(false);
     };
     init();
