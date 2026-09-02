@@ -81,6 +81,7 @@ function ParceiroPDV() {
       } = await supabase.auth.getSession();
       let aplicaAcrescimo = false;
       let acrescimoPercentual = 20;
+      let vendedorId = null;
       if (session) {
         const { data: vData } = await supabase
           .from("vendedores")
@@ -88,6 +89,7 @@ function ParceiroPDV() {
           .eq("user_id", session.user.id)
           .single();
         if (vData) {
+          vendedorId = vData.id;
           setVendedorInfo({ id: vData.id, nome: vData.nome });
           aplicaAcrescimo = vData.acrescimo_catalogo;
           if (vData.acrescimo_catalogo_percentual !== null && vData.acrescimo_catalogo_percentual !== undefined) {
@@ -100,13 +102,32 @@ function ParceiroPDV() {
         }
       }
 
+      let customPricesMap: Record<string, number> = {};
+      if (vendedorId) {
+        const { data: precos } = await supabase
+          .from("parceiro_precos")
+          .select("produto_id, preco_personalizado")
+          .eq("vendedor_id", vendedorId);
+        if (precos) {
+          precos.forEach(p => {
+            customPricesMap[p.produto_id] = Number(p.preco_personalizado);
+          });
+        }
+      }
+
       const { data } = await supabase.from("produtos").select("*").eq("status", "Ativo").order("nome");
       if (data) {
         const multiplier = 1 + (acrescimoPercentual / 100);
-        const produtosComPreco = data.map((p: any) => ({
-          ...p,
-          valor: aplicaAcrescimo ? p.valor * multiplier : p.valor
-        }));
+        const produtosComPreco = data.map((p: any) => {
+          let finalPrice = aplicaAcrescimo ? p.valor * multiplier : p.valor;
+          if (customPricesMap[p.id] !== undefined) {
+            finalPrice = customPricesMap[p.id];
+          }
+          return {
+            ...p,
+            valor: finalPrice
+          };
+        });
         setProdutos(produtosComPreco);
         
         // Verifica se veio um produto mágico pela URL (formato antigo)

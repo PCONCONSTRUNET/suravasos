@@ -30,16 +30,31 @@ function ParceiroCatalogo() {
 
       let aplicaAcrescimo = false;
       let percentual = 20;
+      let vendedorId = null;
       const { data: vData } = await supabase
         .from("vendedores")
-        .select("acrescimo_catalogo, acrescimo_catalogo_percentual")
+        .select("id, acrescimo_catalogo, acrescimo_catalogo_percentual")
         .eq("user_id", session.user.id)
         .single();
       
       if (vData) {
+        vendedorId = vData.id;
         aplicaAcrescimo = vData.acrescimo_catalogo;
         if (vData.acrescimo_catalogo_percentual !== null && vData.acrescimo_catalogo_percentual !== undefined) {
           percentual = Number(vData.acrescimo_catalogo_percentual);
+        }
+      }
+
+      let customPricesMap: Record<string, number> = {};
+      if (vendedorId) {
+        const { data: precos } = await supabase
+          .from("parceiro_precos")
+          .select("produto_id, preco_personalizado")
+          .eq("vendedor_id", vendedorId);
+        if (precos) {
+          precos.forEach(p => {
+            customPricesMap[p.produto_id] = Number(p.preco_personalizado);
+          });
         }
       }
 
@@ -53,10 +68,16 @@ function ParceiroCatalogo() {
       if (error) console.error("[catalogo] erro ao buscar produtos:", error);
       if (data) {
         const multiplier = 1 + (percentual / 100);
-        const produtosComPreco = data.map((prod: any) => ({
-          ...prod,
-          valor: aplicaAcrescimo ? prod.valor * multiplier : prod.valor
-        }));
+        const produtosComPreco = data.map((prod: any) => {
+          let finalPrice = aplicaAcrescimo ? prod.valor * multiplier : prod.valor;
+          if (customPricesMap[prod.id] !== undefined) {
+            finalPrice = customPricesMap[prod.id];
+          }
+          return {
+            ...prod,
+            valor: finalPrice
+          };
+        });
         setProdutos(produtosComPreco);
       }
       setLoading(false);

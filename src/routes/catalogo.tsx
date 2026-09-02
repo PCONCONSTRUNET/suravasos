@@ -127,16 +127,35 @@ function PublicCatalogo() {
       }
 
       if (data) {
-        if (partnerData?.acrescimo_catalogo) {
-          const percentual = partnerData.acrescimo_catalogo_percentual !== null && partnerData.acrescimo_catalogo_percentual !== undefined 
+        let customPricesMap: Record<string, number> = {};
+        if (partnerData) {
+          const { data: precos } = await supabase
+            .from("parceiro_precos")
+            .select("produto_id, preco_personalizado")
+            .eq("vendedor_id", partnerData.id);
+          if (precos) {
+            precos.forEach(p => {
+              customPricesMap[p.produto_id] = Number(p.preco_personalizado);
+            });
+          }
+        }
+
+        if (partnerData?.acrescimo_catalogo || Object.keys(customPricesMap).length > 0) {
+          const percentual = partnerData?.acrescimo_catalogo_percentual !== null && partnerData?.acrescimo_catalogo_percentual !== undefined 
             ? Number(partnerData.acrescimo_catalogo_percentual) 
             : 20;
           const multiplier = 1 + (percentual / 100);
           
-          const produtosComPreco = data.map((prod: any) => ({
-            ...prod,
-            valor: prod.valor * multiplier
-          }));
+          const produtosComPreco = data.map((prod: any) => {
+            let finalPrice = partnerData?.acrescimo_catalogo ? prod.valor * multiplier : prod.valor;
+            if (customPricesMap[prod.id] !== undefined) {
+              finalPrice = customPricesMap[prod.id];
+            }
+            return {
+              ...prod,
+              valor: finalPrice
+            };
+          });
           setProdutos(produtosComPreco);
         } else {
           setProdutos(data);
