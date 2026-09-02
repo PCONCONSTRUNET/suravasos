@@ -57,7 +57,10 @@ function ImprimirDAV() {
              cliente_telefone: cli?.telefone,
              cliente_endereco: enderecoPartes || null,
              condicao_pagamento: v.metodo_pagamento,
-             subtotal: v.valor_total,
+             subtotal: v.subtotal || v.valor_total,
+             desconto_valor: v.desconto_valor || 0,
+             desconto_percentual: v.desconto_percentual || 0,
+             frete_valor: v.frete_valor || 0,
              total: v.valor_total,
              vendedor: "",
              emissor_nome: "VIVAVERDE VASOS",
@@ -216,8 +219,10 @@ function ImprimirDAV() {
             <span>R$ {Number(dav.subtotal || 0).toFixed(2).replace(".", ",")}</span>
           </div>
           {Number(dav.desconto_valor) > 0 && (
-            <div className="flex justify-between text-red-600">
-              <span>Desconto ({dav.desconto_percentual}%):</span>
+            <div className="flex justify-between text-red-600 font-medium">
+              <span>
+                Desconto{Number(dav.desconto_percentual) > 0 ? ` (${Number(dav.desconto_percentual).toFixed(2).replace(".", ",")}%)` : ""}:
+              </span>
               <span>- R$ {Number(dav.desconto_valor).toFixed(2).replace(".", ",")}</span>
             </div>
           )}
