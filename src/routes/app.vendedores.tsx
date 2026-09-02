@@ -78,6 +78,7 @@ function VendedoresAdmin() {
   const [customPrices, setCustomPrices] = useState<Record<string, string>>({});
   const [searchProduct, setSearchProduct] = useState("");
   const [isSavingPrices, setIsSavingPrices] = useState(false);
+  const [successAlertModal, setSuccessAlertModal] = useState({ isOpen: false, message: "" });
 
   const [selectedSaleForDetails, setSelectedSaleForDetails] = useState<any>(null);
   const [saleItems, setSaleItems] = useState<any[]>([]);
@@ -317,8 +318,8 @@ function VendedoresAdmin() {
         if (error) throw error;
       }
 
-      alert("Tabela de preços salva com sucesso!");
       setIsTabelaPrecosModalOpen(false);
+      setSuccessAlertModal({ isOpen: true, message: "Tabela de preços salva com sucesso!" });
     } catch (err: any) {
       alert("Erro ao salvar tabela de preços: " + err.message);
     } finally {
@@ -1126,8 +1127,24 @@ function VendedoresAdmin() {
             <Button variant="outline" onClick={() => setIsTabelaPrecosModalOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={saveTabelaPrecos} disabled={isSavingPrices} className="bg-brand text-primary-foreground hover:bg-brand/90">
+            <Button onClick={saveTabelaPrecos} disabled={isSavingPrices} className="bg-green-600 text-white hover:bg-green-700">
               {isSavingPrices ? "Salvando..." : "Salvar Tabela"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={successAlertModal.isOpen} onOpenChange={(open) => setSuccessAlertModal({ ...successAlertModal, isOpen: open })}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Sucesso</DialogTitle>
+            <DialogDescription className="text-base text-slate-700 py-4 text-center font-medium">
+              {successAlertModal.message}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="sm:justify-center">
+            <Button className="w-full bg-green-600 text-white hover:bg-green-700" onClick={() => setSuccessAlertModal({ ...successAlertModal, isOpen: false })}>
+              OK
             </Button>
           </DialogFooter>
         </DialogContent>
