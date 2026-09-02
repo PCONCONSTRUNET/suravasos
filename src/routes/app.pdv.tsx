@@ -481,9 +481,9 @@ function PDV() {
                   cart.map((i) => (
                     <div
                       key={i.id}
-                      className="grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-3 px-6 py-3"
+                      className="grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-1.5 sm:gap-3 px-2 sm:px-6 py-3"
                     >
-                      <div className="grid h-12 w-12 place-items-center rounded-lg bg-accent text-2xl overflow-hidden relative">
+                      <div className="grid h-10 w-10 sm:h-12 sm:w-12 place-items-center rounded-lg bg-accent text-xl sm:text-2xl overflow-hidden relative">
                         {i.imagem ? (
                           <img src={i.imagem} alt={i.p} className="absolute inset-0 w-full h-full object-cover" />
                         ) : (
@@ -491,8 +491,8 @@ function PDV() {
                         )}
                       </div>
                       <div className="min-w-0">
-                        <p className="font-semibold truncate">{i.p}</p>
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
+                        <p className="font-semibold text-sm sm:text-base truncate">{i.p}</p>
+                        <div className="flex items-center gap-0.5 sm:gap-1 text-[11px] sm:text-xs text-muted-foreground mt-0.5">
                           R$ 
                           <input
                             type="number"
@@ -500,17 +500,17 @@ function PDV() {
                             step="0.01"
                             value={i.u}
                             onChange={(e) => setUnitPrice(i.id, parseFloat(e.target.value) || 0)}
-                            className="w-16 bg-transparent border-b border-dashed border-slate-300 outline-none focus:border-brand p-0 m-0 text-slate-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-10 sm:w-16 bg-transparent border-b border-dashed border-slate-300 outline-none focus:border-brand p-0 m-0 text-slate-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
                           un
                         </div>
                       </div>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-0.5 sm:gap-1">
                         <Button
                           onClick={() => updateQuantity(i.id, -1)}
                           size="icon"
                           variant="outline"
-                          className="h-8 w-8"
+                          className="h-7 w-7 sm:h-8 sm:w-8"
                         >
                           −
                         </Button>
@@ -519,25 +519,25 @@ function PDV() {
                           min="1"
                           value={i.q || ""}
                           onChange={(e) => setQuantity(i.id, parseInt(e.target.value) || 1)}
-                          className="w-12 text-center font-semibold bg-transparent border-0 outline-none p-0 focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          className="w-6 sm:w-12 text-center font-semibold bg-transparent border-0 outline-none p-0 focus:ring-0 text-sm sm:text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                         <Button
                           onClick={() => updateQuantity(i.id, 1)}
                           size="icon"
                           variant="outline"
-                          className="h-8 w-8"
+                          className="h-7 w-7 sm:h-8 sm:w-8"
                         >
                           +
                         </Button>
                       </div>
-                      <p className="font-bold text-primary">R$ {i.t.toFixed(2)}</p>
+                      <p className="font-bold text-primary text-sm sm:text-base">R$ {i.t.toFixed(2)}</p>
                       <Button
                         onClick={() => removeFromCart(i.id)}
                         size="icon"
                         variant="ghost"
-                        className="h-8 w-8 text-destructive"
+                        className="h-7 w-7 sm:h-8 sm:w-8 text-destructive"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </Button>
                     </div>
                   ))

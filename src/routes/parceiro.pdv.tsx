@@ -207,6 +207,18 @@ function ParceiroPDV() {
     );
   };
 
+  const setUnitPrice = (id: string, newU: number) => {
+    setCart((prev) =>
+      prev.map((i) => {
+        if (i.id === id) {
+          if (newU < 0) return i;
+          return { ...i, u: newU, t: i.q * newU };
+        }
+        return i;
+      }),
+    );
+  };
+
   const removeFromCart = (id: string) => {
     setCart((prev) => prev.filter((i) => i.id !== id));
   };
@@ -528,7 +540,21 @@ function ParceiroPDV() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-slate-800 truncate">{i.p}</p>
-                    <p className="text-xs text-brand font-bold">R$ {i.t.toFixed(2)}</p>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-x-2 gap-y-0.5 mt-0.5">
+                      <div className="flex items-center gap-0.5 text-[11px] sm:text-xs text-muted-foreground">
+                        R$ 
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={i.u}
+                          onChange={(e) => setUnitPrice(i.id, parseFloat(e.target.value) || 0)}
+                          className="w-10 sm:w-12 bg-transparent border-b border-dashed border-slate-300 outline-none focus:border-brand p-0 m-0 text-slate-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                        un
+                      </div>
+                      <p className="text-xs text-brand font-bold">R$ {i.t.toFixed(2)}</p>
+                    </div>
                   </div>
                   <div className="flex items-center gap-1.5 bg-slate-100 rounded-lg p-1">
                     <button
