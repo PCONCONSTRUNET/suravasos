@@ -22,25 +22,50 @@ export const Route = createFileRoute("/parceiro/pdv")({
 function ParceiroPDV() {
   const navigate = useNavigate();
   const [produtos, setProdutos] = useState<any[]>([]);
-  const [cart, setCart] = useState<any[]>([]);
+  const [cart, setCart] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('pdv_cart_parceiro');
+      if (saved) return JSON.parse(saved);
+    }
+    return [];
+  });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('pdv_cart_parceiro', JSON.stringify(cart));
+    }
+  }, [cart]);
+
   const [loading, setLoading] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
-  const [clientForm, setClientForm] = useState({
-    nome: "",
-    documento: "",
-    telefone: "",
-    cep: "",
-    endereco: "",
-    numero: "",
-    bairro: "",
-    cidade: "",
-    uf: "",
-    pagamento: "Dinheiro / Pix",
-    condicaoBoleto: "",
-    frete: "Retirada",
-    observacoes: "",
+  const [clientForm, setClientForm] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('pdv_client_parceiro');
+      if (saved) return JSON.parse(saved);
+    }
+    return {
+      nome: "",
+      documento: "",
+      telefone: "",
+      cep: "",
+      endereco: "",
+      numero: "",
+      bairro: "",
+      cidade: "",
+      uf: "",
+      pagamento: "Dinheiro / Pix",
+      condicaoBoleto: "",
+      frete: "Retirada",
+      observacoes: "",
+    };
   });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('pdv_client_parceiro', JSON.stringify(clientForm));
+    }
+  }, [clientForm]);
   const [vendedorInfo, setVendedorInfo] = useState<{ id: string; nome: string } | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [davGeradoId, setDavGeradoId] = useState<string | null>(null);
@@ -186,7 +211,8 @@ function ParceiroPDV() {
     setCart((prev) =>
       prev.map((i) => {
         if (i.id === id) {
-          const newQ = i.q + delta;
+          const currentQ = typeof i.q === "number" ? i.q : 0;
+          const newQ = currentQ + delta;
           if (newQ <= 0) return i;
           return { ...i, q: newQ, t: newQ * i.u };
         }
@@ -195,11 +221,15 @@ function ParceiroPDV() {
     );
   };
 
-  const setQuantity = (id: string, newQ: number) => {
+  const setQuantity = (id: string, val: string) => {
     setCart((prev) =>
       prev.map((i) => {
         if (i.id === id) {
-          if (newQ <= 0) return i;
+          if (val === "") {
+            return { ...i, q: "", t: 0 };
+          }
+          const newQ = parseInt(val);
+          if (isNaN(newQ) || newQ < 0) return i;
           return { ...i, q: newQ, t: newQ * i.u };
         }
         return i;
@@ -443,6 +473,22 @@ function ParceiroPDV() {
 
   const closeSuccessModal = () => {
     setIsSuccessModalOpen(false);
+    setCart([]);
+    setClientForm({
+      nome: "",
+      documento: "",
+      telefone: "",
+      cep: "",
+      endereco: "",
+      numero: "",
+      bairro: "",
+      cidade: "",
+      uf: "",
+      pagamento: "Dinheiro / Pix",
+      condicaoBoleto: "",
+      frete: "Retirada",
+      observacoes: "",
+    });
     navigate({ to: "/parceiro/dashboard" });
   };
 
@@ -520,7 +566,18 @@ function ParceiroPDV() {
           <h2 className="font-semibold text-sm flex items-center gap-2">
             <ShoppingCart className="h-4 w-4" /> Carrinho
           </h2>
-          <span className="text-xs font-bold text-muted-foreground">{cart.length} itens</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-muted-foreground">{cart.length} itens</span>
+            {cart.length > 0 && (
+              <button
+                onClick={() => setCart([])}
+                className="p-1 text-destructive hover:bg-destructive/10 rounded-md transition-colors"
+                title="Limpar Pedido"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         </div>
         <CardContent className="p-0">
           <div className="max-h-[40vh] overflow-y-auto divide-y">
@@ -566,8 +623,8 @@ function ParceiroPDV() {
                     <input
                       type="number"
                       min="1"
-                      value={i.q || ""}
-                      onChange={(e) => setQuantity(i.id, parseInt(e.target.value) || 1)}
+                      value={i.q === "" ? "" : i.q}
+                      onChange={(e) => setQuantity(i.id, e.target.value)}
                       className="w-8 text-center text-xs font-bold bg-transparent border-0 outline-none p-0 focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                     <button

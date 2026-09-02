@@ -30,7 +30,20 @@ export const Route = createFileRoute("/app/pdv")({
 
 function PDV() {
   const [produtos, setProdutos] = useState<any[]>([]);
-  const [cart, setCart] = useState<any[]>([]);
+  const [cart, setCart] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('pdv_cart_main');
+      if (saved) return JSON.parse(saved);
+    }
+    return [];
+  });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('pdv_cart_main', JSON.stringify(cart));
+    }
+  }, [cart]);
+
   const [loading, setLoading] = useState(false);
   const [metodoPagamento, setMetodoPagamento] = useState("Cartão");
   const [condicaoPagamento, setCondicaoPagamento] = useState("À vista");
@@ -262,7 +275,8 @@ function PDV() {
     setCart((prev) =>
       prev.map((i) => {
         if (i.id === id) {
-          const newQ = i.q + delta;
+          const currentQ = typeof i.q === "number" ? i.q : 0;
+          const newQ = currentQ + delta;
           if (newQ <= 0) return i;
           if (newQ > i.max) {
             alert("Estoque insuficiente!");
@@ -275,11 +289,15 @@ function PDV() {
     );
   };
 
-  const setQuantity = (id: string, newQ: number) => {
+  const setQuantity = (id: string, val: string) => {
     setCart((prev) =>
       prev.map((i) => {
         if (i.id === id) {
-          if (newQ <= 0) return i;
+          if (val === "") {
+            return { ...i, q: "", t: 0 };
+          }
+          const newQ = parseInt(val);
+          if (isNaN(newQ) || newQ < 0) return i;
           if (newQ > i.max) {
             alert("Estoque insuficiente!");
             return i;
@@ -461,7 +479,20 @@ function PDV() {
 
           <Card className="shadow-card">
             <CardHeader className="pb-3 flex flex-row items-center justify-between">
-              <CardTitle>Itens · {cart.length}</CardTitle>
+              <div className="flex items-center gap-3">
+                <CardTitle>Itens · {cart.length}</CardTitle>
+                {cart.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={limparCaixa}
+                    className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                    title="Limpar Pedido"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
               <Button
                 variant="outline"
                 size="sm"
@@ -517,8 +548,8 @@ function PDV() {
                         <input
                           type="number"
                           min="1"
-                          value={i.q || ""}
-                          onChange={(e) => setQuantity(i.id, parseInt(e.target.value) || 1)}
+                          value={i.q === "" ? "" : i.q}
+                          onChange={(e) => setQuantity(i.id, e.target.value)}
                           className="w-6 sm:w-12 text-center font-semibold bg-transparent border-0 outline-none p-0 focus:ring-0 text-sm sm:text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                         <Button
