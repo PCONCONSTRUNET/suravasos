@@ -600,12 +600,21 @@ function ParceiroPDV() {
                 <p className="text-[11px] font-bold text-slate-800 leading-tight line-clamp-2 h-7">{p.nome}</p>
                 <p className="text-[11px] font-extrabold text-slate-900 mt-1 mb-3">R$ {Number(p.valor).toFixed(2).replace(".", ",")}</p>
                 
-                {getCartQuantity(p.id) > 0 ? (
+                {getCartQuantity(p.id) !== 0 ? (
                   <div className="mt-auto flex items-center justify-between border rounded-lg p-0.5 border-brand/20 bg-brand/5">
                     <button onClick={() => updateQuantity(p.id, -1)} className="w-7 h-7 flex items-center justify-center text-brand hover:bg-brand/10 rounded-md">
                       <Minus className="w-3 h-3" />
                     </button>
-                    <span className="text-xs font-bold w-6 text-center text-brand">{getCartQuantity(p.id)}</span>
+                    <input
+                      type="number"
+                      min="0"
+                      className="w-8 text-center text-xs font-bold text-brand bg-transparent outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      value={getCartQuantity(p.id)}
+                      onChange={(e) => setQuantity(p.id, e.target.value)}
+                      onBlur={(e) => {
+                        if (e.target.value === "" || parseInt(e.target.value) <= 0) removeFromCart(p.id);
+                      }}
+                    />
                     <button onClick={() => updateQuantity(p.id, 1)} className="w-7 h-7 flex items-center justify-center text-brand hover:bg-brand/10 rounded-md">
                       <Plus className="w-3 h-3" />
                     </button>
@@ -655,12 +664,21 @@ function ParceiroPDV() {
                 </div>
                 <div className="flex flex-col items-end gap-2 shrink-0">
                   <p className="text-sm font-extrabold text-slate-900">R$ {Number(p.valor).toFixed(2).replace(".", ",")}</p>
-                  {qtd > 0 ? (
+                  {qtd !== 0 ? (
                     <div className="flex items-center gap-1 border rounded-lg p-0.5 border-brand/20 bg-brand/5">
                       <button onClick={() => updateQuantity(p.id, -1)} className="w-6 h-6 flex items-center justify-center text-brand">
                         <Minus className="w-3 h-3" />
                       </button>
-                      <span className="text-xs font-bold w-5 text-center text-brand">{qtd}</span>
+                      <input
+                        type="number"
+                        min="0"
+                        className="w-8 text-center text-xs font-bold text-brand bg-transparent outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        value={qtd}
+                        onChange={(e) => setQuantity(p.id, e.target.value)}
+                        onBlur={(e) => {
+                          if (e.target.value === "" || parseInt(e.target.value) <= 0) removeFromCart(p.id);
+                        }}
+                      />
                       <button onClick={() => updateQuantity(p.id, 1)} className="w-6 h-6 flex items-center justify-center text-brand">
                         <Plus className="w-3 h-3" />
                       </button>
@@ -729,7 +747,16 @@ function ParceiroPDV() {
                       <p className="text-xs font-extrabold text-slate-900">R$ {i.t.toFixed(2)}</p>
                       <div className="flex items-center gap-1.5 bg-white border rounded-lg p-0.5">
                         <button onClick={() => updateQuantity(i.id, -1)} className="w-5 h-5 flex items-center justify-center text-slate-600"><Minus className="w-3 h-3" /></button>
-                        <span className="text-[10px] font-bold w-4 text-center">{i.q}</span>
+                        <input
+                          type="number"
+                          min="0"
+                          className="w-8 text-center text-[10px] font-bold text-slate-800 bg-transparent outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          value={i.q}
+                          onChange={(e) => setQuantity(i.id, e.target.value)}
+                          onBlur={(e) => {
+                            if (e.target.value === "" || parseInt(e.target.value) <= 0) removeFromCart(i.id);
+                          }}
+                        />
                         <button onClick={() => updateQuantity(i.id, 1)} className="w-5 h-5 flex items-center justify-center text-slate-600"><Plus className="w-3 h-3" /></button>
                       </div>
                     </div>
