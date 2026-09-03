@@ -295,7 +295,7 @@ function DAVList() {
           <SheetHeader>
             <SheetTitle>Detalhes do Orçamento</SheetTitle>
             <SheetDescription>
-              DAV Nº {selectedDav?.numero ? String(selectedDav.numero).padStart(3, "0") : selectedDav?.numero_venda || selectedDav?.id?.substring(0, 8).toUpperCase()}
+              DAV Nº {selectedDav?.numero_venda}
             </SheetDescription>
           </SheetHeader>
 

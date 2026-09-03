@@ -322,7 +322,7 @@ function ParceiroDashboard() {
         {
           tipo: "venda",
           titulo: `Pedido reenviado pelo parceiro: ${nome.split(" ")[0]}`,
-          mensagem: `O parceiro reenviou o pedido #${selectedSaleForDetails.id.substring(0, 6)} para aprovação.`,
+          mensagem: `O parceiro reenviou o pedido #${selectedSaleForDetails.numero_venda} para aprovação.`,
         },
       ]);
       alert("Pedido enviado para o dono com sucesso!");
@@ -514,7 +514,7 @@ function ParceiroDashboard() {
             <DialogTitle>Ficha do Pedido</DialogTitle>
             <DialogDescription asChild>
               <div>
-                Pedido #{selectedSaleForDetails?.id.substring(0, 6)} •{" "}
+                Pedido #{selectedSaleForDetails?.numero_venda} •{" "}
                 {new Date(selectedSaleForDetails?.created_at).toLocaleDateString()}
                 {selectedSaleForDetails?.cliente?.nome && (
                   <div className="mt-3 text-sm text-slate-700 bg-slate-100 p-3 rounded-md border border-slate-200 text-left">

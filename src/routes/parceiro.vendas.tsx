@@ -232,7 +232,7 @@ function VendasParceiro() {
             <DialogTitle>Ficha do Pedido</DialogTitle>
             <DialogDescription asChild>
               <div>
-                Pedido #{selectedVenda?.id?.substring(0, 6)} •{" "}
+                Pedido #{selectedVenda?.numero_venda} •{" "}
                 {selectedVenda && new Date(selectedVenda.created_at).toLocaleDateString('pt-BR')}
                 {selectedVenda?.clientes?.nome && (
                   <div className="mt-3 text-sm text-slate-700 bg-slate-100 p-3 rounded-md border border-slate-200 text-left">

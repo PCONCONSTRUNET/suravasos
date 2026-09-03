@@ -224,7 +224,7 @@ function VendasParceiros() {
                 >
                   <TableCell>
                     <p className="font-mono text-xs font-medium">
-                      #{v.numero_venda || v.id.substring(0, 8).toUpperCase()}
+                      #{v.numero_venda}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {new Date(v.created_at).toLocaleDateString()}
@@ -309,7 +309,7 @@ function VendasParceiros() {
             <DialogTitle>Detalhes do Pedido</DialogTitle>
             <DialogDescription asChild>
               <div>
-                Pedido #{selectedSaleForDetails?.id?.substring(0, 6).toUpperCase()} • Vendedor:{" "}
+                Pedido #{selectedSaleForDetails?.numero_venda} • Vendedor:{" "}
                 {selectedSaleForDetails?.vendedor?.nome || "Desconhecido"}
                 {selectedSaleForDetails?.cliente?.nome && (
                   <div className="mt-3 text-sm text-slate-700 bg-slate-100 p-3 rounded-md border border-slate-200">

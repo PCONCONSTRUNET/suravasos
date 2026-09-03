@@ -385,7 +385,7 @@ function PDV() {
       await supabase.from("contas_receber").insert([
         {
           venda_id: vendaId,
-          descricao: `Venda PDV #${vendaData.numero ? String(vendaData.numero).padStart(3, "0") : vendaData.numero_venda || vendaId.substring(0, 8).toUpperCase()}`,
+          descricao: `Venda PDV #${vendaData.numero_venda}`,
           valor: totalPagamento,
           vencimento: dataAtual,
           status: "Recebido",
@@ -405,7 +405,7 @@ function PDV() {
             produto_id: item.id,
             tipo: "Saída",
             quantidade: -item.q,
-            motivo: `Venda PDV #${vendaData.numero ? String(vendaData.numero).padStart(3, "0") : vendaData.numero_venda || vendaId.substring(0, 8).toUpperCase()}`
+            motivo: `Venda PDV #${vendaData.numero_venda}`
           });
           
           prod.estoque = novoEstoque; // Atualiza local
@@ -749,7 +749,7 @@ function PDV() {
                 >
                   <div>
                     <p className="font-semibold text-slate-800">
-                      #{orc.numero ? String(orc.numero).padStart(3, "0") : orc.numero_venda || orc.id.substring(0, 8).toUpperCase()}
+                      #{orc.numero_venda}
                     </p>
                     <p className="text-sm text-slate-600 font-medium">
                       👤 {orc.cliente?.nome || "Cliente Desconhecido"}

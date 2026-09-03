@@ -523,7 +523,7 @@ function ParceiroPDV() {
     if (!davGeradoId) return;
 
     let msg = `*ORÇAMENTO - VIVAVERDE VASOS*\n`;
-    msg += `Nº do Orçamento: ${davGeradoNumero || davGeradoId.substring(0, 8).toUpperCase()}\n\n`;
+    msg += `Nº do Orçamento: ${davGeradoNumero}\n\n`;
     msg += `Olá ${clientForm.nome}, aqui está o seu orçamento detalhado!\n\n`;
 
     msg += `*ITENS DO ORÇAMENTO:*\n`;

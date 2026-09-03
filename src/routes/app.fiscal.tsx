@@ -775,7 +775,7 @@ function Fiscal() {
               Emitir NF-e — Venda{" "}
               {vendaSelecionada?.numero
                 ? String(vendaSelecionada.numero).padStart(3, "0")
-                : vendaSelecionada?.id?.substring(0, 8).toUpperCase()}
+                : vendaSelecionada?.numero_venda}
             </DialogTitle>
             <DialogDescription>
               Preencha os dados fiscais e transmita para a SEFAZ via Brasil NFe.

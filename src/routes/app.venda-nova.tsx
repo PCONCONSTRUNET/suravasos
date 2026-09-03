@@ -249,7 +249,7 @@ function NovaVenda() {
           {
             venda_id: vendaId,
             cliente_id: idDoCliente,
-            descricao: `Venda #${vendaData.numero_venda || vendaId.substring(0, 8).toUpperCase()}`,
+            descricao: `Venda #${vendaData.numero_venda}`,
             valor: totalVenda,
             vencimento: vencimento.toISOString().split("T")[0],
             status: status === "Pago" ? "Recebido" : "Pendente",

@@ -205,7 +205,7 @@ function VendedoresAdmin() {
       await supabase.from("contas_receber").insert([
         {
           venda_id: venda.id,
-          descricao: `Venda Parceiro #${venda.numero_venda || venda.id.substring(0, 8).toUpperCase()} - ${vendedor?.nome || ""}`,
+          descricao: `Venda Parceiro #${venda.numero_venda} - ${vendedor?.nome || ""}`,
           valor: valorVenda,
           vencimento: dataAtual,
           status: "Pendente",
@@ -771,7 +771,7 @@ function VendedoresAdmin() {
                         <div className="flex justify-between items-start">
                           <div>
                             <p className="text-xs font-medium text-muted-foreground">
-                              Pedido #{v.numero_venda || v.id.substring(0, 8).toUpperCase()}
+                              Pedido #{v.numero_venda}
                             </p>
                             <p className="font-bold text-sm">
                               Venda: R$ {Number(v.valor_total).toFixed(2)}
@@ -944,7 +944,7 @@ function VendedoresAdmin() {
             <DialogDescription asChild>
               <div>
                 <p>
-                  Pedido #{selectedSaleForDetails?.id?.substring(0, 6).toUpperCase()} • Vendedor:{" "}
+                  Pedido #{selectedSaleForDetails?.numero_venda} • Vendedor:{" "}
                   {selectedSaleForDetails?.vendedor?.nome || "Desconhecido"}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
