@@ -77,9 +77,8 @@ function ParceiroPDV() {
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [initError, setInitError] = useState<string | null>(null);
   
-  const fixedOrder = ["Terra", "Vasos", "Pratos", "Substratos", "Pedras", "Fertilizantes"];
   const dynamicCategories = Array.from(new Set(produtos.map((p) => p.categoria))).filter(Boolean) as string[];
-  const categorias = Array.from(new Set([...fixedOrder, ...dynamicCategories]));
+  const categorias = dynamicCategories;
 
   const toggleCategory = (cat: string) => {
     setSelectedCategory(cat);
