@@ -75,11 +75,16 @@ function ParceiroPDV() {
   const [cnpjErro, setCnpjErro] = useState("");
   const [descontoPercentual, setDescontoPercentual] = useState<number>(0);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
-  const [categorySearchTerm, setCategorySearchTerm] = useState("");
-  const categorias = Array.from(new Set(produtos.map((p) => p.categoria))).filter(Boolean) as string[];
+  
+  const fixedOrder = ["Terra", "Vasos", "Pratos", "Substratos", "Pedras", "Fertilizantes"];
+  const dynamicCategories = Array.from(new Set(produtos.map((p) => p.categoria))).filter(Boolean) as string[];
+  const categorias = Array.from(new Set([...fixedOrder, ...dynamicCategories]));
 
   const toggleCategory = (cat: string) => {
+    if (cat === "Todos") {
+      setSelectedCategories([]);
+      return;
+    }
     setSelectedCategories(prev =>
       prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
     );
@@ -640,18 +645,23 @@ function ParceiroPDV() {
           </div>
         </div>
 
-        {/* Category Button */}
-        <div className="flex justify-center mb-4">
-          <Button 
-            onClick={() => setIsCategoryModalOpen(true)}
-            variant="outline"
-            className="rounded-full px-6 flex items-center gap-2 border-slate-300 shadow-sm"
+        {/* Categories Tabs */}
+        <div className="flex overflow-x-auto gap-2 pb-2 no-scrollbar bg-slate-50 py-1">
+          <button
+            onClick={() => toggleCategory("Todos")}
+            className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-colors ${selectedCategories.length === 0 ? 'bg-emerald-700 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200'}`}
           >
-            <Grid className="w-4 h-4 text-emerald-600" />
-            <span className="text-sm font-bold text-slate-700">
-              {selectedCategories.length === 0 ? "Categorias" : `Categorias (${selectedCategories.length})`}
-            </span>
-          </Button>
+            Todos
+          </button>
+          {categorias.map(cat => (
+            <button
+              key={cat}
+              onClick={() => toggleCategory(cat)}
+              className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-colors ${selectedCategories.includes(cat) ? 'bg-emerald-700 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200'}`}
+            >
+              {cat}
+            </button>
+          ))}
         </div>
 
         {/* Vertical Product List */}
@@ -1040,51 +1050,7 @@ function ParceiroPDV() {
           </form>
         </DialogContent>
       </Dialog>
-      {/* Modal de Categorias */}
-      <Dialog open={isCategoryModalOpen} onOpenChange={setIsCategoryModalOpen}>
-        <DialogContent className="w-[90vw] sm:max-w-[425px] rounded-2xl p-0 overflow-hidden">
-          <div className="p-4 border-b">
-            <DialogTitle className="text-xl mb-3">Categorias</DialogTitle>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Pesquisar categoria..."
-                value={categorySearchTerm}
-                onChange={(e) => setCategorySearchTerm(e.target.value)}
-                className="pl-9 bg-slate-50 border-slate-200 rounded-xl"
-              />
-            </div>
-          </div>
-          <div className="p-4 max-h-[50vh] overflow-y-auto space-y-2">
-            {categorias
-              .filter(c => c.toLowerCase().includes(categorySearchTerm.toLowerCase()))
-              .map(cat => {
-                const isSelected = selectedCategories.includes(cat);
-                return (
-                  <button
-                    key={cat}
-                    onClick={() => toggleCategory(cat)}
-                    className={`w-full flex justify-between items-center px-4 py-3 rounded-xl border ${isSelected ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-white border-slate-200 text-slate-700'} hover:bg-slate-50 transition-colors text-left`}
-                  >
-                    <span className="font-semibold">{cat}</span>
-                    {isSelected && <CheckCircle2 className="w-5 h-5 text-emerald-600" />}
-                  </button>
-                )
-            })}
-            {categorias.filter(c => c.toLowerCase().includes(categorySearchTerm.toLowerCase())).length === 0 && (
-              <p className="text-center text-muted-foreground py-4 text-sm">Nenhuma categoria encontrada.</p>
-            )}
-          </div>
-          <div className="p-4 border-t bg-slate-50 flex gap-3">
-            <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setSelectedCategories([])}>
-              Limpar
-            </Button>
-            <Button className="flex-1 rounded-xl bg-emerald-700 text-white hover:bg-emerald-800" onClick={() => setIsCategoryModalOpen(false)}>
-              Aplicar
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+
     </div>
   );
 }
