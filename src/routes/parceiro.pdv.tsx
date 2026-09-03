@@ -76,6 +76,7 @@ function ParceiroPDV() {
   const [descontoPercentual, setDescontoPercentual] = useState<number>(0);
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [initError, setInitError] = useState<string | null>(null);
+  const [isInitializing, setIsInitializing] = useState(true);
   
   const dynamicCategories = Array.from(new Set(produtos.map((p) => p.categoria))).filter(Boolean) as string[];
   const categorias = dynamicCategories;
@@ -237,6 +238,8 @@ function ParceiroPDV() {
     } catch (err: any) {
       console.error("Erro na inicialização do PDV:", err);
       setInitError(err.message || "Ocorreu um erro ao carregar o PDV.");
+    } finally {
+      setIsInitializing(false);
     }
   };
   init();
@@ -536,6 +539,15 @@ function ParceiroPDV() {
     const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
     window.open(url, "_blank");
   };
+
+  if (isInitializing) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 space-y-4">
+        <Loader2 className="w-12 h-12 animate-spin text-brand" />
+        <p className="text-slate-600 font-medium animate-pulse">Iniciando PDV...</p>
+      </div>
+    );
+  }
 
   if (initError)
     return <div className="text-center py-10 text-red-600 font-bold">Erro: {initError}</div>;
