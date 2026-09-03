@@ -4,7 +4,8 @@ import { supabaseParceiro as supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Trash2, ShoppingCart, CheckCircle2, Loader2 } from "lucide-react";
+import { Search, Trash2, ShoppingCart, CheckCircle2, Loader2, Camera, Mic, Star, Flame, Clock, Grid, RefreshCw, Plus, Minus, ArrowRight, ChevronRight } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import {
   Dialog,
   DialogContent,
@@ -73,6 +74,13 @@ function ParceiroPDV() {
   const [cnpjLoading, setCnpjLoading] = useState(false);
   const [cnpjErro, setCnpjErro] = useState("");
   const [descontoPercentual, setDescontoPercentual] = useState<number>(0);
+  const [selectedCategory, setSelectedCategory] = useState("Todos");
+  const categorias = ["Todos", "Terra", "Vasos", "Pratos", "Substratos", "Pedras", "Fertilizantes"];
+
+  const getCartQuantity = (id: string) => {
+    const item = cart.find((i) => i.id === id);
+    return item ? item.q : 0;
+  };
 
   useEffect(() => {
     const init = async () => {
@@ -542,149 +550,244 @@ function ParceiroPDV() {
   if (!vendedorInfo)
     return <div className="text-center py-10">Verificando perfil de vendedor...</div>;
 
+  // Filter products by search and category
+  const filteredProducts = produtos.filter((p) => {
+    const matchesSearch = p.nome.toLowerCase().includes(searchTerm.toLowerCase()) || (p.codigo && p.codigo.toLowerCase().includes(searchTerm.toLowerCase()));
+    if (selectedCategory === "Todos") return matchesSearch;
+    // Basic category filter logic based on name for now, as we don't have a category field
+    return matchesSearch && p.nome.toLowerCase().includes(selectedCategory.toLowerCase());
+  });
+
   return (
-    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="mb-2">
-        <h1 className="text-2xl font-bold font-display text-slate-800">Nova Venda</h1>
-        <p className="text-sm text-muted-foreground">Registre o pedido do seu cliente.</p>
-      </div>
-
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder="Buscar produto…"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="h-12 pl-10 rounded-xl bg-white shadow-sm border-0 ring-1 ring-slate-900/5"
-        />
-      </div>
-
-      <div className="flex overflow-x-auto pb-2 gap-2 snap-x">
-        {produtos
-          .filter((p) => p.nome.toLowerCase().includes(searchTerm.toLowerCase()) || (p.codigo && p.codigo.toLowerCase().includes(searchTerm.toLowerCase())))
-          .map((p) => (
-            <button
-              key={p.id}
-              onClick={() => addToCart(p)}
-              className="flex-shrink-0 snap-center w-28 bg-white p-3 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center gap-2 active:scale-95 transition-transform"
-            >
-              <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-md bg-accent text-3xl">
-                {p.imagem ? (
-                  <img src={p.imagem} alt={p.nome} className="h-full w-full object-cover" />
-                ) : (
-                  <span className="opacity-50">{p.emoji || "🪴"}</span>
-                )}
-              </div>
-              <div className="text-center flex-1 flex flex-col justify-between w-full">
-                <p className="text-[11px] font-semibold text-slate-800 leading-tight break-words mb-1">
-                  {p.nome}
-                </p>
-                <p className="text-[11px] font-bold text-brand mt-auto">
-                  R$ {Number(p.valor).toFixed(2)}
-                </p>
-              </div>
-            </button>
-          ))}
-      </div>
-
-      <Card className="shadow-sm border-0 ring-1 ring-slate-900/5 overflow-hidden">
-        <div className="bg-slate-50 border-b p-3 flex justify-between items-center">
-          <h2 className="font-semibold text-sm flex items-center gap-2">
-            <ShoppingCart className="h-4 w-4" /> Carrinho
-          </h2>
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-muted-foreground">{cart.length} itens</span>
-            {cart.length > 0 && (
-              <button
-                onClick={() => setCart([])}
-                className="p-1 text-destructive hover:bg-destructive/10 rounded-md transition-colors"
-                title="Limpar Pedido"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 pb-28 bg-slate-50 min-h-screen">
+      {/* Top Header */}
+      <div className="bg-white p-4 sticky top-0 z-10 shadow-sm">
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <p className="text-xs font-semibold text-brand">Cliente</p>
+            {clientForm.nome ? (
+              <>
+                <h2 className="text-lg font-bold text-slate-800 leading-tight">{clientForm.nome}</h2>
+                {clientForm.documento && <p className="text-xs text-muted-foreground mt-0.5">CNPJ: {clientForm.documento}</p>}
+              </>
+            ) : (
+              <h2 className="text-lg font-bold text-slate-400 leading-tight">Nenhum cliente</h2>
             )}
           </div>
+          <Button variant="outline" size="sm" onClick={() => setIsClientModalOpen(true)} className="h-9 px-3 rounded-lg text-xs font-semibold shadow-sm">
+            <RefreshCw className="w-3 h-3 mr-1.5" />
+            {clientForm.nome ? "Trocar cliente" : "Selecionar"}
+          </Button>
         </div>
-        <CardContent className="p-0">
-          <div className="max-h-[40vh] overflow-y-auto divide-y">
-            {cart.length === 0 ? (
-              <div className="p-6 text-center text-sm text-muted-foreground">
-                Selecione produtos acima.
+
+        {/* Search Bar */}
+        <div className="relative flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar produto, código..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="h-11 pl-9 pr-10 rounded-xl bg-white border-slate-200 shadow-sm text-sm"
+            />
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 text-muted-foreground">
+              <button className="p-1.5 hover:text-brand"><Camera className="w-4 h-4" /></button>
+            </div>
+          </div>
+          <button className="h-11 w-11 rounded-xl bg-slate-100 flex items-center justify-center text-muted-foreground hover:bg-slate-200 shrink-0">
+            <Mic className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Quick Filters */}
+        <div className="flex gap-2 mt-4 overflow-x-auto pb-1 snap-x no-scrollbar">
+          <button className="flex-shrink-0 snap-start flex items-center gap-2 bg-amber-50 text-amber-700 px-3 py-1.5 rounded-lg text-xs font-semibold border border-amber-100">
+            <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" /> Favoritos
+          </button>
+          <button className="flex-shrink-0 snap-start flex items-center gap-2 bg-rose-50 text-rose-700 px-3 py-1.5 rounded-lg text-xs font-semibold border border-rose-100">
+            <Flame className="w-3.5 h-3.5 fill-rose-500 text-rose-500" /> Mais vendidos
+          </button>
+          <button className="flex-shrink-0 snap-start flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg text-xs font-semibold border border-blue-100">
+            <Clock className="w-3.5 h-3.5" /> Último pedido
+          </button>
+          <button className="flex-shrink-0 snap-start flex items-center gap-2 bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold border border-slate-200">
+            <Grid className="w-3.5 h-3.5" /> Categorias
+          </button>
+        </div>
+      </div>
+
+      <div className="p-4 space-y-6">
+        {/* Mais Comprados */}
+        <div>
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="font-bold text-sm text-slate-800">Mais comprados por este cliente</h3>
+            <button className="text-xs font-semibold text-muted-foreground hover:text-brand">Ver todos</button>
+          </div>
+          <div className="flex overflow-x-auto gap-3 pb-2 snap-x no-scrollbar">
+            {produtos.slice(0, 5).map((p) => (
+              <div key={`fav-${p.id}`} className="flex-shrink-0 snap-center w-36 bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex flex-col">
+                <div className="h-24 w-full bg-slate-50 rounded-xl mb-3 flex items-center justify-center overflow-hidden">
+                  {p.imagem ? (
+                    <img src={p.imagem} alt={p.nome} className="h-full w-full object-cover mix-blend-multiply" />
+                  ) : (
+                    <span className="text-3xl opacity-50">{p.emoji || "🪴"}</span>
+                  )}
+                </div>
+                <p className="text-[11px] font-bold text-slate-800 leading-tight line-clamp-2 h-7">{p.nome}</p>
+                <p className="text-[11px] font-extrabold text-slate-900 mt-1 mb-3">R$ {Number(p.valor).toFixed(2).replace(".", ",")}</p>
+                
+                <div className="mt-auto flex items-center justify-between border rounded-lg p-0.5 border-brand/20 bg-brand/5">
+                  <button onClick={() => updateQuantity(p.id, -1)} className="w-7 h-7 flex items-center justify-center text-brand hover:bg-brand/10 rounded-md">
+                    <Minus className="w-3 h-3" />
+                  </button>
+                  <span className="text-xs font-bold w-6 text-center text-brand">{getCartQuantity(p.id)}</span>
+                  <button onClick={() => updateQuantity(p.id, 1)} className="w-7 h-7 flex items-center justify-center text-brand hover:bg-brand/10 rounded-md">
+                    <Plus className="w-3 h-3" />
+                  </button>
+                </div>
               </div>
-            ) : (
-              cart.map((i) => (
-                <div key={i.id} className="flex items-center gap-3 p-3">
-                  <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-md bg-accent text-2xl">
-                    {i.imagem ? (
-                      <img src={i.imagem} alt={i.p} className="h-full w-full object-cover" />
-                    ) : (
-                      <span className="opacity-50">{i.emoji || "🪴"}</span>
-                    )}
+            ))}
+          </div>
+        </div>
+
+        {/* Categories Tabs */}
+        <div className="flex overflow-x-auto gap-2 pb-2 snap-x no-scrollbar sticky top-36 z-10 bg-slate-50 py-1">
+          {categorias.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`flex-shrink-0 snap-center px-4 py-2 rounded-full text-xs font-bold transition-colors ${selectedCategory === cat ? 'bg-brand text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200'}`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        {/* Vertical Product List */}
+        <div className="space-y-3">
+          {filteredProducts.map((p) => {
+            const qtd = getCartQuantity(p.id);
+            return (
+              <div key={p.id} className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
+                <div className="h-16 w-16 bg-slate-50 rounded-xl shrink-0 flex items-center justify-center overflow-hidden">
+                  {p.imagem ? (
+                    <img src={p.imagem} alt={p.nome} className="h-full w-full object-cover mix-blend-multiply" />
+                  ) : (
+                    <span className="text-2xl opacity-50">{p.emoji || "🪴"}</span>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-slate-800 leading-tight mb-1">{p.nome}</p>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[10px] text-muted-foreground">Código: {p.codigo || "N/A"}</span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs sm:text-sm font-semibold text-slate-800 leading-tight break-words pr-2">{i.p}</p>
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-x-2 gap-y-0.5 mt-0.5">
-                      <div className="flex items-center gap-0.5 text-[11px] sm:text-xs text-muted-foreground">
-                        R$ 
+                  <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">Estoque: {p.estoque || 0} und</span>
+                </div>
+                <div className="flex flex-col items-end gap-2 shrink-0">
+                  <p className="text-sm font-extrabold text-slate-900">R$ {Number(p.valor).toFixed(2).replace(".", ",")}</p>
+                  {qtd > 0 ? (
+                    <div className="flex items-center gap-1 border rounded-lg p-0.5 border-brand/20 bg-brand/5">
+                      <button onClick={() => updateQuantity(p.id, -1)} className="w-6 h-6 flex items-center justify-center text-brand">
+                        <Minus className="w-3 h-3" />
+                      </button>
+                      <span className="text-xs font-bold w-5 text-center text-brand">{qtd}</span>
+                      <button onClick={() => updateQuantity(p.id, 1)} className="w-6 h-6 flex items-center justify-center text-brand">
+                        <Plus className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <button onClick={() => updateQuantity(p.id, 1)} className="bg-emerald-700 text-white p-1.5 px-2.5 rounded-lg shadow-sm hover:bg-emerald-800 active:scale-95 transition-transform flex items-center gap-1">
+                      <ShoppingCart className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Fixed Bottom Bar */}
+      <div className="fixed bottom-0 left-0 right-0 md:left-64 bg-white border-t p-3 sm:p-4 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] z-40 flex items-center justify-between gap-3">
+        <Sheet>
+          <SheetTrigger asChild>
+            <button className="flex items-center gap-3 active:scale-95 transition-transform text-left">
+              <div className="relative">
+                <ShoppingCart className="w-7 h-7 text-brand" />
+                {cart.length > 0 && (
+                  <span className="absolute -top-1 -right-1.5 bg-rose-500 text-white text-[9px] font-bold w-4 h-4 flex items-center justify-center rounded-full border-2 border-white">
+                    {cart.length}
+                  </span>
+                )}
+              </div>
+              <div>
+                <p className="text-xs font-bold text-slate-800">{cart.length} itens</p>
+                <p className="text-[10px] text-muted-foreground flex items-center font-semibold">Ver carrinho <ChevronRight className="w-3 h-3 ml-0.5 -rotate-90" /></p>
+              </div>
+            </button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl p-0 flex flex-col">
+            <SheetHeader className="p-4 border-b text-left">
+              <div className="flex justify-between items-center">
+                <SheetTitle className="flex items-center gap-2 text-lg"><ShoppingCart className="w-5 h-5"/> Seu Carrinho</SheetTitle>
+                <Button variant="ghost" size="sm" onClick={() => setCart([])} className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 h-8 text-xs">Esvaziar</Button>
+              </div>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {cart.length === 0 ? (
+                <div className="text-center py-10 text-muted-foreground text-sm">Seu carrinho está vazio.</div>
+              ) : (
+                cart.map((i) => (
+                  <div key={i.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-white shadow-sm text-2xl">
+                      {i.imagem ? <img src={i.imagem} alt={i.p} className="h-full w-full object-cover" /> : <span className="opacity-50">{i.emoji || "🪴"}</span>}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-slate-800 leading-tight mb-1 truncate">{i.p}</p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-muted-foreground line-through">R$ {Number(i.u).toFixed(2)}</span>
                         <input
                           type="number"
-                          min="0"
                           step="0.01"
                           value={i.u}
                           onChange={(e) => setUnitPrice(i.id, parseFloat(e.target.value) || 0)}
-                          className="w-10 sm:w-12 bg-transparent border-b border-dashed border-slate-300 outline-none focus:border-brand p-0 m-0 text-slate-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          className="w-14 bg-transparent border-b border-dashed border-slate-300 outline-none focus:border-brand p-0 text-xs font-bold text-brand [appearance:textfield]"
                         />
-                        un
                       </div>
-                      <p className="text-xs text-brand font-bold">R$ {i.t.toFixed(2)}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-2 shrink-0">
+                      <p className="text-xs font-extrabold text-slate-900">R$ {i.t.toFixed(2)}</p>
+                      <div className="flex items-center gap-1.5 bg-white border rounded-lg p-0.5">
+                        <button onClick={() => updateQuantity(i.id, -1)} className="w-5 h-5 flex items-center justify-center text-slate-600"><Minus className="w-3 h-3" /></button>
+                        <span className="text-[10px] font-bold w-4 text-center">{i.q}</span>
+                        <button onClick={() => updateQuantity(i.id, 1)} className="w-5 h-5 flex items-center justify-center text-slate-600"><Plus className="w-3 h-3" /></button>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1.5 bg-slate-100 rounded-lg p-1">
-                    <button
-                      onClick={() => updateQuantity(i.id, -1)}
-                      className="h-6 w-6 grid place-items-center bg-white rounded shadow-sm text-lg leading-none font-medium"
-                    >
-                      −
-                    </button>
-                    <input
-                      type="number"
-                      min="1"
-                      value={i.q === "" ? "" : i.q}
-                      onChange={(e) => setQuantity(i.id, e.target.value)}
-                      className="w-8 text-center text-xs font-bold bg-transparent border-0 outline-none p-0 focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    />
-                    <button
-                      onClick={() => updateQuantity(i.id, 1)}
-                      className="h-6 w-6 grid place-items-center bg-white rounded shadow-sm text-lg leading-none font-medium"
-                    >
-                      +
-                    </button>
-                  </div>
-                  <button
-                    onClick={() => removeFromCart(i.id)}
-                    className="p-1.5 text-destructive bg-destructive/10 rounded-md"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {cart.length > 0 && (
-        <div className="sticky bottom-24 pt-2">
-          <Button
-            onClick={handleOpenClientModal}
-            disabled={loading}
-            className="w-full h-14 bg-gradient-brand text-primary-foreground text-lg font-bold shadow-lg shadow-brand/25 flex justify-between px-6"
-          >
-            <span>Enviar Pedido</span>
-            <span>R$ {subtotal.toFixed(2).replace(".", ",")}</span>
-          </Button>
+                ))
+              )}
+            </div>
+            <div className="p-4 border-t bg-slate-50">
+               <div className="flex justify-between items-center mb-2">
+                 <span className="text-sm font-semibold text-slate-600">Subtotal</span>
+                 <span className="font-bold text-slate-800">R$ {rawSubtotal.toFixed(2)}</span>
+               </div>
+               <Button onClick={() => { document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape'})); handleOpenClientModal(); }} disabled={cart.length === 0} className="w-full h-12 bg-gradient-brand text-white font-bold text-base shadow-lg shadow-brand/25">
+                 Avançar para Pagamento
+               </Button>
+            </div>
+          </SheetContent>
+        </Sheet>
+        
+        <div className="flex-1 flex flex-col items-center">
+           <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Total</span>
+           <span className="text-sm font-black text-emerald-600 font-display">R$ {subtotal.toFixed(2).replace(".", ",")}</span>
         </div>
-      )}
+
+        <Button onClick={handleOpenClientModal} disabled={cart.length === 0} className="h-12 bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-4 sm:px-6 shadow-lg shadow-emerald-700/20 rounded-xl shrink-0 gap-2">
+          FINALIZAR PEDIDO <ArrowRight className="w-4 h-4" />
+        </Button>
+      </div>
 
       {/* Modal de Sucesso */}
       <Dialog open={isSuccessModalOpen} onOpenChange={closeSuccessModal}>
