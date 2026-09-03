@@ -575,11 +575,11 @@ function ParceiroPDV() {
                   <span className="opacity-50">{p.emoji || "🪴"}</span>
                 )}
               </div>
-              <div className="text-center">
-                <p className="text-xs font-semibold text-slate-800 line-clamp-2 leading-tight">
+              <div className="text-center flex-1 flex flex-col justify-between w-full">
+                <p className="text-[11px] font-semibold text-slate-800 leading-tight break-words mb-1">
                   {p.nome}
                 </p>
-                <p className="text-[10px] font-bold text-brand mt-1">
+                <p className="text-[11px] font-bold text-brand mt-auto">
                   R$ {Number(p.valor).toFixed(2)}
                 </p>
               </div>
@@ -622,7 +622,7 @@ function ParceiroPDV() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-800 truncate">{i.p}</p>
+                    <p className="text-xs sm:text-sm font-semibold text-slate-800 leading-tight break-words pr-2">{i.p}</p>
                     <div className="flex flex-col sm:flex-row sm:items-center gap-x-2 gap-y-0.5 mt-0.5">
                       <div className="flex items-center gap-0.5 text-[11px] sm:text-xs text-muted-foreground">
                         R$ 

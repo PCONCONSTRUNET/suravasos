@@ -495,7 +495,7 @@ function VendedoresAdmin() {
       />
 
       {/* Resumo Geral */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card className="border-0 shadow-sm ring-1 ring-slate-200">
           <CardContent className="p-4 flex items-center gap-4">
             <div className="p-3 bg-brand/10 text-brand rounded-xl">
@@ -1076,39 +1076,39 @@ function VendedoresAdmin() {
       </Dialog>
 
       <Dialog open={isTabelaPrecosModalOpen} onOpenChange={setIsTabelaPrecosModalOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[85vh] flex flex-col">
+        <DialogContent className="sm:max-w-[600px] w-[95vw] max-h-[85vh] flex flex-col rounded-3xl p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle>Tabela de Preços Personalizada</DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-xs sm:text-sm">
               Defina os preços específicos por produto para {tabelaPrecosTarget?.nome}. 
               Se deixar em branco, será usada a regra padrão do sistema.
             </DialogDescription>
           </DialogHeader>
           
-          <div className="relative mt-2">
+          <div className="relative mt-1 sm:mt-2">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Pesquisar produto..."
-              className="pl-9"
+              className="pl-9 h-9 sm:h-10 rounded-2xl text-sm"
               value={searchProduct}
               onChange={(e) => setSearchProduct(e.target.value)}
             />
           </div>
 
-          <div className="flex-1 overflow-y-auto pr-2 mt-2 space-y-2">
+          <div className="flex-1 overflow-y-auto pr-1 mt-2 space-y-2">
             {produtosParaTabela
               .filter(p => p.nome.toLowerCase().includes(searchProduct.toLowerCase()))
               .map(prod => (
-                <div key={prod.id} className="flex items-center justify-between p-3 border rounded-lg bg-slate-50/50">
-                  <div className="flex-1 pr-4">
-                    <p className="font-medium text-sm">{prod.nome}</p>
-                    <p className="text-xs text-muted-foreground">Preço base: R$ {prod.valor.toFixed(2).replace(".", ",")}</p>
+                <div key={prod.id} className="flex items-center justify-between p-2.5 sm:p-3 border rounded-2xl bg-slate-50/50 gap-2">
+                  <div className="flex-1 pr-2">
+                    <p className="font-medium text-xs sm:text-sm leading-tight">{prod.nome}</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">Preço base: R$ {prod.valor.toFixed(2).replace(".", ",")}</p>
                   </div>
-                  <div className="w-32">
+                  <div className="w-24 sm:w-28">
                     <div className="relative">
-                      <span className="absolute left-3 top-2.5 text-muted-foreground text-sm">R$</span>
+                      <span className="absolute left-2.5 top-1.5 sm:top-2 text-muted-foreground text-[10px] sm:text-xs">R$</span>
                       <Input
-                        className="pl-8 text-right"
+                        className="pl-7 text-right h-7 sm:h-8 text-xs sm:text-sm rounded-xl"
                         placeholder="Padrão"
                         value={customPrices[prod.id] || ""}
                         onChange={(e) => setCustomPrices(prev => ({ ...prev, [prod.id]: e.target.value }))}
@@ -1119,15 +1119,15 @@ function VendedoresAdmin() {
               ))}
             
             {produtosParaTabela.length === 0 && (
-              <p className="text-center text-muted-foreground py-8">Carregando produtos...</p>
+              <p className="text-center text-xs text-muted-foreground py-8">Carregando produtos...</p>
             )}
           </div>
 
-          <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setIsTabelaPrecosModalOpen(false)}>
+          <DialogFooter className="mt-4 flex gap-2 sm:gap-0">
+            <Button variant="outline" className="rounded-xl flex-1 sm:flex-none h-9 sm:h-10" onClick={() => setIsTabelaPrecosModalOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={saveTabelaPrecos} disabled={isSavingPrices} className="bg-green-600 text-white hover:bg-green-700">
+            <Button onClick={saveTabelaPrecos} disabled={isSavingPrices} className="bg-green-600 text-white hover:bg-green-700 rounded-xl flex-1 sm:flex-none h-9 sm:h-10">
               {isSavingPrices ? "Salvando..." : "Salvar Tabela"}
             </Button>
           </DialogFooter>
