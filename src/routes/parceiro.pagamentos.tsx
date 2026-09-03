@@ -212,7 +212,7 @@ function ParceiroPagamentos() {
             </p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">
             {vendas.map((v) => {
               const isExpanded = expandedId === v.id;
               const statusAprov = v.status_aprovacao;
