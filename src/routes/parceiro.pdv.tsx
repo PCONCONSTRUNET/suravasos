@@ -777,7 +777,12 @@ function ParceiroPDV() {
                       {i.imagem ? <img src={i.imagem} alt={i.p} className="h-full w-full object-cover" /> : <span className="opacity-50">{i.emoji || "🪴"}</span>}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-slate-800 leading-tight mb-1 truncate">{i.p}</p>
+                      <div className="flex items-start justify-between gap-1">
+                        <p className="text-xs font-bold text-slate-800 leading-tight mb-1 truncate">{i.p}</p>
+                        <button onClick={() => removeFromCart(i.id)} className="text-slate-400 hover:text-rose-500 transition-colors p-0.5" title="Remover item">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] text-muted-foreground line-through">R$ {Number(i.u).toFixed(2)}</span>
                         <input
