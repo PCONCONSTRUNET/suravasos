@@ -370,6 +370,8 @@ function ParceiroPDV() {
 
   const submitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
+    
     if (!clientForm.nome) {
       alert("Por favor, preencha o nome do cliente.");
       return;
@@ -547,7 +549,16 @@ function ParceiroPDV() {
     const matchesSearch = p.nome.toLowerCase().includes(searchTerm.toLowerCase()) || (p.codigo && p.codigo.toLowerCase().includes(searchTerm.toLowerCase()));
     if (selectedCategory === "Todos") return matchesSearch;
     
-    const matchesCategory = p.categoria === selectedCategory;
+    const prodCat = (p.categoria || "").toLowerCase();
+    const selCat = selectedCategory.toLowerCase();
+    
+    let matchesCategory = prodCat === selCat;
+    
+    // Fuzzy matching para as categorias fixas no plural
+    if (selCat === "vasos" && prodCat.includes("vaso")) matchesCategory = true;
+    if (selCat === "pratos" && prodCat.includes("prato")) matchesCategory = true;
+    if (selCat === "cuias" && prodCat.includes("cuia")) matchesCategory = true;
+    if (selCat === "floreiras" && prodCat.includes("floreira")) matchesCategory = true;
     
     return matchesSearch && matchesCategory;
   });
