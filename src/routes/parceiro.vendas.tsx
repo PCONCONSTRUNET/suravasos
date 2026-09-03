@@ -3,6 +3,13 @@ import { useEffect, useState } from "react";
 import { supabaseParceiro as supabase } from "@/lib/supabase";
 import { Loader2, PackageOpen, FileText, Search, X, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/parceiro/vendas")({
   head: () => ({ meta: [{ title: "Minhas Vendas — VIVAVERDE" }] }),
@@ -14,6 +21,29 @@ function VendasParceiro() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
+  
+  const [selectedVenda, setSelectedVenda] = useState<any>(null);
+  const [vendaItens, setVendaItens] = useState<any[]>([]);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [loadingItens, setLoadingItens] = useState(false);
+
+  const openDetails = async (venda: any) => {
+    setSelectedVenda(venda);
+    setIsDetailsOpen(true);
+    setLoadingItens(true);
+    setVendaItens([]);
+    try {
+      const { data, error } = await supabase
+        .from("vendas_itens")
+        .select("*, produto:produtos(nome, emoji)")
+        .eq("venda_id", venda.id);
+      if (data) setVendaItens(data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingItens(false);
+    }
+  };
   
   useEffect(() => {
     async function fetchVendas() {
@@ -142,7 +172,11 @@ function VendasParceiro() {
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filteredVendas.map((v) => (
-            <div key={v.id} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-3">
+            <div 
+              key={v.id} 
+              className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-3 cursor-pointer hover:border-brand/30 transition-colors active:scale-[0.99]"
+              onClick={() => openDetails(v)}
+            >
               <div className="flex justify-between items-start">
                 <div className="flex gap-3">
                   <div className="w-10 h-10 rounded-xl bg-slate-50 border flex items-center justify-center shrink-0">
@@ -158,8 +192,8 @@ function VendasParceiro() {
                   </div>
                 </div>
                 <button
-                  onClick={() => deleteVenda(v.id)}
-                  className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                  onClick={(e) => { e.stopPropagation(); deleteVenda(v.id); }}
+                  className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors shrink-0"
                   title="Excluir pedido"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -190,6 +224,70 @@ function VendasParceiro() {
           ))}
         </div>
       )}
+
+      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Ficha do Pedido</DialogTitle>
+            <DialogDescription asChild>
+              <div>
+                Pedido #{selectedVenda?.id?.substring(0, 6)} •{" "}
+                {selectedVenda && new Date(selectedVenda.created_at).toLocaleDateString('pt-BR')}
+                {selectedVenda?.clientes?.nome && (
+                  <div className="mt-3 text-sm text-slate-700 bg-slate-100 p-3 rounded-md border border-slate-200 text-left">
+                    <p className="font-semibold text-slate-900 flex items-center gap-2">
+                      👤 {selectedVenda.clientes.nome}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2">
+            {loadingItens ? (
+              <div className="text-center py-6 text-muted-foreground">Carregando itens...</div>
+            ) : (
+              <div className="space-y-4">
+                <div className="max-h-[300px] overflow-y-auto divide-y border rounded-lg">
+                  {vendaItens.length === 0 ? (
+                    <div className="p-4 text-center text-sm text-muted-foreground">
+                      Nenhum item encontrado.
+                    </div>
+                  ) : (
+                    vendaItens.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between p-3 bg-slate-50/50"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="text-2xl">{item.produto?.emoji || "📦"}</div>
+                          <div>
+                            <p className="font-semibold text-sm text-slate-800">
+                              {item.produto?.nome || "Produto Excluído"}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {item.quantidade}x R$ {Number(item.valor_unitario).toFixed(2).replace('.', ',')}
+                            </p>
+                          </div>
+                        </div>
+                        <p className="font-bold text-brand">
+                          R$ {Number(item.subtotal).toFixed(2).replace('.', ',')}
+                        </p>
+                      </div>
+                    ))
+                  )}
+                </div>
+                <div className="flex justify-between items-center p-4 bg-slate-100 rounded-lg">
+                  <span className="font-semibold text-slate-700">Total do Pedido:</span>
+                  <span className="text-xl font-bold font-display text-slate-900">
+                    R$ {Number(selectedVenda?.valor_total || 0).toFixed(2).replace('.', ',')}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
