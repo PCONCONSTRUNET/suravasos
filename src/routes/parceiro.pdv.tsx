@@ -77,7 +77,7 @@ function ParceiroPDV() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [categorySearchTerm, setCategorySearchTerm] = useState("");
-  const categorias = ["Terra", "Vasos", "Pratos", "Substratos", "Pedras", "Fertilizantes"];
+  const categorias = Array.from(new Set(produtos.map((p) => p.categoria))).filter(Boolean) as string[];
 
   const toggleCategory = (cat: string) => {
     setSelectedCategories(prev =>
@@ -527,8 +527,8 @@ function ParceiroPDV() {
     const matchesSearch = p.nome.toLowerCase().includes(searchTerm.toLowerCase()) || (p.codigo && p.codigo.toLowerCase().includes(searchTerm.toLowerCase()));
     if (selectedCategories.length === 0) return matchesSearch;
     
-    // Check if the product name includes ANY of the selected categories
-    const matchesCategory = selectedCategories.some(cat => p.nome.toLowerCase().includes(cat.toLowerCase()));
+    // Check if the product belongs to ANY of the selected categories
+    const matchesCategory = selectedCategories.includes(p.categoria);
     
     return matchesSearch && matchesCategory;
   });
