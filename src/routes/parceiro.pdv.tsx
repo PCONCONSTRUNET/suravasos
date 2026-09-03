@@ -448,45 +448,9 @@ function ParceiroPDV() {
       const { error: itensError } = await supabase.from("vendas_itens").insert(itensToInsert);
       if (itensError) throw itensError;
 
-      // 3. Gera o DAV Oficial (Orçamento) na tabela VENDAS
-      const { data: dav, error: davError } = await supabase
-        .from("vendas")
-        .insert([
-          {
-            tipo: "DAV",
-            status: "Pendente",
-            status_aprovacao: "Pendente",
-            valor_total: subtotal,
-            vendedor_id: vendedorInfo?.id,
-            cliente_id: finalClienteId,
-            desconto_valor: descontoAplicado,
-            desconto_percentual: descontoPercentual,
-            condicao_pagamento: clientForm.pagamento === "Boleto a Prazo" ? clientForm.condicaoBoleto || "Boleto a Prazo" : clientForm.pagamento,
-          },
-        ])
-        .select()
-        .single();
-
-      if (!davError && dav) {
-        setDavGeradoId(dav.id);
-        setDavGeradoNumero(dav.numero_venda);
-
-        // Salvar itens do DAV
-        const davItensToInsert = cart.map((i) => ({
-          venda_id: dav.id,
-          produto_id: i.id,
-          quantidade: i.q,
-          valor_unitario: i.u,
-          subtotal: i.t,
-        }));
-        await supabase.from("vendas_itens").insert(davItensToInsert);
-      } else if (davError) {
-        console.error("Erro ao gerar DAV:", davError);
-        alert(
-          "Aviso: O pedido foi enviado, mas o Orçamento (DAV) não pôde ser gerado: " +
-            davError.message,
-        );
-      }
+      // 3. Prepara os dados para o WhatsApp (usando o pedido que já foi gerado)
+      setDavGeradoId(vendaData.id);
+      setDavGeradoNumero(vendaData.numero_venda);
 
       // 4. Dispara a notificação para o dono
       await supabase.from("notificacoes").insert([
