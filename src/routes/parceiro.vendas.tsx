@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabaseParceiro as supabase } from "@/lib/supabase";
-import { Loader2, PackageOpen, FileText, Search, X } from "lucide-react";
+import { Loader2, PackageOpen, FileText, Search, X, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/parceiro/vendas")({
@@ -60,6 +60,18 @@ function VendasParceiro() {
         return 'bg-rose-100 text-rose-800 border-rose-200';
       default:
         return 'bg-slate-100 text-slate-800 border-slate-200';
+    }
+  };
+
+  const deleteVenda = async (id: string) => {
+    if (!window.confirm("Tem certeza que deseja excluir este pedido? Essa ação não pode ser desfeita.")) return;
+    
+    try {
+      const { error } = await supabase.from("vendas").delete().eq("id", id);
+      if (error) throw error;
+      setVendas(prev => prev.filter(v => v.id !== id));
+    } catch (err: any) {
+      alert("Erro ao excluir pedido: " + err.message);
     }
   };
 
@@ -145,6 +157,13 @@ function VendasParceiro() {
                     </p>
                   </div>
                 </div>
+                <button
+                  onClick={() => deleteVenda(v.id)}
+                  className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                  title="Excluir pedido"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </div>
               
               <div className="border-t border-dashed my-1 border-slate-200"></div>
