@@ -74,20 +74,15 @@ function ParceiroPDV() {
   const [cnpjLoading, setCnpjLoading] = useState(false);
   const [cnpjErro, setCnpjErro] = useState("");
   const [descontoPercentual, setDescontoPercentual] = useState<number>(0);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState("Todos");
+  const [initError, setInitError] = useState<string | null>(null);
   
   const fixedOrder = ["Terra", "Vasos", "Pratos", "Substratos", "Pedras", "Fertilizantes"];
   const dynamicCategories = Array.from(new Set(produtos.map((p) => p.categoria))).filter(Boolean) as string[];
   const categorias = Array.from(new Set([...fixedOrder, ...dynamicCategories]));
 
   const toggleCategory = (cat: string) => {
-    if (cat === "Todos") {
-      setSelectedCategories([]);
-      return;
-    }
-    setSelectedCategories(prev =>
-      prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
-    );
+    setSelectedCategory(cat);
   };
 
   const getCartQuantity = (id: string) => {
@@ -97,18 +92,28 @@ function ParceiroPDV() {
 
   useEffect(() => {
     const init = async () => {
-      const {
+      try {
+        const {
         data: { session },
       } = await supabase.auth.getSession();
       let aplicaAcrescimo = false;
       let acrescimoPercentual = 20;
       let vendedorId = null;
       if (session) {
-        const { data: vData } = await supabase
+        const { data: vData, error } = await supabase
           .from("vendedores")
           .select("id, status, nome, acrescimo_catalogo, acrescimo_catalogo_percentual")
           .eq("user_id", session.user.id)
-          .single();
+          .maybeSingle();
+
+        if (error || !vData) {
+          console.error("Vendedor não encontrado ou erro:", error);
+          setVendedorInfo({ id: "error", nome: "Erro ao carregar perfil" });
+          alert("Não foi possível carregar seu perfil de parceiro. Você será redirecionado.");
+          navigate({ to: "/parceiro/dashboard" });
+          return;
+        }
+
         if (vData) {
           vendedorId = vData.id;
           setVendedorInfo({ id: vData.id, nome: vData.nome });
@@ -121,6 +126,9 @@ function ParceiroPDV() {
             return;
           }
         }
+      } else {
+        navigate({ to: "/parceiro/login" });
+        return;
       }
 
       let customPricesMap: Record<string, number> = {};
@@ -227,9 +235,13 @@ function ParceiroPDV() {
           }
         }
       }
-    };
-    init();
-  }, []);
+    } catch (err: any) {
+      console.error("Erro na inicialização do PDV:", err);
+      setInitError(err.message || "Ocorreu um erro ao carregar o PDV.");
+    }
+  };
+  init();
+}, []);
 
   const addToCart = (produto: any) => {
     setCart((prev) => {
@@ -524,16 +536,18 @@ function ParceiroPDV() {
     window.open(url, "_blank");
   };
 
+  if (initError)
+    return <div className="text-center py-10 text-red-600 font-bold">Erro: {initError}</div>;
+
   if (!vendedorInfo)
     return <div className="text-center py-10">Verificando perfil de vendedor...</div>;
 
   // Filter products by search and category
   const filteredProducts = produtos.filter((p) => {
     const matchesSearch = p.nome.toLowerCase().includes(searchTerm.toLowerCase()) || (p.codigo && p.codigo.toLowerCase().includes(searchTerm.toLowerCase()));
-    if (selectedCategories.length === 0) return matchesSearch;
+    if (selectedCategory === "Todos") return matchesSearch;
     
-    // Check if the product belongs to ANY of the selected categories
-    const matchesCategory = selectedCategories.includes(p.categoria);
+    const matchesCategory = p.categoria === selectedCategory;
     
     return matchesSearch && matchesCategory;
   });
@@ -649,7 +663,7 @@ function ParceiroPDV() {
         <div className="flex overflow-x-auto gap-2 pb-2 no-scrollbar bg-slate-50 py-1">
           <button
             onClick={() => toggleCategory("Todos")}
-            className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-colors ${selectedCategories.length === 0 ? 'bg-emerald-700 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200'}`}
+            className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-colors ${selectedCategory === "Todos" ? 'bg-emerald-700 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200'}`}
           >
             Todos
           </button>
@@ -657,7 +671,7 @@ function ParceiroPDV() {
             <button
               key={cat}
               onClick={() => toggleCategory(cat)}
-              className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-colors ${selectedCategories.includes(cat) ? 'bg-emerald-700 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200'}`}
+              className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-colors ${selectedCategory === cat ? 'bg-emerald-700 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200'}`}
             >
               {cat}
             </button>

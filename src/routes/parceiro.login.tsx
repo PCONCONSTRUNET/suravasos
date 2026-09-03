@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { VivaverdeLogo } from "@/components/vivaverde-logo";
+import { Eye, EyeOff } from "lucide-react";
 
 export const Route = createFileRoute("/parceiro/login")({
   beforeLoad: async () => {
@@ -24,6 +25,7 @@ function LoginParceiro() {
   const [error, setError] = useState("");
   const [resetSent, setResetSent] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Verifica se o parceiro foi bloqueado via sessionStorage
   useEffect(() => {
@@ -55,7 +57,13 @@ function LoginParceiro() {
         navigate({ to: "/parceiro/dashboard" });
       }
     } catch (err: any) {
-      setError("Credenciais inválidas. Tente novamente.");
+      if (err.message === "Email not confirmed") {
+        setError("Por favor, confirme seu e-mail (verifique a caixa de entrada) antes de fazer login.");
+      } else if (err.message === "Invalid login credentials") {
+        setError("E-mail ou senha incorretos.");
+      } else {
+        setError(err.message || "Ocorreu um erro ao fazer login. Tente novamente.");
+      }
     } finally {
       setLoading(false);
     }
@@ -113,14 +121,24 @@ function LoginParceiro() {
               </div>
               <div className="space-y-1">
                 <label className="text-sm font-medium">Senha</label>
-                <Input
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="h-12"
-                />
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="h-12 pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                    aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
 
               {error && (
