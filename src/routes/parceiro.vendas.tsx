@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabaseParceiro as supabase } from "@/lib/supabase";
-import { Loader2, PackageOpen, FileText } from "lucide-react";
+import { Loader2, PackageOpen, FileText, Search, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/parceiro/vendas")({
   head: () => ({ meta: [{ title: "Minhas Vendas — VIVAVERDE" }] }),
@@ -11,6 +12,8 @@ export const Route = createFileRoute("/parceiro/vendas")({
 function VendasParceiro() {
   const [vendas, setVendas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
   
   useEffect(() => {
     async function fetchVendas() {
@@ -60,11 +63,52 @@ function VendasParceiro() {
     }
   };
 
+  const filteredVendas = vendas.filter(v => {
+    let matchesSearch = true;
+    let matchesDate = true;
+    
+    if (searchTerm) {
+      const nome = (v.clientes?.nome || "").toLowerCase();
+      matchesSearch = nome.includes(searchTerm.toLowerCase());
+    }
+    
+    if (selectedDate) {
+      matchesDate = v.created_at.startsWith(selectedDate);
+    }
+    
+    return matchesSearch && matchesDate;
+  });
+
   return (
     <div className="p-4 sm:p-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold font-display text-slate-800">Minhas Vendas</h1>
         <p className="text-sm text-muted-foreground mt-1">Acompanhe o histórico e status dos seus pedidos.</p>
+      </div>
+
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por cliente..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 pr-9 h-11 bg-white border-slate-200 rounded-xl"
+          />
+          {searchTerm && (
+            <button onClick={() => setSearchTerm("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+        <div className="relative w-full sm:w-auto">
+          <Input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="h-11 bg-white border-slate-200 rounded-xl w-full sm:w-[160px]"
+          />
+        </div>
       </div>
 
       {loading ? (
@@ -77,9 +121,15 @@ function VendasParceiro() {
           <p className="font-semibold text-slate-600">Nenhuma venda encontrada</p>
           <p className="text-sm text-muted-foreground">Suas vendas aparecerão aqui após você enviar um pedido no PDV.</p>
         </div>
+      ) : filteredVendas.length === 0 ? (
+        <div className="text-center py-16 bg-white rounded-2xl border border-slate-100 shadow-sm">
+          <Search className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+          <p className="font-semibold text-slate-600">Nenhum resultado encontrado</p>
+          <p className="text-sm text-muted-foreground">Tente buscar por outro cliente ou data.</p>
+        </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {vendas.map((v) => (
+          {filteredVendas.map((v) => (
             <div key={v.id} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-3">
               <div className="flex justify-between items-start">
                 <div className="flex gap-3">
