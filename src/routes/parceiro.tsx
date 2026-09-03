@@ -71,10 +71,10 @@ export const Route = createFileRoute("/parceiro")({
 
 const navItems = [
   { to: "/parceiro/dashboard", icon: Home, label: "Início" },
-  { to: "/parceiro/vendas", icon: ClipboardList, label: "Vendas" },
-  { to: "/parceiro/catalogo", icon: Package, label: "Catálogo" },
   { to: "/parceiro/pdv", icon: Calculator, label: "Nova Venda" },
+  { to: "/parceiro/vendas", icon: ClipboardList, label: "Vendas" },
   { to: "/parceiro/pagamentos", icon: Wallet, label: "Pagamentos" },
+  { to: "/parceiro/catalogo", icon: Package, label: "Catálogo" },
 ];
 
 function ParceiroLayout() {
