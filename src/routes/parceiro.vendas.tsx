@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabaseParceiro as supabase } from "@/lib/supabase";
 import { Loader2, PackageOpen, FileText, Search, X, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -283,6 +284,21 @@ function VendasParceiro() {
                     R$ {Number(selectedVenda?.valor_total || 0).toFixed(2).replace('.', ',')}
                   </span>
                 </div>
+              </div>
+            )}
+            
+            {!loadingItens && vendaItens.length > 0 && (
+              <div className="pt-4">
+                <Button
+                  variant="secondary"
+                  className="w-full font-bold border border-slate-200"
+                  onClick={() => {
+                    const itemsMagic = vendaItens.map(i => `${i.produto_id}:${i.quantidade}`).join(',');
+                    window.location.href = `/parceiro/pdv?c=${itemsMagic}`;
+                  }}
+                >
+                  Clonar Pedido
+                </Button>
               </div>
             )}
           </div>
