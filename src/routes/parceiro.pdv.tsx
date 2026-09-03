@@ -74,8 +74,16 @@ function ParceiroPDV() {
   const [cnpjLoading, setCnpjLoading] = useState(false);
   const [cnpjErro, setCnpjErro] = useState("");
   const [descontoPercentual, setDescontoPercentual] = useState<number>(0);
-  const [selectedCategory, setSelectedCategory] = useState("Todos");
-  const categorias = ["Todos", "Terra", "Vasos", "Pratos", "Substratos", "Pedras", "Fertilizantes"];
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [categorySearchTerm, setCategorySearchTerm] = useState("");
+  const categorias = ["Terra", "Vasos", "Pratos", "Substratos", "Pedras", "Fertilizantes"];
+
+  const toggleCategory = (cat: string) => {
+    setSelectedCategories(prev =>
+      prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
+    );
+  };
 
   const getCartQuantity = (id: string) => {
     const item = cart.find((i) => i.id === id);
@@ -517,9 +525,12 @@ function ParceiroPDV() {
   // Filter products by search and category
   const filteredProducts = produtos.filter((p) => {
     const matchesSearch = p.nome.toLowerCase().includes(searchTerm.toLowerCase()) || (p.codigo && p.codigo.toLowerCase().includes(searchTerm.toLowerCase()));
-    if (selectedCategory === "Todos") return matchesSearch;
-    // Basic category filter logic based on name for now, as we don't have a category field
-    return matchesSearch && p.nome.toLowerCase().includes(selectedCategory.toLowerCase());
+    if (selectedCategories.length === 0) return matchesSearch;
+    
+    // Check if the product name includes ANY of the selected categories
+    const matchesCategory = selectedCategories.some(cat => p.nome.toLowerCase().includes(cat.toLowerCase()));
+    
+    return matchesSearch && matchesCategory;
   });
 
   return (
@@ -629,17 +640,18 @@ function ParceiroPDV() {
           </div>
         </div>
 
-        {/* Categories Tabs */}
-        <div className="flex overflow-x-auto gap-2 pb-2 no-scrollbar bg-slate-50 py-1">
-          {categorias.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-colors ${selectedCategory === cat ? 'bg-emerald-700 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200'}`}
-            >
-              {cat}
-            </button>
-          ))}
+        {/* Category Button */}
+        <div className="flex justify-center mb-4">
+          <Button 
+            onClick={() => setIsCategoryModalOpen(true)}
+            variant="outline"
+            className="rounded-full px-6 flex items-center gap-2 border-slate-300 shadow-sm"
+          >
+            <Grid className="w-4 h-4 text-emerald-600" />
+            <span className="text-sm font-bold text-slate-700">
+              {selectedCategories.length === 0 ? "Categorias" : `Categorias (${selectedCategories.length})`}
+            </span>
+          </Button>
         </div>
 
         {/* Vertical Product List */}
@@ -1026,6 +1038,51 @@ function ParceiroPDV() {
               </div>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+      {/* Modal de Categorias */}
+      <Dialog open={isCategoryModalOpen} onOpenChange={setIsCategoryModalOpen}>
+        <DialogContent className="w-[90vw] sm:max-w-[425px] rounded-2xl p-0 overflow-hidden">
+          <div className="p-4 border-b">
+            <DialogTitle className="text-xl mb-3">Categorias</DialogTitle>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Pesquisar categoria..."
+                value={categorySearchTerm}
+                onChange={(e) => setCategorySearchTerm(e.target.value)}
+                className="pl-9 bg-slate-50 border-slate-200 rounded-xl"
+              />
+            </div>
+          </div>
+          <div className="p-4 max-h-[50vh] overflow-y-auto space-y-2">
+            {categorias
+              .filter(c => c.toLowerCase().includes(categorySearchTerm.toLowerCase()))
+              .map(cat => {
+                const isSelected = selectedCategories.includes(cat);
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => toggleCategory(cat)}
+                    className={`w-full flex justify-between items-center px-4 py-3 rounded-xl border ${isSelected ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-white border-slate-200 text-slate-700'} hover:bg-slate-50 transition-colors text-left`}
+                  >
+                    <span className="font-semibold">{cat}</span>
+                    {isSelected && <CheckCircle2 className="w-5 h-5 text-emerald-600" />}
+                  </button>
+                )
+            })}
+            {categorias.filter(c => c.toLowerCase().includes(categorySearchTerm.toLowerCase())).length === 0 && (
+              <p className="text-center text-muted-foreground py-4 text-sm">Nenhuma categoria encontrada.</p>
+            )}
+          </div>
+          <div className="p-4 border-t bg-slate-50 flex gap-3">
+            <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setSelectedCategories([])}>
+              Limpar
+            </Button>
+            <Button className="flex-1 rounded-xl bg-emerald-700 text-white hover:bg-emerald-800" onClick={() => setIsCategoryModalOpen(false)}>
+              Aplicar
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
