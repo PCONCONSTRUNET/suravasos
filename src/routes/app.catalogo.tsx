@@ -148,13 +148,15 @@ function Catalogo() {
 
     // Pré-carrega todas as imagens em paralelo
     const imageCache: Record<string, string | null> = {};
-    await Promise.all(
-      filtrados
-        .filter((p) => p.imagem)
-        .map(async (p) => {
-          imageCache[p.id] = await toBase64(p.imagem);
-        }),
-    );
+    const [vivaVerdeLogo64, gardenPlusLogo64, ...loadedImages] = await Promise.all([
+      toBase64("/vivaverdelogo.png"), // ou import se estivesse no escopo, mas podemos usar public path
+      toBase64("/garden-plus.png"),
+      ...filtrados.filter((p) => p.imagem).map((p) => toBase64(p.imagem))
+    ]);
+
+    filtrados.filter((p) => p.imagem).forEach((p, index) => {
+      imageCache[p.id] = loadedImages[index];
+    });
 
     // Helper: desenha título da categoria
     const drawTitle = (label: string, y: number) => {
@@ -163,11 +165,35 @@ function Catalogo() {
       doc.text(label.toUpperCase(), margin, y);
     };
 
-    // Cabeçalho
+    // Cabeçalho com Logos e CNPJs
     let yPos = 15;
+    
+    // Viva Verde (Esquerda)
+    if (vivaVerdeLogo64) {
+      doc.addImage(vivaVerdeLogo64, "PNG", margin, yPos, 40, 12);
+    }
+    doc.setFontSize(10);
+    doc.setTextColor(80, 80, 80);
+    doc.text("VIVAVERDE VASOS", margin, yPos + 18);
+    doc.setFontSize(8);
+    doc.text("CNPJ: 55.433.863/0001-55", margin, yPos + 23);
+    doc.text("Tel: (19) 99714-1112", margin, yPos + 27);
+
+    // Garden Plus (Direita)
+    const rightColX = pageWidth - margin - 60;
+    if (gardenPlusLogo64) {
+      doc.addImage(gardenPlusLogo64, "PNG", rightColX, yPos, 40, 12);
+    }
+    doc.setFontSize(10);
+    doc.text("Garden Plus Ltda", rightColX, yPos + 18);
+    doc.setFontSize(8);
+    doc.text("CNPJ: 50.387.381/0001-81", rightColX, yPos + 23);
+
+    // Título Principal
+    yPos += 45;
     doc.setFontSize(18);
     doc.setTextColor(22, 163, 74);
-    doc.text("Catálogo de Produtos — VivaVerde", margin, yPos);
+    doc.text("Catálogo de Produtos", margin, yPos);
     yPos += 12;
 
     const categorias = Array.from(new Set(filtrados.map((p) => p.categoria || "Outros")));
