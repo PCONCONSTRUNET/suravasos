@@ -139,10 +139,9 @@ function Dashboard() {
         const dataVenda = new Date(v.created_at);
         
         if (isValida) {
-          fat += Number(v.valor_total || v.total || 0);
-          validVendasCount++;
-          
           if (dataVenda >= inicioMesAtual) {
+            fat += Number(v.valor_total || v.total || 0);
+            validVendasCount++;
             vendasValidasMes++;
             if (v.status === "Entregue" || v.status === "Pago" || v.status === "Faturado") {
                 entreguesMes++;
