@@ -6,6 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Command,
   CommandEmpty,
   CommandGroup,
@@ -37,23 +44,54 @@ export const Route = createFileRoute("/app/catalogo")({
 
 function Catalogo() {
   const [produtos, setProdutos] = useState<any[]>([]);
+  const [vendedores, setVendedores] = useState<any[]>([]);
+  const [vendedorSelecionado, setVendedorSelecionado] = useState("nenhum");
+  const [precosPersonalizados, setPrecosPersonalizados] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [busca, setBusca] = useState("");
   const [categoria, setCategoria] = useState("Todos");
   const [openCategoria, setOpenCategoria] = useState(false);
 
-  const fetchProdutos = async () => {
+  const fetchData = async () => {
+    setLoading(true);
     try {
-      const { data } = await supabase.from("produtos").select("*").eq("status", "Ativo").order("nome");
-      if (data) setProdutos(data);
+      const { data: prodData } = await supabase.from("produtos").select("*").eq("status", "Ativo").order("nome");
+      if (prodData) setProdutos(prodData);
+
+      const { data: vendData } = await supabase.from("vendedores").select("*").eq("status", "Ativo").order("nome");
+      if (vendData) setVendedores(vendData);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchProdutos();
+    fetchData();
   }, []);
+
+  useEffect(() => {
+    const fetchPrecos = async () => {
+      if (vendedorSelecionado === "nenhum") {
+        setPrecosPersonalizados({});
+        return;
+      }
+      
+      const { data } = await supabase
+        .from("parceiro_precos")
+        .select("produto_id, preco_personalizado")
+        .eq("vendedor_id", vendedorSelecionado);
+        
+      if (data) {
+        const precos: Record<string, number> = {};
+        data.forEach(p => {
+          precos[p.produto_id] = Number(p.preco_personalizado);
+        });
+        setPrecosPersonalizados(precos);
+      }
+    };
+    
+    fetchPrecos();
+  }, [vendedorSelecionado]);
 
   const handleShare = (nome: string) => {
     const text = encodeURIComponent(
@@ -67,6 +105,13 @@ function Catalogo() {
       `Veja nosso catálogo completo de produtos VivaVerde: ${window.location.origin}/catalogo`,
     );
     window.open(`https://wa.me/?text=${text}`, "_blank");
+  };
+
+  const getPrecoProduto = (produto: any) => {
+    if (vendedorSelecionado !== "nenhum" && precosPersonalizados[produto.id] !== undefined) {
+      return Number(precosPersonalizados[produto.id]);
+    }
+    return Number(produto.valor);
   };
 
   const filtrados = produtos.filter((p) => {
@@ -207,10 +252,11 @@ function Catalogo() {
         doc.text(`Cód: ${p.codigo || "-"}`, xPos + 3, textY + 5);
 
         // Preço
+        const precoFinal = getPrecoProduto(p);
         doc.setFontSize(8);
         doc.setTextColor(22, 163, 74);
         doc.text(
-          `R$ ${Number(p.valor).toFixed(2).replace(".", ",")}`,
+          `R$ ${precoFinal.toFixed(2).replace(".", ",")}`,
           xPos + 3,
           textY + 11,
         );
@@ -281,6 +327,21 @@ function Catalogo() {
               onChange={(e) => setBusca(e.target.value)}
             />
           </div>
+          
+          <Select value={vendedorSelecionado} onValueChange={setVendedorSelecionado}>
+            <SelectTrigger className="w-full sm:w-[240px]">
+              <SelectValue placeholder="Catálogo do Parceiro" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="nenhum">Preços Padrão</SelectItem>
+              {vendedores.map((v) => (
+                <SelectItem key={v.id} value={v.id}>
+                  {v.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           <Popover open={openCategoria} onOpenChange={setOpenCategoria}>
             <PopoverTrigger asChild>
               <Button
@@ -368,7 +429,7 @@ function Catalogo() {
 
                         <div className="mt-2 flex items-baseline justify-between border-b pb-2 mb-2">
                           <p className="text-primary font-display text-xl font-extrabold">
-                            R$ {Number(p.valor).toFixed(2).replace(".", ",")}
+                            R$ {getPrecoProduto(p).toFixed(2).replace(".", ",")}
                           </p>
                           <span className="text-xs text-muted-foreground">{p.estoque} disp.</span>
                         </div>
