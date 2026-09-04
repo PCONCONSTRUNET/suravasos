@@ -52,6 +52,7 @@ function PDV() {
   const [orcamentos, setOrcamentos] = useState<any[]>([]);
   const [isOrcamentoModalOpen, setIsOrcamentoModalOpen] = useState(false);
   const [orcamentoIdSelecionado, setOrcamentoIdSelecionado] = useState<string | null>(null);
+  const [orcamentoNumeroSelecionado, setOrcamentoNumeroSelecionado] = useState<number | null>(null);
   const [orcamentoOrigem, setOrcamentoOrigem] = useState<"vendas" | "davs" | null>(null);
   const [clienteSelecionado, setClienteSelecionado] = useState<{ id: string; nome: string } | null>(null);
   
@@ -182,6 +183,7 @@ function PDV() {
           }));
           setCart(novoCarrinho);
           setOrcamentoIdSelecionado(orcamento.id);
+          setOrcamentoNumeroSelecionado(orcamento.numero || orcamento.numero_venda || null);
           setOrcamentoOrigem("davs");
           if (orcamento.cliente?.nome) {
             setClienteSelecionado({ id: orcamento.cliente_id || "avulso", nome: orcamento.cliente.nome });
@@ -216,6 +218,7 @@ function PDV() {
           }));
           setCart(novoCarrinho);
           setOrcamentoIdSelecionado(orcamento.id);
+          setOrcamentoNumeroSelecionado(orcamento.numero || orcamento.numero_venda || null);
           setOrcamentoOrigem("vendas");
           if (orcamento.cliente?.nome) {
             setClienteSelecionado({ id: orcamento.cliente_id || "avulso", nome: orcamento.cliente.nome });
@@ -233,6 +236,7 @@ function PDV() {
   const limparCaixa = () => {
     setCart([]);
     setOrcamentoIdSelecionado(null);
+    setOrcamentoNumeroSelecionado(null);
     setOrcamentoOrigem(null);
     setClienteSelecionado(null);
     setDescontoValor(0);
@@ -335,16 +339,21 @@ function PDV() {
     try {
       // Pega o último número gerado para evitar pulos
       let nextNumero = 1;
-      const { data: maxVenda } = await supabase
-        .from("vendas")
-        .select("numero")
-        .not("numero", "is", null)
-        .order("numero", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      
+      if (orcamentoNumeroSelecionado) {
+        nextNumero = Number(orcamentoNumeroSelecionado);
+      } else {
+        const { data: maxVenda } = await supabase
+          .from("vendas")
+          .select("numero")
+          .not("numero", "is", null)
+          .order("numero", { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
-      if (maxVenda && maxVenda.numero) {
-        nextNumero = Number(maxVenda.numero) + 1;
+        if (maxVenda && maxVenda.numero) {
+          nextNumero = Number(maxVenda.numero) + 1;
+        }
       }
 
       // Cria a venda

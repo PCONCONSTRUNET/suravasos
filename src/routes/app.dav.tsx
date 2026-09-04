@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -38,6 +39,9 @@ function DAVList() {
   type SortDirection = "asc" | "desc";
   const [sortColumn, setSortColumn] = useState<SortColumn>("created_at");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+
+  // Search state
+  const [searchTerm, setSearchTerm] = useState("");
 
   // States for Details Sheet
   const [selectedDav, setSelectedDav] = useState<any>(null);
@@ -148,7 +152,18 @@ function DAVList() {
   };
 
   const sortedDavs = useMemo(() => {
-    return [...davs].sort((a, b) => {
+    let filtered = [...davs];
+    if (searchTerm) {
+      const lower = searchTerm.toLowerCase();
+      filtered = filtered.filter((v) => {
+        const name = (v.cliente_nome || "").toLowerCase();
+        const cnpj = (v.cliente_cnpj || "").toLowerCase();
+        const numero = String(v.numero || v.id).toLowerCase();
+        return name.includes(lower) || cnpj.includes(lower) || numero.includes(lower);
+      });
+    }
+
+    return filtered.sort((a, b) => {
       let valA = a[sortColumn];
       let valB = b[sortColumn];
 
@@ -173,7 +188,7 @@ function DAVList() {
       if (valA > valB) return sortDirection === "asc" ? 1 : -1;
       return 0;
     });
-  }, [davs, sortColumn, sortDirection]);
+  }, [davs, sortColumn, sortDirection, searchTerm]);
 
   const SortIcon = ({ column }: { column: SortColumn }) => {
     if (sortColumn !== column) return <ArrowUpDown className="ml-1 h-3 w-3 inline-block opacity-50" />;
@@ -198,6 +213,20 @@ function DAVList() {
           </Button>
         }
       />
+      
+      <div className="mb-4 flex items-center gap-2">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Buscar por nome, CNPJ/CPF ou número..."
+            className="pl-8 bg-card"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </div>
+
       <Card className="shadow-card overflow-x-auto">
         <Table>
           <TableHeader>

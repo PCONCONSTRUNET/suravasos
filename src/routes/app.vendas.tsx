@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -11,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Calculator, Trash2, Check, X, Pencil } from "lucide-react";
+import { Plus, Calculator, Trash2, Check, X, Pencil, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useConfirm } from "@/contexts/ConfirmContext";
@@ -39,6 +40,7 @@ function Vendas() {
   const confirm = useConfirm();
   const [vendas, setVendas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // States for Details Sheet
   const [selectedVenda, setSelectedVenda] = useState<any>(null);
@@ -51,10 +53,10 @@ function Vendas() {
 
   const fetchVendas = async () => {
     try {
-      // Usando junção (join) com clientes para pegar o nome
+      // Usando junção (join) com clientes para pegar o nome e cnpj
       const { data, error } = await supabase
         .from("vendas")
-        .select(`*, clientes (nome)`)
+        .select(`*, clientes (nome, cpf_cnpj)`)
         .or("status_aprovacao.neq.Pendente,status_aprovacao.is.null")
         .order("created_at", { ascending: false });
 
@@ -71,6 +73,15 @@ function Vendas() {
   useEffect(() => {
     fetchVendas();
   }, []);
+
+  const filteredVendas = vendas.filter((v) => {
+    if (!searchTerm) return true;
+    const lower = searchTerm.toLowerCase();
+    const name = (v.clientes?.nome || "").toLowerCase();
+    const cnpj = (v.clientes?.cpf_cnpj || "").toLowerCase();
+    const numero = String(v.numero_venda || v.numero || v.id).toLowerCase();
+    return name.includes(lower) || cnpj.includes(lower) || numero.includes(lower);
+  });
 
   const handleOpenDetails = async (venda: any) => {
     setSelectedVenda(venda);
@@ -231,6 +242,20 @@ function Vendas() {
           </>
         }
       />
+
+      <div className="mb-4 flex items-center gap-2">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Buscar por nome, CNPJ/CPF ou número..."
+            className="pl-8 bg-card"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </div>
+
       <Card className="shadow-card overflow-x-auto">
         <Table>
           <TableHeader>
@@ -252,14 +277,14 @@ function Vendas() {
                   Carregando operações...
                 </TableCell>
               </TableRow>
-            ) : vendas.length === 0 ? (
+            ) : filteredVendas.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                   Nenhuma venda ou orçamento encontrado.
                 </TableCell>
               </TableRow>
             ) : (
-              vendas.map((v) => (
+              filteredVendas.map((v) => (
                 <TableRow
                   key={v.id}
                   className="cursor-pointer hover:bg-muted/50"
