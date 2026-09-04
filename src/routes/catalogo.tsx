@@ -251,7 +251,14 @@ function PublicCatalogo() {
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-white px-4 md:px-8 shadow-sm">
-        <VivaverdeLogo size="small" />
+        <div className="flex items-center gap-4 sm:gap-8">
+          <VivaverdeLogo size="small" />
+          <div className="h-8 w-[1px] bg-slate-200"></div>
+          <div className="flex items-center gap-2">
+            <img src="/garden-plus.png" alt="Garden Plus" className="h-6 sm:h-8 object-contain" />
+            <span className="font-bold text-slate-800 text-sm hidden sm:inline-block">Garden Plus</span>
+          </div>
+        </div>
       </header>
 
       <main className="mx-auto max-w-6xl p-4 py-8">
@@ -571,6 +578,7 @@ function PublicCatalogo() {
       )}
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        {/* ... Dialog Content ... */}
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Dados da Empresa</DialogTitle>
@@ -697,6 +705,29 @@ function PublicCatalogo() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <footer className="bg-slate-900 text-slate-400 py-12 px-4 mt-20 pb-32 lg:pb-12">
+        <div className="max-w-6xl mx-auto grid gap-8 md:grid-cols-2">
+          <div>
+            <div className="mb-4 inline-block bg-white p-2 rounded-lg">
+              <VivaverdeLogo size="small" />
+            </div>
+            <p className="font-bold text-white mb-2">VIVAVERDE VASOS</p>
+            <p>CNPJ: 55.433.863/0001-55</p>
+            <p>Telefone: (19) 99714-1112</p>
+          </div>
+          <div>
+            <div className="mb-4 inline-block bg-white p-2 rounded-lg">
+              <img src="/garden-plus.png" alt="Garden Plus" className="h-8 object-contain" />
+            </div>
+            <p className="font-bold text-white mb-2">Garden Plus Ltda</p>
+            <p>CNPJ: 50.387.381/0001-81</p>
+          </div>
+        </div>
+        <div className="max-w-6xl mx-auto mt-8 pt-8 border-t border-slate-800 text-sm text-center">
+          &copy; {new Date().getFullYear()} VivaVerde & Garden Plus. Todos os direitos reservados.
+        </div>
+      </footer>
     </div>
   );
 }
