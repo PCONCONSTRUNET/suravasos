@@ -722,6 +722,7 @@ function PublicCatalogo() {
             </div>
             <p className="font-bold text-white mb-2">Garden Plus Ltda</p>
             <p>CNPJ: 50.387.381/0001-81</p>
+            <p>Telefone: (15) 98105-4330</p>
           </div>
         </div>
         <div className="max-w-6xl mx-auto mt-8 pt-8 border-t border-slate-800 text-sm text-center">

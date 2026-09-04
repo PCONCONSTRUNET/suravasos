@@ -139,6 +139,7 @@ function ImprimirDAV() {
             <div className="mt-4 text-sm text-slate-600">
               <p className="font-bold text-slate-900">Garden Plus Ltda</p>
               <p>CNPJ: 50.387.381/0001-81</p>
+              <p>Tel: (15) 98105-4330</p>
             </div>
           </div>
         </div>

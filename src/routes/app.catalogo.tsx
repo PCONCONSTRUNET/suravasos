@@ -188,6 +188,7 @@ function Catalogo() {
     doc.text("Garden Plus Ltda", rightColX, yPos + 18);
     doc.setFontSize(8);
     doc.text("CNPJ: 50.387.381/0001-81", rightColX, yPos + 23);
+    doc.text("Tel: (15) 98105-4330", rightColX, yPos + 27);
 
     // Título Principal
     yPos += 45;
