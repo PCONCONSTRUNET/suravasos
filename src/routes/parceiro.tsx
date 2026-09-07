@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, redirect, Link, useRouterState } from "@tanstack/react-router";
 import { supabaseParceiro as supabase } from "@/lib/supabase";
-import { VivaverdeLogo } from "@/components/vivaverde-logo";
+import { GardenPrimeLogo } from "@/components/garden-prime-logo";
 import { Home, Calculator, LogOut, Package, Menu, X, Wallet, ClipboardList } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -97,7 +97,7 @@ function ParceiroLayout() {
       {/* ── SIDEBAR DESKTOP (≥ lg) ── */}
       <aside className="hidden lg:flex flex-col w-60 min-h-screen bg-white border-r shadow-sm sticky top-0 h-screen">
         <div className="flex items-center justify-center h-16 border-b px-4">
-          <VivaverdeLogo size="small" />
+          <GardenPrimeLogo size="small" />
         </div>
 
         <nav className="flex-1 p-4 space-y-1">
@@ -146,7 +146,7 @@ function ParceiroLayout() {
         )}
       >
         <div className="flex items-center justify-between h-16 border-b px-4">
-          <VivaverdeLogo size="small" />
+          <GardenPrimeLogo size="small" />
           <button
             onClick={() => setDrawerOpen(false)}
             className="p-2 rounded-lg text-muted-foreground hover:bg-slate-100"
@@ -197,7 +197,7 @@ function ParceiroLayout() {
           >
             <Menu className="h-6 w-6" />
           </button>
-          <VivaverdeLogo size="small" />
+          <GardenPrimeLogo size="small" />
           {/* Spacer para centralizar o logo */}
           <div className="w-10" />
         </header>

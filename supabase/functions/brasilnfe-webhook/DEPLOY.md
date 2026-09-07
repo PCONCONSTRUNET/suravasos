@@ -11,7 +11,7 @@ supabase link --project-ref <seu-project-ref>
 ## 1. Configurar o Secret do Webhook
 
 No painel Brasil NFe (**Perfil → Webhooks → Adicionar webhook**):
-- **Nome:** Integração VIVAVERDE ERP
+- **Nome:** Integração GARDEN PRIME ERP
 - **URL:** `https://<seu-project-ref>.supabase.co/functions/v1/brasilnfe-webhook`
 - Clique **Salvar** e **copie o secret gerado**
 

@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/select";
 
 export const Route = createFileRoute("/app/vendas")({
-  head: () => ({ meta: [{ title: "Vendas — VIVAVERDE ERP" }] }),
+  head: () => ({ meta: [{ title: "Vendas — GARDEN PRIME ERP" }] }),
   component: Vendas,
 });
 
@@ -108,7 +108,7 @@ function Vendas() {
         .select("*, produtos(nome)")
         .eq("venda_id", venda.id);
 
-      let msg = `*${venda.tipo === "DAV" ? "ORÇAMENTO" : "PEDIDO"} - VIVAVERDE VASOS*\n`;
+      let msg = `*${venda.tipo === "DAV" ? "ORÇAMENTO" : "PEDIDO"} - GARDEN PRIME*\n`;
       msg += `Nº: ${venda.numero_venda}\n`;
       msg += `Data: ${new Date(venda.created_at).toLocaleDateString()}\n\n`;
       msg += `*ITENS:*\n`;

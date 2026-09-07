@@ -47,7 +47,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon } from "lucide-react";
 
 export const Route = createFileRoute("/app/financeiro")({
-  head: () => ({ meta: [{ title: "Financeiro — VIVAVERDE ERP" }] }),
+  head: () => ({ meta: [{ title: "Financeiro — GARDEN PRIME ERP" }] }),
   component: Financeiro,
 });
 

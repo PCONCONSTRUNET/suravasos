@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/parceiro/pdv")({
-  head: () => ({ meta: [{ title: "Nova Venda — VIVAVERDE" }] }),
+  head: () => ({ meta: [{ title: "Nova Venda — GARDEN PRIME" }] }),
   component: ParceiroPDV,
 });
 
@@ -174,7 +174,7 @@ function ParceiroPDV() {
         const telParam = params.get("tel");
 
         if (eParam || cnjParam) {
-          setClientForm((prev) => ({
+          setClientForm((prev: any) => ({
             ...prev,
             nome: eParam || "",
             documento: cnjParam || "",
@@ -347,7 +347,7 @@ function ParceiroPDV() {
       const cidade = data.municipio
         ? data.municipio.charAt(0) + data.municipio.slice(1).toLowerCase()
         : clientForm.cidade;
-      setClientForm((prev) => ({
+      setClientForm((prev: any) => ({
         ...prev,
         nome: data.razao_social || prev.nome,
         telefone: tel,
@@ -522,7 +522,7 @@ function ParceiroPDV() {
   const handleShareWhatsApp = () => {
     if (!davGeradoId) return;
 
-    let msg = `*ORÇAMENTO - VIVAVERDE VASOS*\n`;
+    let msg = `*ORÇAMENTO - GARDEN PRIME*\n`;
     msg += `Nº do Orçamento: ${davGeradoNumero}\n\n`;
     msg += `Olá ${clientForm.nome}, aqui está o seu orçamento detalhado!\n\n`;
 

@@ -5,7 +5,7 @@ import { Search, ShoppingCart, Package } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/parceiro/catalogo")({
-  head: () => ({ meta: [{ title: "Catálogo de Produtos — VIVAVERDE" }] }),
+  head: () => ({ meta: [{ title: "Catálogo de Produtos — GARDEN PRIME" }] }),
   component: ParceiroCatalogo,
 });
 

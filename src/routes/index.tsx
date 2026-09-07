@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import logoImg from "@/assets/vivaverde-logo.png";
+import logoImg from "@/assets/garden-prime-logo.png";
 import { supabase } from "@/lib/supabase";
 
 const authSchema = z.object({
@@ -30,7 +30,7 @@ export const Route = createFileRoute("/")({
       });
     }
   },
-  head: () => ({ meta: [{ title: "Entrar — VIVAVERDE ERP" }] }),
+  head: () => ({ meta: [{ title: "Entrar — GARDEN PRIME ERP" }] }),
   component: Login,
 });
 
@@ -84,7 +84,7 @@ function Login() {
       {/* Background Image */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/vasos-foto.jpeg')" }}
+        style={{ backgroundImage: "url('/capa-garden-prime.png')" }}
       />
 
       {/* Dark overlay for better contrast */}
@@ -97,7 +97,7 @@ function Login() {
       <div className="relative z-10 w-full max-w-[420px] px-6">
         {/* Logo centered above card */}
         <div className="flex flex-col items-center mb-8">
-          <img src={logoImg} alt="VIVAVERDE" className="h-32 w-auto object-contain" />
+          <img src={logoImg} alt="GARDEN PRIME" className="h-32 w-auto object-contain" />
         </div>
 
         {/* Card */}
@@ -122,7 +122,7 @@ function Login() {
               <Input
                 id="email"
                 type="email"
-                placeholder="usuario@vivaverde.com.br"
+                placeholder="usuario@gardenprime.com.br"
                 {...register("email")}
                 className={`h-11 border-[#e5e7eb] focus:border-[#4a7c2a] focus:ring-[#4a7c2a]/20 ${errors.email ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : ""}`}
               />
@@ -174,7 +174,7 @@ function Login() {
 
         {/* Footer */}
         <p className="mt-6 text-center text-[10px] text-[#9ca3af] tracking-wide">
-          VIVAVERDE Distribuidora de Vasos e Acessórios Ltda · Sistema Interno
+          GARDEN PRIME Distribuidora de Vasos e Acessórios Ltda · Sistema Interno
         </p>
       </div>
     </div>

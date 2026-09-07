@@ -7,7 +7,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { ShoppingCart, Trash2, Search, Check, ChevronsUpDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { VivaverdeLogo } from "@/components/vivaverde-logo";
+import { GardenPrimeLogo } from "@/components/garden-prime-logo";
 import { ColorDock } from "@/components/color-dock";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -22,7 +22,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/catalogo")({
-  head: () => ({ meta: [{ title: "Catálogo — VivaVerde" }] }),
+  head: () => ({ meta: [{ title: "Catálogo — Garden Prime" }] }),
   component: PublicCatalogo,
 });
 
@@ -252,7 +252,7 @@ function PublicCatalogo() {
     <div className="min-h-screen bg-slate-50">
       <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-white px-4 md:px-8 shadow-sm">
         <div className="flex items-center gap-4 sm:gap-8">
-          <VivaverdeLogo size="small" />
+          <GardenPrimeLogo size="small" />
           <div className="h-8 w-[1px] bg-slate-200"></div>
           <div className="flex items-center gap-2">
             <img src="/garden-plus.png" alt="Garden Plus" className="h-6 sm:h-8 object-contain" />
@@ -710,9 +710,9 @@ function PublicCatalogo() {
         <div className="max-w-6xl mx-auto grid gap-8 md:grid-cols-2">
           <div>
             <div className="mb-4 inline-block bg-white p-2 rounded-lg">
-              <VivaverdeLogo size="small" />
+              <GardenPrimeLogo size="small" />
             </div>
-            <p className="font-bold text-white mb-2">VIVAVERDE VASOS</p>
+            <p className="font-bold text-white mb-2">GARDEN PRIME</p>
             <p>CNPJ: 55.433.863/0001-55</p>
             <p>Telefone: (19) 99714-1112</p>
           </div>
@@ -726,7 +726,7 @@ function PublicCatalogo() {
           </div>
         </div>
         <div className="max-w-6xl mx-auto mt-8 pt-8 border-t border-slate-800 text-sm text-center">
-          &copy; {new Date().getFullYear()} VivaVerde & Garden Plus. Todos os direitos reservados.
+          &copy; {new Date().getFullYear()} Garden Prime & Garden Plus. Todos os direitos reservados.
         </div>
       </footer>
     </div>

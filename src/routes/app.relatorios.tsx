@@ -49,7 +49,7 @@ import {
 } from "@/components/ui/select";
 
 export const Route = createFileRoute("/app/relatorios")({
-  head: () => ({ meta: [{ title: "Relatórios — VIVAVERDE ERP" }] }),
+  head: () => ({ meta: [{ title: "Relatórios — GARDEN PRIME ERP" }] }),
   component: Relatorios,
 });
 

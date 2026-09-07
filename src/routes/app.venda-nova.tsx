@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/app/venda-nova")({
-  head: () => ({ meta: [{ title: "Nova Venda — VIVAVERDE ERP" }] }),
+  head: () => ({ meta: [{ title: "Nova Venda — GARDEN PRIME ERP" }] }),
   component: NovaVenda,
 });
 

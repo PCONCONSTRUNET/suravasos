@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/sheet";
 
 export const Route = createFileRoute("/app/dav")({
-  head: () => ({ meta: [{ title: "Orçamentos (DAV) — VIVAVERDE ERP" }] }),
+  head: () => ({ meta: [{ title: "Orçamentos (DAV) — GARDEN PRIME ERP" }] }),
   component: DAVList,
 });
 
@@ -111,7 +111,7 @@ function DAVList() {
         .select("*")
         .eq("dav_id", dav.id);
 
-      let msg = `*ORÇAMENTO - VIVAVERDE VASOS*\n`;
+      let msg = `*ORÇAMENTO - GARDEN PRIME*\n`;
       msg += `Nº: ${dav.numero ? String(dav.numero).padStart(3, "0") : dav.id.substring(0, 8).toUpperCase()}\n`;
       msg += `Data: ${new Date(dav.created_at).toLocaleDateString()}\n`;
       msg += `Cliente: ${dav.cliente_nome}\n\n`;

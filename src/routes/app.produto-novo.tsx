@@ -23,7 +23,7 @@ export const Route = createFileRoute("/app/produto-novo")({
       id: search.id as string | undefined,
     };
   },
-  head: () => ({ meta: [{ title: "Produto — VIVAVERDE ERP" }] }),
+  head: () => ({ meta: [{ title: "Produto — GARDEN PRIME ERP" }] }),
   component: NovoProduto,
 });
 

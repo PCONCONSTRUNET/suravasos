@@ -1,12 +1,12 @@
 {
-  "name": "VIVAVERDE ERP",
-  "short_name": "VIVAVERDE",
+  "name": "GARDEN PRIME ERP",
+  "short_name": "GARDEN PRIME",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#166534",
   "icons": [
     {
-      "src": "/vivaverdelogo.png",
+      "src": "/garden-prime-logo.png",
       "sizes": "192x192 512x512",
       "type": "image/png",
       "purpose": "any maskable"

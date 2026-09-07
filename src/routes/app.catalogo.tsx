@@ -38,7 +38,7 @@ const WhatsAppIcon = ({ className }: { className?: string }) => (
 );
 
 export const Route = createFileRoute("/app/catalogo")({
-  head: () => ({ meta: [{ title: "Catálogo Digital — VIVAVERDE ERP" }] }),
+  head: () => ({ meta: [{ title: "Catálogo Digital — GARDEN PRIME ERP" }] }),
   component: Catalogo,
 });
 
@@ -95,14 +95,14 @@ function Catalogo() {
 
   const handleShare = (nome: string) => {
     const text = encodeURIComponent(
-      `Confira nosso produto: *${nome}* na VivaVerde!\nAcesse nosso catálogo: ${window.location.origin}/catalogo`,
+      `Confira nosso produto: *${nome}* na Garden Prime!\nAcesse nosso catálogo: ${window.location.origin}/catalogo`,
     );
     window.open(`https://wa.me/?text=${text}`, "_blank");
   };
 
   const handleShareCatalog = () => {
     const text = encodeURIComponent(
-      `Veja nosso catálogo completo de produtos VivaVerde: ${window.location.origin}/catalogo`,
+      `Veja nosso catálogo completo de produtos Garden Prime: ${window.location.origin}/catalogo`,
     );
     window.open(`https://wa.me/?text=${text}`, "_blank");
   };
@@ -148,8 +148,8 @@ function Catalogo() {
 
     // Pré-carrega todas as imagens em paralelo
     const imageCache: Record<string, string | null> = {};
-    const [vivaVerdeLogo64, gardenPlusLogo64, ...loadedImages] = await Promise.all([
-      toBase64("/vivaverdelogo.png"), // ou import se estivesse no escopo, mas podemos usar public path
+    const [gardenPrimeLogo64, gardenPlusLogo64, ...loadedImages] = await Promise.all([
+      toBase64("/garden-prime-logo.png"), // ou import se estivesse no escopo, mas podemos usar public path
       toBase64("/garden-plus.png"),
       ...filtrados.filter((p) => p.imagem).map((p) => toBase64(p.imagem))
     ]);
@@ -168,13 +168,13 @@ function Catalogo() {
     // Cabeçalho com Logos e CNPJs
     let yPos = 15;
     
-    // Viva Verde (Esquerda)
-    if (vivaVerdeLogo64) {
-      doc.addImage(vivaVerdeLogo64, "PNG", margin, yPos, 40, 12);
+    // Garden Prime (Esquerda)
+    if (gardenPrimeLogo64) {
+      doc.addImage(gardenPrimeLogo64, "PNG", margin, yPos, 40, 12);
     }
     doc.setFontSize(10);
     doc.setTextColor(80, 80, 80);
-    doc.text("VIVAVERDE VASOS", margin, yPos + 18);
+    doc.text("GARDEN PRIME", margin, yPos + 18);
     doc.setFontSize(8);
     doc.text("CNPJ: 55.433.863/0001-55", margin, yPos + 23);
     doc.text("Tel: (19) 99714-1112", margin, yPos + 27);
@@ -295,7 +295,7 @@ function Catalogo() {
       if (yPos > pageHeight - 10) { doc.addPage(); yPos = 15; }
     }
 
-    doc.save("catalogo-vivaverde.pdf");
+    doc.save("catalogo-garden-prime.pdf");
   };
 
   const categoriasUnicas = [

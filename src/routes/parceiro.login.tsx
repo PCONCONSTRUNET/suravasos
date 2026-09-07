@@ -4,7 +4,7 @@ import { supabaseParceiro as supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { VivaverdeLogo } from "@/components/vivaverde-logo";
+import { GardenPrimeLogo } from "@/components/garden-prime-logo";
 import { Eye, EyeOff } from "lucide-react";
 
 export const Route = createFileRoute("/parceiro/login")({
@@ -13,7 +13,7 @@ export const Route = createFileRoute("/parceiro/login")({
       await supabase.auth.signOut();
     }
   },
-  head: () => ({ meta: [{ title: "Login Parceiro — VIVAVERDE" }] }),
+  head: () => ({ meta: [{ title: "Login Parceiro — GARDEN PRIME" }] }),
   component: LoginParceiro,
 });
 
@@ -89,7 +89,7 @@ function LoginParceiro() {
     <div className="flex min-h-[80vh] items-center justify-center">
       <Card className="w-full max-w-sm shadow-xl border-0 ring-1 ring-slate-900/5">
         <div className="pt-8 pb-4 flex justify-center">
-          <VivaverdeLogo size="small" />
+          <GardenPrimeLogo size="small" />
         </div>
         <CardContent className="p-6">
           <div className="text-center mb-6">

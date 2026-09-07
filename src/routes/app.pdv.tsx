@@ -24,7 +24,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/app/pdv")({
-  head: () => ({ meta: [{ title: "PDV — VIVAVERDE ERP" }] }),
+  head: () => ({ meta: [{ title: "PDV — GARDEN PRIME ERP" }] }),
   component: PDV,
 });
 

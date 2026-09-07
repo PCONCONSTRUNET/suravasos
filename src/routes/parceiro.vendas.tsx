@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/parceiro/vendas")({
-  head: () => ({ meta: [{ title: "Minhas Vendas — VIVAVERDE" }] }),
+  head: () => ({ meta: [{ title: "Minhas Vendas — GARDEN PRIME" }] }),
   component: VendasParceiro,
 });
 
