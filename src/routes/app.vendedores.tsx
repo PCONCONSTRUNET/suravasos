@@ -671,7 +671,7 @@ function VendedoresAdmin() {
                   >
                     <TableCell>
                       <p className="font-medium">{v.vendedor?.nome || "Desconhecido"}</p>
-                      <p className="text-xs text-muted-foreground">#{v.id.substring(0, 6)}</p>
+                      <p className="text-xs text-muted-foreground">#{v.numero_venda || v.numero || v.id.substring(0, 6)}</p>
                     </TableCell>
                     <TableCell className="font-semibold">
                       R$ {Number(v.valor_total).toFixed(2)}

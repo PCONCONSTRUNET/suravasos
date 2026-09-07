@@ -249,8 +249,8 @@ function Dashboard() {
                 }
                 const rows = [
                   ["ID", "Cliente", "Tipo", "Status", "Valor Total", "Data"],
-                  ...data.map((v) => [
-                    v.id.slice(0, 8).toUpperCase(),
+                  ...data.map((v: any) => [
+                    v.numero_venda || v.numero || v.id.slice(0, 8).toUpperCase(),
                     v.clientes?.nome || "Consumidor Final",
                     v.tipo || "",
                     v.status || "",
@@ -443,7 +443,7 @@ function Dashboard() {
                 stats.recent.map((r: any) => (
                   <div key={r.id} className="flex items-center justify-between px-6 py-3">
                     <div className="min-w-0">
-                      <p className="font-semibold text-sm">#{r.id?.toString().slice(0, 5)}</p>
+                      <p className="font-semibold text-sm">#{r.numero_venda || r.numero || r.id?.toString().slice(0, 5)}</p>
                       <p className="text-xs text-muted-foreground truncate">
                         {r.clientes?.nome || "Consumidor Final"}
                       </p>

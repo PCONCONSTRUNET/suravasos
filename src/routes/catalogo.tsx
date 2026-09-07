@@ -252,7 +252,7 @@ function PublicCatalogo() {
     <div className="min-h-screen bg-slate-50">
       <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-white px-4 md:px-8 shadow-sm">
         <div className="flex items-center gap-4 sm:gap-8">
-          <GardenPrimeLogo size="small" />
+          <GardenPrimeLogo horizontal size="small" />
           <div className="h-8 w-[1px] bg-slate-200"></div>
           <div className="flex items-center gap-2">
             <img src="/garden-plus.png" alt="Garden Plus" className="h-6 sm:h-8 object-contain" />

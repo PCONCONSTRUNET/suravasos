@@ -96,8 +96,12 @@ function Login() {
       {/* Login card */}
       <div className="relative z-10 w-full max-w-[420px] px-6">
         {/* Logo centered above card */}
-        <div className="flex flex-col items-center mb-8">
-          <img src={logoImg} alt="GARDEN PRIME" className="h-32 w-auto object-contain" />
+        <div className="flex flex-col items-center mb-6">
+          <img
+            src={logoImg}
+            alt="GARDEN PRIME"
+            className="h-48 md:h-52 w-auto object-contain drop-shadow-[0_4px_16px_rgba(0,0,0,0.5)]"
+          />
         </div>
 
         {/* Card */}

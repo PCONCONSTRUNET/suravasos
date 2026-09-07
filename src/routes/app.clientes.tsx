@@ -296,7 +296,7 @@ function Clientes() {
                     >
                       <div>
                         <div className="font-semibold text-sm">
-                          Pedido #{v.id?.toString().slice(0, 5)}
+                          Pedido #{v.numero_venda || v.numero || v.id?.toString().slice(0, 5)}
                         </div>
                         <div className="text-xs text-muted-foreground">
                           {new Date(v.created_at).toLocaleDateString()}

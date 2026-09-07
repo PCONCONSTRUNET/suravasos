@@ -97,7 +97,7 @@ function ParceiroLayout() {
       {/* ── SIDEBAR DESKTOP (≥ lg) ── */}
       <aside className="hidden lg:flex flex-col w-60 min-h-screen bg-white border-r shadow-sm sticky top-0 h-screen">
         <div className="flex items-center justify-center h-16 border-b px-4">
-          <GardenPrimeLogo size="small" />
+          <GardenPrimeLogo horizontal size="small" />
         </div>
 
         <nav className="flex-1 p-4 space-y-1">
@@ -146,7 +146,7 @@ function ParceiroLayout() {
         )}
       >
         <div className="flex items-center justify-between h-16 border-b px-4">
-          <GardenPrimeLogo size="small" />
+          <GardenPrimeLogo horizontal size="small" />
           <button
             onClick={() => setDrawerOpen(false)}
             className="p-2 rounded-lg text-muted-foreground hover:bg-slate-100"
@@ -197,7 +197,7 @@ function ParceiroLayout() {
           >
             <Menu className="h-6 w-6" />
           </button>
-          <GardenPrimeLogo size="small" />
+          <GardenPrimeLogo horizontal size="small" />
           {/* Spacer para centralizar o logo */}
           <div className="w-10" />
         </header>
