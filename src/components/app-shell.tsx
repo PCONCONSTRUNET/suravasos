@@ -142,6 +142,16 @@ export function AppShell({ children }: { children: ReactNode }) {
     document.documentElement.classList.toggle("dark");
   };
 
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {
+      console.error("Erro ao sair:", e);
+    } finally {
+      window.location.href = "/";
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar desktop */}
@@ -188,6 +198,15 @@ export function AppShell({ children }: { children: ReactNode }) {
               <p className="text-sm font-semibold truncate">Douglas Almeida</p>
               <p className="text-xs text-sidebar-foreground/60 truncate">Administrador</p>
             </div>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8 text-sidebar-foreground/70 hover:text-destructive hover:bg-destructive/10 shrink-0"
+              title="Sair do sistema"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </aside>
@@ -228,6 +247,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                 ))}
               </div>
             ))}
+            <div className="mt-4 p-3 border-t border-sidebar-border">
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-destructive hover:bg-destructive/10 w-full transition-colors font-medium"
+              >
+                <LogOut className="h-4 w-4" /> Sair do sistema
+              </button>
+            </div>
           </aside>
         </div>
       )}
@@ -355,11 +382,12 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link to="/">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sair
-                </Link>
+              <DropdownMenuItem
+                onClick={handleLogout}
+                className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Sair
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
