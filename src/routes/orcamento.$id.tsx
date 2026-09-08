@@ -115,6 +115,38 @@ function ImprimirDAV() {
     ? new Date(dav.validade).toLocaleDateString("pt-BR")
     : null;
 
+  const handleVoltar = () => {
+    // 1. Se foi aberto em uma nova aba com window.open e possui opener
+    try {
+      if (window.opener && !window.opener.closed) {
+        window.close();
+        return;
+      }
+    } catch {}
+
+    // 2. Se há histórico anterior nesta mesma aba
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      window.history.back();
+    }
+
+    // 3. Tenta fechar a aba diretamente (funciona em abas criadas por script)
+    try {
+      window.close();
+    } catch {}
+
+    // 4. Fallback imediato garantido: se a janela não fechou e não navegou, redireciona
+    setTimeout(() => {
+      if (typeof window !== "undefined" && window.location.pathname.startsWith("/orcamento")) {
+        const ref = document.referrer;
+        if (ref && (ref.includes("/parceiro") || ref.includes("/app"))) {
+          window.location.href = ref;
+        } else {
+          window.location.href = "/parceiro/vendas";
+        }
+      }
+    }, 200);
+  };
+
   return (
     <div
       className="bg-white min-h-screen text-black p-6 print:p-0 font-sans"
@@ -133,8 +165,8 @@ function ImprimirDAV() {
       <div className="print:hidden mb-4 flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-200 shadow-sm">
         <button
           type="button"
-          onClick={() => window.history.back()}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-white border border-slate-200 transition-colors cursor-pointer"
+          onClick={handleVoltar}
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-white border border-slate-200 transition-colors cursor-pointer active:scale-95"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Voltar</span>
