@@ -385,10 +385,27 @@ export function generateOrderPdfDoc(
   const totalBoxW = 75;
   const totalBoxX = pageWidth - margin - totalBoxW;
 
-  const subtotal = Number(order.subtotal ?? order.valor_total ?? order.total ?? 0);
+  // Calcula a soma real dos itens da tabela
+  const itemsSum = (items || []).reduce((acc, it) => {
+    const itSub = Number(it.subtotal ?? it.total ?? 0);
+    if (itSub > 0) return acc + itSub;
+    const qtd = Number(it.quantidade ?? it.qtd ?? 1);
+    const unit = Number(it.valor_unitario ?? 0);
+    return acc + qtd * unit;
+  }, 0);
+
   const desc = Number(order.desconto_valor || 0);
   const frete = Number(order.frete_valor || 0);
-  const totalFinal = Number(order.valor_total ?? order.total ?? subtotal - desc + frete);
+
+  const orderSub = Number(order.subtotal || 0);
+  const orderTotal = Number(order.valor_total ?? order.total ?? 0);
+
+  let subtotal = orderSub > 0 ? orderSub : itemsSum > 0 ? itemsSum : 0;
+  if (subtotal === 0 && orderTotal > 0) {
+    subtotal = orderTotal + desc - frete;
+  }
+
+  const totalFinal = orderTotal > 0 ? orderTotal : Math.max(0, subtotal - desc + frete);
 
   doc.setFillColor(248, 250, 252);
   doc.setDrawColor(226, 232, 240);
@@ -456,7 +473,10 @@ export function buildWhatsAppMessage(order: OrderData, items: OrderItem[]): stri
     items.forEach((item) => {
       const nome = item.produto?.nome || item.produtos?.nome || item.produto_nome || "Produto";
       const qtd = item.quantidade ?? item.qtd ?? 1;
-      const sub = Number(item.subtotal ?? item.total ?? 0).toFixed(2).replace(".", ",");
+      const rawSub = Number(item.subtotal ?? item.total ?? 0);
+      const unitVal = Number(item.valor_unitario ?? 0);
+      const itVal = rawSub > 0 ? rawSub : qtd * unitVal;
+      const sub = itVal.toFixed(2).replace(".", ",");
       msg += `• ${qtd}x ${nome} - R$ ${sub}\n`;
     });
   } else {
