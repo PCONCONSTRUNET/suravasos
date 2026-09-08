@@ -168,27 +168,31 @@ function Catalogo() {
     // Cabeçalho com Logos e CNPJs
     let yPos = 15;
     
-    // Garden Prime (Esquerda)
+    // Garden Prime
     if (gardenPrimeLogo64) {
-      doc.addImage(gardenPrimeLogo64, "PNG", margin, yPos, 40, 12);
+      doc.addImage(gardenPrimeLogo64, "PNG", margin, yPos, 45, 13);
     }
-    doc.setFontSize(10);
-    doc.setTextColor(80, 80, 80);
-    doc.text("GARDEN PRIME", margin, yPos + 18);
-    doc.setFontSize(8);
-    doc.text("CNPJ: 55.433.863/0001-55", margin, yPos + 23);
-    doc.text("Tel: (19) 99714-1112", margin, yPos + 27);
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(30, 41, 59);
+    doc.text("GARDEN PRIME", margin, yPos + 19);
 
-    // Garden Plus (Direita)
-    const rightColX = pageWidth - margin - 60;
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(71, 85, 105);
+    doc.text("CNPJ: 63.874.628/0001-36  •  Insc. Estadual: 266.037.553.113", margin, yPos + 24);
+    doc.text("Rua Santa Teresinha, 86 - Paraisolândia, Charqueada - SP", margin, yPos + 28.5);
+    doc.text("Tel: (19) 99714-1112  •  contatogardenprime@gmail.com", margin, yPos + 33);
+
+    // Garden Plus (Canto direito: somente logo e nome, sem contatos)
+    const rightColX = pageWidth - margin - 50;
     if (gardenPlusLogo64) {
-      doc.addImage(gardenPlusLogo64, "PNG", rightColX, yPos, 40, 12);
+      doc.addImage(gardenPlusLogo64, "PNG", rightColX, yPos, 38, 12);
     }
     doc.setFontSize(10);
-    doc.text("Garden Plus Ltda", rightColX, yPos + 18);
-    doc.setFontSize(8);
-    doc.text("CNPJ: 50.387.381/0001-81", rightColX, yPos + 23);
-    doc.text("Tel: (15) 98105-4330", rightColX, yPos + 27);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(71, 85, 105);
+    doc.text("Garden Plus Ltda", rightColX, yPos + 19);
 
     // Título Principal
     yPos += 45;

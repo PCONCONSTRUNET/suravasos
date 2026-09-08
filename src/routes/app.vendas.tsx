@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Calculator, Trash2, Check, X, Pencil, Search } from "lucide-react";
+import { Plus, Calculator, Trash2, Check, X, Pencil, Search, Ban } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useConfirm } from "@/contexts/ConfirmContext";
@@ -133,9 +133,10 @@ function Vendas() {
   };
 
   const handleDelete = async (venda: any) => {
+    const isDav = venda.tipo === "DAV";
     if (
       !(await confirm({
-        description: `Tem certeza que deseja excluir est${venda.tipo === "DAV" ? "e orçamento" : "a venda"}? ${["Faturado", "Pago", "Entregue"].includes(venda.status) ? "Os itens retornarão ao estoque." : ""}`,
+        description: `Tem certeza que deseja excluir est${isDav ? "e orçamento" : "a venda"}? ${["Faturado", "Pago", "Entregue"].includes(venda.status) ? "Os itens retornarão ao estoque." : ""}`,
         variant: "destructive",
       }))
     )
@@ -164,11 +165,44 @@ function Vendas() {
         }
       }
 
+      // Deleta os itens da venda primeiro para integridade referencial
+      await supabase.from("vendas_itens").delete().eq("venda_id", venda.id);
       const { error } = await supabase.from("vendas").delete().eq("id", venda.id);
       if (error) throw error;
+      if (selectedVenda?.id === venda.id) {
+        setOpenSheet(false);
+        setSelectedVenda(null);
+      }
       fetchVendas();
     } catch (err: any) {
       alert("Erro ao deletar: " + err.message);
+    }
+  };
+
+  const handleCancelDav = async (venda: any) => {
+    if (
+      !(await confirm({
+        description: "Tem certeza que deseja cancelar este orçamento?",
+        variant: "destructive",
+      }))
+    )
+      return;
+
+    try {
+      const { error } = await supabase
+        .from("vendas")
+        .update({ status: "Cancelado", status_aprovacao: "Cancelado" })
+        .eq("id", venda.id);
+      if (error) throw error;
+
+      if (selectedVenda?.id === venda.id) {
+        setSelectedVenda((prev: any) =>
+          prev ? { ...prev, status: "Cancelado", status_aprovacao: "Cancelado" } : null
+        );
+      }
+      fetchVendas();
+    } catch (err: any) {
+      alert("Erro ao cancelar orçamento: " + err.message);
     }
   };
 
@@ -312,11 +346,23 @@ function Vendas() {
                   <TableCell>
                     <Badge className={getTone(v.status)}>{v.status}</Badge>
                   </TableCell>
-                  <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                  <TableCell className="text-right space-x-1" onClick={(e) => e.stopPropagation()}>
+                    {v.tipo === "DAV" && v.status !== "Cancelado" && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                        title="Cancelar Orçamento"
+                        onClick={() => handleCancelDav(v)}
+                      >
+                        <Ban className="h-4 w-4" />
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-destructive"
+                      className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                      title={v.tipo === "DAV" ? "Excluir Orçamento" : "Excluir Venda / Pedido"}
                       onClick={() => handleDelete(v)}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -496,6 +542,41 @@ function Vendas() {
               >
                 Clonar Pedido
               </Button>
+
+              {/* Ações de Cancelar / Excluir no Sheet */}
+              <div className="pt-2 border-t flex flex-col gap-2">
+                {selectedVenda?.tipo === "DAV" ? (
+                  <>
+                    {selectedVenda.status !== "Cancelado" && (
+                      <Button
+                        variant="outline"
+                        className="w-full border-amber-300 text-amber-800 hover:bg-amber-50 font-semibold"
+                        onClick={() => handleCancelDav(selectedVenda)}
+                      >
+                        <Ban className="h-4 w-4 mr-2 text-amber-600" />
+                        Cancelar Orçamento
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      className="w-full text-destructive hover:bg-destructive/10 font-semibold text-xs"
+                      onClick={() => handleDelete(selectedVenda)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Excluir Orçamento Definitivamente
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    variant="outline"
+                    className="w-full border-destructive/30 text-destructive hover:bg-destructive/10 font-semibold"
+                    onClick={() => handleDelete(selectedVenda)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Excluir Venda / Pedido
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </SheetContent>

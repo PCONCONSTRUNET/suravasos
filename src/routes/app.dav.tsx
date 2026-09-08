@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, FileText, Download, Printer, Trash2, Pencil, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Search, FileText, Download, Printer, Trash2, Pencil, ArrowUpDown, ArrowUp, ArrowDown, Ban } from "lucide-react";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { useConfirm } from "@/contexts/ConfirmContext";
@@ -90,17 +90,48 @@ function DAVList() {
   const handleDelete = async (id: string) => {
     if (
       !(await confirm({
-        description: "Tem certeza que deseja excluir este orçamento?",
+        description: "Tem certeza que deseja excluir permanentemente este orçamento? Essa ação não pode ser desfeita.",
         variant: "destructive",
       }))
     )
       return;
     try {
+      // Deleta itens primeiro para integridade referencial
+      await supabase.from("dav_items").delete().eq("dav_id", id);
       const { error } = await supabase.from("davs").delete().eq("id", id);
       if (error) throw error;
+      if (selectedDav?.id === id) {
+        setOpenSheet(false);
+        setSelectedDav(null);
+      }
       fetchDAVs();
     } catch (err: any) {
       alert("Erro ao deletar: " + err.message);
+    }
+  };
+
+  const handleCancelDav = async (dav: any) => {
+    if (
+      !(await confirm({
+        description: "Tem certeza que deseja cancelar este orçamento?",
+        variant: "destructive",
+      }))
+    )
+      return;
+
+    try {
+      const { error } = await supabase
+        .from("davs")
+        .update({ status: "Cancelado" })
+        .eq("id", dav.id);
+      if (error) throw error;
+
+      if (selectedDav?.id === dav.id) {
+        setSelectedDav((prev: any) => (prev ? { ...prev, status: "Cancelado" } : null));
+      }
+      fetchDAVs();
+    } catch (err: any) {
+      alert("Erro ao cancelar orçamento: " + err.message);
     }
   };
 
@@ -138,7 +169,7 @@ function DAVList() {
 
   const getTone = (status: string) => {
     if (status === "Aprovado") return "bg-success/15 text-success border-0";
-    if (status === "Rejeitado") return "bg-destructive/10 text-destructive border-0";
+    if (status === "Rejeitado" || status === "Cancelado") return "bg-destructive/10 text-destructive border-0";
     return "bg-info/15 text-info border-0"; // Orçamento Aberto
   };
 
@@ -303,10 +334,22 @@ function DAVList() {
                         <Printer className="h-4 w-4" />
                       </Link>
                     </Button>
+                    {v.status !== "Cancelado" && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                        title="Cancelar Orçamento"
+                        onClick={() => handleCancelDav(v)}
+                      >
+                        <Ban className="h-4 w-4" />
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-destructive"
+                      className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                      title="Excluir Orçamento"
                       onClick={() => handleDelete(v.id)}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -431,11 +474,29 @@ function DAVList() {
                 </Link>
               </Button>
             </div>
-            <div className="pt-2">
+            <div className="pt-2 flex flex-col gap-2">
               <Button className="w-full" variant="outline" asChild>
                 <Link to="/app/dav-novo" search={{ id: selectedDav?.id }}>
                   <Pencil className="h-4 w-4 mr-2" /> Editar Orçamento
                 </Link>
+              </Button>
+
+              {selectedDav?.status !== "Cancelado" && (
+                <Button
+                  className="w-full border-amber-300 text-amber-800 hover:bg-amber-50 font-semibold"
+                  variant="outline"
+                  onClick={() => handleCancelDav(selectedDav)}
+                >
+                  <Ban className="h-4 w-4 mr-2 text-amber-600" /> Cancelar Orçamento
+                </Button>
+              )}
+
+              <Button
+                className="w-full text-destructive hover:bg-destructive/10 font-semibold text-xs"
+                variant="ghost"
+                onClick={() => handleDelete(selectedDav?.id)}
+              >
+                <Trash2 className="h-4 w-4 mr-2" /> Excluir Orçamento Definitivamente
               </Button>
             </div>
           </div>

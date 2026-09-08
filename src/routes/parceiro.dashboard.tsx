@@ -12,7 +12,15 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Wallet, Clock, CheckCircle2, TrendingUp, XCircle } from "lucide-react";
+import { Wallet, Clock, CheckCircle2, TrendingUp, XCircle, FileText, Download, Loader2, Trash2, Ban } from "lucide-react";
+import {
+  WhatsAppIcon,
+  shareOrderWhatsApp,
+  openOrderPdf,
+  downloadOrderPdf,
+  getOrderNumber,
+  isOrderDav,
+} from "@/lib/order-pdf";
 
 export const Route = createFileRoute("/parceiro/dashboard")({
   head: () => ({ meta: [{ title: "Meu Painel — GARDEN PRIME" }] }),
@@ -25,6 +33,7 @@ function ParceiroDashboard() {
   const [status, setStatus] = useState("");
   const [vendas, setVendas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sharingId, setSharingId] = useState<string | null>(null);
 
   const [selectedSaleForDetails, setSelectedSaleForDetails] = useState<any>(null);
   const [saleItems, setSaleItems] = useState<any[]>([]);
@@ -35,6 +44,15 @@ function ParceiroDashboard() {
   const [editClientData, setEditClientData] = useState({ nome: "", cpf_cnpj: "", telefone: "" });
   const [savingClient, setSavingClient] = useState(false);
   const [deletingOrder, setDeletingOrder] = useState(false);
+
+  const handleShare = async (venda: any, itens?: any[]) => {
+    setSharingId(venda.id);
+    try {
+      await shareOrderWhatsApp(venda, itens);
+    } finally {
+      setSharingId(null);
+    }
+  };
 
   const openSaleDetails = async (venda: any) => {
     setSelectedSaleForDetails(venda);
@@ -55,6 +73,50 @@ function ParceiroDashboard() {
       console.error(e);
     } finally {
       setLoadingSaleDetails(false);
+    }
+  };
+
+  const handleDeleteSale = async (venda: any) => {
+    const isDav = isOrderDav(venda);
+    const label = isDav ? "orçamento" : "pedido";
+    if (!confirm(`Tem certeza que deseja excluir este ${label}? Esta ação não pode ser desfeita.`)) return;
+
+    setDeletingOrder(true);
+    try {
+      // Exclui os itens primeiro para integridade referencial
+      await supabase.from("vendas_itens").delete().eq("venda_id", venda.id);
+      // Exclui a venda
+      const { error } = await supabase.from("vendas").delete().eq("id", venda.id);
+      if (error) throw error;
+      setVendas((prev) => prev.filter((v) => v.id !== venda.id));
+      setIsSaleDetailsOpen(false);
+    } catch (err: any) {
+      alert(`Erro ao excluir ${label}: ` + err.message);
+    } finally {
+      setDeletingOrder(false);
+    }
+  };
+
+  const handleCancelDav = async (venda: any) => {
+    if (!confirm("Tem certeza que deseja cancelar este orçamento?")) return;
+
+    try {
+      const { error } = await supabase
+        .from("vendas")
+        .update({ status: "Cancelado", status_aprovacao: "Cancelado" })
+        .eq("id", venda.id);
+      if (error) throw error;
+
+      setVendas((prev) =>
+        prev.map((v) => (v.id === venda.id ? { ...v, status: "Cancelado", status_aprovacao: "Cancelado" } : v))
+      );
+      if (selectedSaleForDetails?.id === venda.id) {
+        setSelectedSaleForDetails((prev: any) =>
+          prev ? { ...prev, status: "Cancelado", status_aprovacao: "Cancelado" } : null
+        );
+      }
+    } catch (err: any) {
+      alert("Erro ao cancelar orçamento: " + err.message);
     }
   };
 
@@ -468,56 +530,128 @@ function ParceiroDashboard() {
               Nenhuma venda registrada ainda.
             </p>
           ) : (
-            vendas.slice(0, 10).map((v) => (
-              <div
-                key={v.id}
-                className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex justify-between items-center cursor-pointer active:scale-[0.98] transition-transform"
-                onClick={() => openSaleDetails(v)}
-              >
-                <div>
-                  <p className="font-bold text-slate-800">
-                    R$ {Number(v.valor_total).toFixed(2).replace(".", ",")}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {new Date(v.created_at).toLocaleDateString()}
-                  </p>
+            vendas.slice(0, 10).map((v) => {
+              const isDav = isOrderDav(v);
+              const num = getOrderNumber(v);
+              const isSharing = sharingId === v.id;
+
+              return (
+                <div
+                  key={v.id}
+                  className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col gap-3 cursor-pointer active:scale-[0.99] transition-all hover:border-brand/30"
+                  onClick={() => openSaleDetails(v)}
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-bold text-slate-800 text-base">
+                        R$ {Number(v.valor_total).toFixed(2).replace(".", ",")}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        <span className="font-semibold text-slate-700">{isDav ? "Orçamento" : "Pedido"} #{num}</span> • {new Date(v.created_at).toLocaleDateString('pt-BR')}
+                      </p>
+                    </div>
+                    <div className="text-right flex flex-col items-end gap-1">
+                      <div className="flex items-center gap-1.5">
+                        {v.status_aprovacao === "Aprovada" ? (
+                          <span className="inline-flex items-center gap-1 text-xs font-bold text-success bg-success/10 px-2 py-1 rounded-md">
+                            <CheckCircle2 className="h-3 w-3" /> Aprovada
+                          </span>
+                        ) : v.status_aprovacao === "Rejeitada" || v.status === "Cancelado" ? (
+                          <span className="inline-flex items-center gap-1 text-xs font-bold text-destructive bg-destructive/10 px-2 py-1 rounded-md">
+                            {v.status === "Cancelado" ? "Cancelado" : "Rejeitada"}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-600 bg-amber-100 px-2 py-1 rounded-md">
+                            <Clock className="h-3 w-3" /> Pendente
+                          </span>
+                        )}
+
+                        {/* Ações Rápidas */}
+                        {isDav && v.status !== "Cancelado" && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCancelDav(v);
+                            }}
+                            className="p-1 text-amber-600 hover:text-amber-800 hover:bg-amber-50 rounded transition-colors"
+                            title="Cancelar orçamento"
+                          >
+                            <Ban className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteSale(v);
+                          }}
+                          className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors"
+                          title={isDav ? "Excluir orçamento" : "Excluir pedido"}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      {v.status_aprovacao === "Aprovada" && v.valor_comissao > 0 && (
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          + R$ {Number(v.valor_comissao).toFixed(2)} comissão
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Ações rápidas no card */}
+                  <div className="border-t border-slate-100 pt-2 flex items-center gap-2">
+                    <button
+                      type="button"
+                      disabled={isSharing}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleShare(v);
+                      }}
+                      className="flex-1 h-8 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors border border-emerald-200/60"
+                      title="Enviar arquivo PDF e resumo no WhatsApp"
+                    >
+                      {isSharing ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-700" />
+                      ) : (
+                        <WhatsAppIcon className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      )}
+                      <span>WhatsApp</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openOrderPdf(v.id);
+                      }}
+                      className="flex-1 h-8 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors border border-slate-200"
+                      title="Visualizar e Imprimir PDF"
+                    >
+                      <FileText className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                      <span>Ver PDF</span>
+                    </button>
+                  </div>
                 </div>
-                <div className="text-right">
-                  {v.status_aprovacao === "Aprovada" ? (
-                    <span className="inline-flex items-center gap-1 text-xs font-bold text-success bg-success/10 px-2 py-1 rounded-md">
-                      <CheckCircle2 className="h-3 w-3" /> Aprovada
-                    </span>
-                  ) : v.status_aprovacao === "Rejeitada" ? (
-                    <span className="inline-flex items-center gap-1 text-xs font-bold text-destructive bg-destructive/10 px-2 py-1 rounded-md">
-                      Rejeitada
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-600 bg-amber-100 px-2 py-1 rounded-md">
-                      <Clock className="h-3 w-3" /> Pendente
-                    </span>
-                  )}
-                  {v.status_aprovacao === "Aprovada" && v.valor_comissao > 0 && (
-                    <p className="text-[10px] text-muted-foreground mt-1">
-                      + R$ {Number(v.valor_comissao).toFixed(2)} comissão
-                    </p>
-                  )}
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>
 
       <Dialog open={isSaleDetailsOpen} onOpenChange={setIsSaleDetailsOpen}>
-        <DialogContent className="sm:max-w-[400px]">
+        <DialogContent className="sm:max-w-[440px]">
           <DialogHeader>
-            <DialogTitle>Ficha do Pedido</DialogTitle>
+            <DialogTitle>
+              {isOrderDav(selectedSaleForDetails || {}) ? "Ficha do Orçamento" : "Ficha do Pedido"}
+            </DialogTitle>
             <DialogDescription asChild>
               <div>
-                Pedido #{selectedSaleForDetails?.numero_venda} •{" "}
-                {new Date(selectedSaleForDetails?.created_at).toLocaleDateString()}
+                {isOrderDav(selectedSaleForDetails || {}) ? "Orçamento" : "Pedido"} #{getOrderNumber(selectedSaleForDetails || {})} •{" "}
+                {selectedSaleForDetails && new Date(selectedSaleForDetails?.created_at).toLocaleDateString('pt-BR')}
                 {selectedSaleForDetails?.cliente?.nome && (
-                  <div className="mt-3 text-sm text-slate-700 bg-slate-100 p-3 rounded-md border border-slate-200 text-left">
+                  <div className="mt-3 text-sm text-slate-700 bg-slate-100 p-3 rounded-xl border border-slate-200 text-left">
                     <p className="font-semibold text-slate-900 flex items-center gap-2">
                       👤 {selectedSaleForDetails.cliente.nome}
                     </p>
@@ -534,10 +668,13 @@ function ParceiroDashboard() {
           </DialogHeader>
           <div className="py-2">
             {loadingSaleDetails ? (
-              <div className="text-center py-6 text-muted-foreground">Carregando itens...</div>
+              <div className="text-center py-6 text-muted-foreground flex flex-col items-center gap-2">
+                <Loader2 className="w-6 h-6 animate-spin text-brand" />
+                <span>Carregando itens...</span>
+              </div>
             ) : (
               <div className="space-y-4">
-                <div className="max-h-[300px] overflow-y-auto divide-y border rounded-lg">
+                <div className="max-h-[260px] overflow-y-auto divide-y border rounded-xl">
                   {saleItems.length === 0 ? (
                     <div className="p-4 text-center text-sm text-muted-foreground">
                       Nenhum item encontrado.
@@ -555,73 +692,122 @@ function ParceiroDashboard() {
                               {item.produto?.nome || "Produto Excluído"}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              {item.quantidade}x R$ {Number(item.valor_unitario).toFixed(2)}
+                              {item.quantidade}x R$ {Number(item.valor_unitario).toFixed(2).replace('.', ',')}
                             </p>
                           </div>
                         </div>
                         <p className="font-bold text-brand">
-                          R$ {Number(item.subtotal).toFixed(2)}
+                          R$ {Number(item.subtotal).toFixed(2).replace('.', ',')}
                         </p>
                       </div>
                     ))
                   )}
                 </div>
-                <div className="flex justify-between items-center p-4 bg-slate-100 rounded-lg">
+                <div className="flex justify-between items-center p-4 bg-slate-100 rounded-xl">
                   <span className="font-semibold text-slate-700">Total do Pedido:</span>
                   <span className="text-xl font-bold font-display text-slate-900">
-                    R$ {Number(selectedSaleForDetails?.valor_total || 0).toFixed(2)}
+                    R$ {Number(selectedSaleForDetails?.valor_total || 0).toFixed(2).replace('.', ',')}
                   </span>
                 </div>
               </div>
             )}
           </div>
-          <div className="pt-2 flex flex-col gap-2 w-full">
+          <div className="pt-2 flex flex-col gap-2.5 w-full">
+            {/* Botão principal de WhatsApp com PDF */}
+            {selectedSaleForDetails && (
+              <>
+                <Button
+                  className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2"
+                  onClick={() => handleShare(selectedSaleForDetails, saleItems)}
+                  disabled={sharingId === selectedSaleForDetails.id}
+                >
+                  {sharingId === selectedSaleForDetails.id ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-white" />
+                  ) : (
+                    <WhatsAppIcon className="w-4 h-4 shrink-0" />
+                  )}
+                  <span>Enviar PDF no WhatsApp</span>
+                </Button>
+
+                {/* Botões secundários: Ver / Imprimir PDF e Baixar PDF */}
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-10 border-slate-200 hover:bg-slate-100 text-slate-700 font-semibold rounded-xl text-xs flex items-center justify-center gap-1.5"
+                    onClick={() => openOrderPdf(selectedSaleForDetails.id)}
+                  >
+                    <FileText className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                    <span>Ver / Imprimir PDF</span>
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-10 border-slate-200 hover:bg-slate-100 text-slate-700 font-semibold rounded-xl text-xs flex items-center justify-center gap-1.5"
+                    onClick={() => downloadOrderPdf(selectedSaleForDetails, saleItems)}
+                  >
+                    <Download className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                    <span>Baixar PDF</span>
+                  </Button>
+                </div>
+              </>
+            )}
+
             {selectedSaleForDetails?.status_aprovacao === "Pendente" && (
               <>
                 <Button
-                  className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold"
+                  className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl"
                   onClick={handleEnviarPedido}
                 >
                   🚀 Enviar pedido para o dono
                 </Button>
                 <Button
                   variant="outline"
-                  className="w-full border-slate-300 text-slate-800 font-semibold"
+                  className="w-full border-slate-300 text-slate-800 font-semibold rounded-xl"
                   onClick={openEditClient}
                 >
                   ✏️ Editar Informações do Cliente
                 </Button>
               </>
             )}
-            {selectedSaleForDetails?.status_aprovacao === "Pendente" && (
+            {/* Ações de Cancelar Orçamento e Excluir */}
+            {isOrderDav(selectedSaleForDetails || {}) ? (
+              <div className="space-y-2">
+                {selectedSaleForDetails?.status !== "Cancelado" && (
+                  <Button
+                    variant="outline"
+                    className="w-full border-amber-300 text-amber-800 hover:bg-amber-50 font-semibold rounded-xl flex items-center justify-center gap-1.5"
+                    onClick={() => handleCancelDav(selectedSaleForDetails)}
+                  >
+                    <Ban className="h-4 w-4 text-amber-600" />
+                    <span>Cancelar Orçamento</span>
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 font-semibold rounded-xl flex items-center justify-center gap-1.5 text-xs"
+                  disabled={deletingOrder}
+                  onClick={() => handleDeleteSale(selectedSaleForDetails)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span>{deletingOrder ? "Excluindo..." : "Excluir Orçamento Definitivamente"}</span>
+                </Button>
+              </div>
+            ) : (
               <Button
                 variant="outline"
-                className="w-full border-red-200 text-red-600 hover:bg-red-50 font-semibold"
+                className="w-full border-red-200 text-red-600 hover:bg-red-50 font-semibold rounded-xl flex items-center justify-center gap-1.5"
                 disabled={deletingOrder}
-                onClick={async () => {
-                  if (!confirm("Tem certeza que deseja excluir este pedido? Esta ação não pode ser desfeita.")) return;
-                  setDeletingOrder(true);
-                  try {
-                    // Exclui os itens primeiro
-                    await supabase.from("vendas_itens").delete().eq("venda_id", selectedSaleForDetails.id);
-                    // Exclui a venda
-                    const { error } = await supabase.from("vendas").delete().eq("id", selectedSaleForDetails.id);
-                    if (error) throw error;
-                    setVendas((prev) => prev.filter(v => v.id !== selectedSaleForDetails.id));
-                    setIsSaleDetailsOpen(false);
-                  } catch (err: any) {
-                    alert("Erro ao excluir pedido: " + err.message);
-                  } finally {
-                    setDeletingOrder(false);
-                  }
-                }}
+                onClick={() => handleDeleteSale(selectedSaleForDetails)}
               >
-                {deletingOrder ? "Excluindo..." : "🗑️ Excluir Pedido"}
+                <Trash2 className="h-4 w-4 text-red-500" />
+                <span>{deletingOrder ? "Excluindo..." : "Excluir Pedido"}</span>
               </Button>
             )}
             <Button
               variant="outline"
-              className="w-full border-slate-200 text-slate-600"
+              className="w-full border-slate-200 text-slate-600 rounded-xl"
               onClick={() => setIsSaleDetailsOpen(false)}
             >
               Fechar

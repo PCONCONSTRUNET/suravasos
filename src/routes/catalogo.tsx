@@ -709,23 +709,22 @@ function PublicCatalogo() {
       <footer className="bg-slate-900 text-slate-400 py-12 px-4 mt-20 pb-32 lg:pb-12">
         <div className="max-w-6xl mx-auto grid gap-8 md:grid-cols-2">
           <div>
-            <div className="mb-4 inline-block bg-white p-2 rounded-lg">
+            <div className="mb-4 inline-block bg-white p-2.5 rounded-xl shadow-xs">
               <GardenPrimeLogo size="small" />
             </div>
-            <p className="font-bold text-white mb-2">GARDEN PRIME</p>
-            <p>CNPJ: 55.433.863/0001-55</p>
-            <p>Telefone: (19) 99714-1112</p>
+            <p className="font-bold text-white text-base mb-1 tracking-wide">GARDEN PRIME</p>
+            <p className="text-slate-400 text-sm">CNPJ: 63.874.628/0001-36 • Insc. Estadual: 266.037.553.113</p>
+            <p className="text-slate-400 text-sm">Rua Santa Teresinha, 86 - Paraisolândia, Charqueada - SP</p>
+            <p className="text-slate-400 text-sm">Telefone: (19) 99714-1112 • E-mail: contatogardenprime@gmail.com</p>
           </div>
-          <div>
-            <div className="mb-4 inline-block bg-white p-2 rounded-lg">
+          <div className="md:text-right flex flex-col md:items-end justify-start">
+            <div className="mb-4 inline-block bg-white p-2.5 rounded-xl shadow-xs">
               <img src="/garden-plus.png" alt="Garden Plus" className="h-8 object-contain" />
             </div>
-            <p className="font-bold text-white mb-2">Garden Plus Ltda</p>
-            <p>CNPJ: 50.387.381/0001-81</p>
-            <p>Telefone: (15) 98105-4330</p>
+            <p className="font-bold text-white text-base mb-1 tracking-wide">Garden Plus Ltda</p>
           </div>
         </div>
-        <div className="max-w-6xl mx-auto mt-8 pt-8 border-t border-slate-800 text-sm text-center">
+        <div className="max-w-6xl mx-auto mt-8 pt-8 border-t border-slate-800 text-sm text-center text-slate-500">
           &copy; {new Date().getFullYear()} Garden Prime & Garden Plus. Todos os direitos reservados.
         </div>
       </footer>

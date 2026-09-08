@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { GardenPrimeLogo } from "@/components/garden-prime-logo";
+import { Printer, ArrowLeft, Loader2 } from "lucide-react";
+import { WhatsAppIcon, shareOrderWhatsApp } from "@/lib/order-pdf";
 
 export const Route = createFileRoute("/orcamento/$id")({
   head: () => ({ meta: [{ title: "Orçamento (DAV) - Impressão" }] }),
@@ -12,6 +14,7 @@ function ImprimirDAV() {
   const { id } = Route.useParams();
   const [dav, setDav] = useState<any>(null);
   const [itens, setItens] = useState<any[]>([]);
+  const [sharing, setSharing] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -34,7 +37,7 @@ function ImprimirDAV() {
         // Tenta buscar na tabela de vendas (Vendas ou DAVs antigos)
         const { data: v } = await supabase
           .from("vendas")
-          .select("*, cliente:clientes(*)")
+          .select("*, cliente:clientes(*), vendedor:vendedores(nome)")
           .eq("id", id)
           .single();
         
@@ -62,9 +65,10 @@ function ImprimirDAV() {
              desconto_percentual: v.desconto_percentual || 0,
              frete_valor: v.frete_valor || 0,
              total: v.valor_total,
-             vendedor: "",
+             vendedor: v.vendedor?.nome || "",
              emissor_nome: "GARDEN PRIME",
-             isVenda: v.tipo !== "DAV"
+             isVenda: v.tipo !== "DAV",
+             rawVenda: v,
           };
           setDav(d);
           
@@ -115,51 +119,124 @@ function ImprimirDAV() {
         @media print {
           @page { margin: 10mm; size: A4; }
           body { background: white; -webkit-print-color-adjust: exact; }
-          header, footer, nav, aside { display: none; }
+          header, footer, nav, aside, .print-hidden { display: none !important; }
         }
       `}</style>
 
+      {/* Barra de Ações na Tela (oculta ao imprimir) */}
+      <div className="print:hidden mb-6 flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-200 shadow-sm">
+        <button
+          type="button"
+          onClick={() => window.history.back()}
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-white border border-slate-200 transition-colors cursor-pointer"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Voltar</span>
+        </button>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled={sharing}
+            onClick={async () => {
+              setSharing(true);
+              try {
+                const orderData = dav.rawVenda || {
+                  id: dav.id,
+                  numero: dav.numero,
+                  tipo: dav.isVenda ? "PDV" : "DAV",
+                  created_at: dav.created_at,
+                  valor_total: dav.total,
+                  subtotal: dav.subtotal,
+                  desconto_valor: dav.desconto_valor,
+                  frete_valor: dav.frete_valor,
+                  condicao_pagamento: dav.condicao_pagamento,
+                  cliente: {
+                    nome: dav.cliente_nome,
+                    cpf_cnpj: dav.cliente_cnpj,
+                    telefone: dav.cliente_telefone,
+                    endereco: dav.cliente_endereco,
+                  },
+                  vendedor_nome: dav.vendedor,
+                };
+                const itemsList = itens.map((it: any) => ({
+                  produto_nome: it.produto,
+                  codigo: it.codigo,
+                  quantidade: it.qtd,
+                  valor_unitario: it.valor_unitario,
+                  subtotal: it.total,
+                }));
+                await shareOrderWhatsApp(orderData, itemsList);
+              } finally {
+                setSharing(false);
+              }
+            }}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm transition-colors cursor-pointer"
+          >
+            {sharing ? <Loader2 className="w-4 h-4 animate-spin" /> : <WhatsAppIcon className="w-4 h-4 shrink-0" />}
+            <span>Enviar no WhatsApp</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-800 bg-white hover:bg-slate-100 border border-slate-200 shadow-sm transition-colors cursor-pointer"
+          >
+            <Printer className="w-4 h-4 text-slate-600 shrink-0" />
+            <span>Imprimir / Salvar PDF</span>
+          </button>
+        </div>
+      </div>
+
       {/* Cabeçalho */}
       <div className="flex justify-between items-start border-b-2 border-slate-900 pb-6 mb-6">
-        <div className="flex gap-12">
-          {/* Garden Prime */}
-          <div>
-            <GardenPrimeLogo size="small" />
-            <div className="mt-4 text-sm text-slate-600">
-              <p className="font-bold text-slate-900">{dav.emissor_nome || "GARDEN PRIME"}</p>
-              {dav.emissor_cnpj && <p>CNPJ: {dav.emissor_cnpj}</p>}
-              {dav.emissor_endereco && <p>{dav.emissor_endereco}</p>}
-              {dav.emissor_telefone && <p>Tel: {dav.emissor_telefone.replace(/99733-?1112/g, '99714-1112').replace('997331112', '997141112')}</p>}
+        <div className="flex items-start gap-8">
+          {/* Garden Prime (com dados cadastrais e contatos completos) */}
+          <div className="flex items-start gap-4">
+            <div className="shrink-0 pt-0.5">
+              <GardenPrimeLogo size="small" />
+            </div>
+            <div className="text-xs text-slate-700 leading-relaxed">
+              <p className="text-base font-black text-slate-950 uppercase tracking-wide">
+                GARDEN PRIME
+              </p>
+              <p className="font-semibold text-slate-800">
+                CNPJ: 63.874.628/0001-36 &nbsp;•&nbsp; Insc. Estadual: 266.037.553.113
+              </p>
+              <p>
+                Rua Santa Teresinha, 86 - Paraisolândia, Charqueada - SP
+              </p>
+              <p>
+                Fone: (19) 99714-1112 &nbsp;•&nbsp; E-mail: contatogardenprime@gmail.com
+              </p>
             </div>
           </div>
 
-          {/* Garden Plus */}
-          <div>
-            <img src="/garden-plus.png" alt="Garden Plus" className="h-8 object-contain" />
-            <div className="mt-4 text-sm text-slate-600">
-              <p className="font-bold text-slate-900">Garden Plus Ltda</p>
-              <p>CNPJ: 50.387.381/0001-81</p>
-              <p>Tel: (15) 98105-4330</p>
-            </div>
+          {/* Garden Plus (canto direito do bloco: somente logo e nome, sem contatos) */}
+          <div className="pl-6 border-l border-slate-200 flex flex-col items-start justify-center">
+            <img src="/garden-plus.png" alt="Garden Plus" className="h-7 object-contain" />
+            <p className="font-bold text-xs text-slate-800 mt-2">Garden Plus Ltda</p>
           </div>
         </div>
-        <div className="text-right">
-          <h1 className="text-3xl font-bold text-slate-900 uppercase tracking-wider">
+
+        {/* Dados do Pedido / Orçamento no canto direito */}
+        <div className="text-right shrink-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 uppercase tracking-wider">
             {dav.isVenda ? "Comprovante de Venda" : "Orçamento"}
           </h1>
-          <p className="text-sm font-medium mt-1">
+          <p className="text-sm font-semibold text-slate-800 mt-1">
             {dav.isVenda ? "Venda Nº: " : "DAV Nº: "} {dav.numero ? String(dav.numero).padStart(3, "0") : dav.id.substring(0, 8).toUpperCase()}
           </p>
-          <p className="text-sm">
+          <p className="text-xs text-slate-600">
             Emissão: {dataDAV} às {horaDAV}
           </p>
           {dav.vendedor && (
-            <p className="text-sm mt-1">
-              Vendedor: <span className="font-medium">{dav.vendedor}</span>
+            <p className="text-xs mt-1 text-slate-700">
+              Vendedor: <span className="font-bold text-slate-900">{dav.vendedor}</span>
             </p>
           )}
           {validadeStr && (
-            <p className="text-sm font-medium mt-1 text-slate-600">
+            <p className="text-xs font-medium mt-1 text-slate-600">
               Validade: {validadeStr}
             </p>
           )}

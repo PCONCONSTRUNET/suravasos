@@ -4,7 +4,7 @@ import { supabaseParceiro as supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Trash2, ShoppingCart, CheckCircle2, Loader2, Camera, Mic, Star, Flame, Clock, Grid, RefreshCw, Plus, Minus, ArrowRight, ChevronRight } from "lucide-react";
+import { Search, Trash2, ShoppingCart, CheckCircle2, Loader2, Camera, Mic, Star, Flame, Clock, Grid, RefreshCw, Plus, Minus, ArrowRight, ChevronRight, FileText, Download } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import {
   Dialog,
@@ -14,6 +14,12 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  WhatsAppIcon,
+  shareOrderWhatsApp,
+  openOrderPdf,
+  downloadOrderPdf,
+} from "@/lib/order-pdf";
 
 export const Route = createFileRoute("/parceiro/pdv")({
   head: () => ({ meta: [{ title: "Nova Venda — GARDEN PRIME" }] }),
@@ -71,6 +77,7 @@ function ParceiroPDV() {
   const [searchTerm, setSearchTerm] = useState("");
   const [davGeradoId, setDavGeradoId] = useState<string | null>(null);
   const [davGeradoNumero, setDavGeradoNumero] = useState<string | number | null>(null);
+  const [sharingSuccess, setSharingSuccess] = useState(false);
   const [cnpjLoading, setCnpjLoading] = useState(false);
   const [cnpjErro, setCnpjErro] = useState("");
   const [descontoPercentual, setDescontoPercentual] = useState<number>(0);
@@ -519,25 +526,38 @@ function ParceiroPDV() {
     navigate({ to: "/parceiro/dashboard" });
   };
 
-  const handleShareWhatsApp = () => {
+  const handleShareWhatsApp = async () => {
     if (!davGeradoId) return;
+    setSharingSuccess(true);
+    try {
+      const orderObj = {
+        id: davGeradoId,
+        numero_venda: davGeradoNumero || undefined,
+        tipo: "PDV",
+        created_at: new Date().toISOString(),
+        valor_total: subtotal,
+        cliente: {
+          nome: clientForm.nome,
+          cpf_cnpj: clientForm.documento,
+          telefone: clientForm.telefone,
+          endereco: `${clientForm.endereco || ""}${clientForm.numero ? `, ${clientForm.numero}` : ""}`,
+        },
+        condicao_pagamento: clientForm.pagamento === "Boleto a Prazo" ? clientForm.condicaoBoleto || "Boleto a Prazo" : clientForm.pagamento,
+        vendedor_nome: vendedorInfo?.nome,
+      };
 
-    let msg = `*ORÇAMENTO - GARDEN PRIME*\n`;
-    msg += `Nº do Orçamento: ${davGeradoNumero}\n\n`;
-    msg += `Olá ${clientForm.nome}, aqui está o seu orçamento detalhado!\n\n`;
+      const itemsList = cart.map((i) => ({
+        produto_nome: i.p,
+        codigo: i.c,
+        quantidade: i.q,
+        valor_unitario: i.u,
+        subtotal: i.t,
+      }));
 
-    msg += `*ITENS DO ORÇAMENTO:*\n`;
-    cart.forEach((item) => {
-      msg += `• ${item.q}x ${item.p} - R$ ${Number(item.t).toFixed(2).replace(".", ",")}\n`;
-    });
-
-    msg += `\n*TOTAL: R$ ${subtotal.toFixed(2).replace(".", ",")}*\n\n`;
-
-    const linkPdf = `${window.location.origin}/orcamento/${davGeradoId}`;
-    msg += `📄 *Acesse o orçamento completo em PDF aqui:*\n${linkPdf}`;
-
-    const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
-    window.open(url, "_blank");
+      await shareOrderWhatsApp(orderObj, itemsList);
+    } finally {
+      setSharingSuccess(false);
+    }
   };
 
   if (isInitializing) {
@@ -862,18 +882,72 @@ function ParceiroPDV() {
               sua comissão.
             </DialogDescription>
           </div>
-          <div className="pt-2 flex flex-col gap-3 w-full">
+          <div className="pt-2 flex flex-col gap-2.5 w-full">
             {davGeradoId && (
-              <Button
-                className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white h-12 text-sm sm:text-base font-bold shadow-md"
-                onClick={handleShareWhatsApp}
-              >
-                Enviar Orçamento no WhatsApp
-              </Button>
+              <>
+                <Button
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white h-12 text-sm sm:text-base font-bold shadow-md rounded-xl flex items-center justify-center gap-2"
+                  onClick={handleShareWhatsApp}
+                  disabled={sharingSuccess}
+                >
+                  {sharingSuccess ? (
+                    <Loader2 className="w-5 h-5 animate-spin text-white" />
+                  ) : (
+                    <WhatsAppIcon className="w-5 h-5 shrink-0" />
+                  )}
+                  <span>Enviar PDF no WhatsApp</span>
+                </Button>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-10 border-slate-200 hover:bg-slate-100 text-slate-700 font-semibold rounded-xl text-xs flex items-center justify-center gap-1.5"
+                    onClick={() => openOrderPdf(davGeradoId)}
+                  >
+                    <FileText className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                    <span>Ver / Imprimir PDF</span>
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-10 border-slate-200 hover:bg-slate-100 text-slate-700 font-semibold rounded-xl text-xs flex items-center justify-center gap-1.5"
+                    onClick={() => {
+                      const orderObj = {
+                        id: davGeradoId,
+                        numero_venda: davGeradoNumero || undefined,
+                        tipo: "PDV",
+                        created_at: new Date().toISOString(),
+                        valor_total: subtotal,
+                        cliente: {
+                          nome: clientForm.nome,
+                          cpf_cnpj: clientForm.documento,
+                          telefone: clientForm.telefone,
+                          endereco: `${clientForm.endereco || ""}${clientForm.numero ? `, ${clientForm.numero}` : ""}`,
+                        },
+                        condicao_pagamento: clientForm.pagamento === "Boleto a Prazo" ? clientForm.condicaoBoleto || "Boleto a Prazo" : clientForm.pagamento,
+                        vendedor_nome: vendedorInfo?.nome,
+                      };
+                      const itemsList = cart.map((i) => ({
+                        produto_nome: i.p,
+                        codigo: i.c,
+                        quantidade: i.q,
+                        valor_unitario: i.u,
+                        subtotal: i.t,
+                      }));
+                      downloadOrderPdf(orderObj, itemsList);
+                    }}
+                  >
+                    <Download className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                    <span>Baixar PDF</span>
+                  </Button>
+                </div>
+              </>
             )}
             <Button
               variant="outline"
-              className="w-full border-slate-300 text-slate-800 hover:bg-slate-100 h-12 text-sm sm:text-base font-bold"
+              className="w-full border-slate-200 text-slate-600 hover:bg-slate-100 h-10 text-xs font-semibold rounded-xl mt-1"
               onClick={closeSuccessModal}
             >
               Voltar ao Painel
