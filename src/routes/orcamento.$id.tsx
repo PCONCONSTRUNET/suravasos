@@ -117,19 +117,20 @@ function ImprimirDAV() {
 
   return (
     <div
-      className="bg-white min-h-screen text-black p-8 font-sans"
+      className="bg-white min-h-screen text-black p-6 print:p-0 font-sans"
       style={{ maxWidth: "800px", margin: "0 auto" }}
     >
       <style>{`
         @media print {
-          @page { margin: 10mm; size: A4; }
-          body { background: white; -webkit-print-color-adjust: exact; }
+          @page { margin: 8mm; size: A4; }
+          body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           header, footer, nav, aside, .print-hidden { display: none !important; }
+          tr { break-inside: avoid; page-break-inside: avoid; }
         }
       `}</style>
 
       {/* Barra de Ações na Tela (oculta ao imprimir) */}
-      <div className="print:hidden mb-6 flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-200 shadow-sm">
+      <div className="print:hidden mb-4 flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-200 shadow-sm">
         <button
           type="button"
           onClick={() => window.history.back()}
@@ -194,15 +195,15 @@ function ImprimirDAV() {
       </div>
 
       {/* Cabeçalho */}
-      <div className="flex justify-between items-start border-b-2 border-slate-900 pb-6 mb-6">
-        <div className="flex items-start gap-8">
+      <div className="flex justify-between items-center border-b-2 border-slate-900 pb-3 mb-3">
+        <div className="flex items-center gap-6">
           {/* Garden Prime (com dados cadastrais e contatos completos) */}
-          <div className="flex items-start gap-4">
-            <div className="shrink-0 pt-0.5">
-              <GardenPrimeLogo size="small" />
+          <div className="flex items-center gap-3">
+            <div className="shrink-0">
+              <GardenPrimeLogo imgClassName="h-14 sm:h-16 w-auto" />
             </div>
-            <div className="text-xs text-slate-700 leading-relaxed">
-              <p className="text-base font-black text-slate-950 uppercase tracking-wide">
+            <div className="text-[11px] text-slate-700 leading-tight">
+              <p className="text-sm font-black text-slate-950 uppercase tracking-wide">
                 GARDEN PRIME
               </p>
               <p className="font-semibold text-slate-800">
@@ -217,31 +218,31 @@ function ImprimirDAV() {
             </div>
           </div>
 
-          {/* Garden Plus (canto direito do bloco: somente logo e nome, sem contatos) */}
-          <div className="pl-6 border-l border-slate-200 flex flex-col items-start justify-center">
-            <img src="/garden-plus.png" alt="Garden Plus" className="h-7 object-contain" />
-            <p className="font-bold text-xs text-slate-800 mt-2">Garden Plus Ltda</p>
+          {/* Garden Plus (canto direito do bloco empresarial: logo ampliada e nome) */}
+          <div className="pl-5 border-l border-slate-300 flex flex-col items-center justify-center shrink-0">
+            <img src="/garden-plus.png" alt="Garden Plus" className="h-11 sm:h-12 w-auto object-contain" />
+            <p className="font-bold text-[11px] text-slate-800 mt-1">Garden Plus Ltda</p>
           </div>
         </div>
 
         {/* Dados do Pedido / Orçamento no canto direito */}
         <div className="text-right shrink-0">
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 uppercase tracking-wider">
+          <h1 className="text-base sm:text-lg font-bold text-slate-900 uppercase tracking-tight">
             {dav.isVenda ? "Comprovante de Venda" : "Orçamento"}
           </h1>
-          <p className="text-sm font-semibold text-slate-800 mt-1">
+          <p className="text-xs sm:text-sm font-semibold text-slate-800 mt-0.5">
             {dav.isVenda ? "Venda Nº: " : "DAV Nº: "} {dav.numero ? String(dav.numero).padStart(3, "0") : dav.id.substring(0, 8).toUpperCase()}
           </p>
-          <p className="text-xs text-slate-600">
+          <p className="text-[11px] text-slate-600">
             Emissão: {dataDAV} às {horaDAV}
           </p>
           {dav.vendedor && (
-            <p className="text-xs mt-1 text-slate-700">
+            <p className="text-[11px] text-slate-700">
               Vendedor: <span className="font-bold text-slate-900">{dav.vendedor}</span>
             </p>
           )}
           {validadeStr && (
-            <p className="text-xs font-medium mt-1 text-slate-600">
+            <p className="text-[11px] font-medium text-slate-600">
               Validade: {validadeStr}
             </p>
           )}
@@ -249,55 +250,100 @@ function ImprimirDAV() {
       </div>
 
       {/* Dados do Cliente e Condições */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-3">
+      <div className="grid grid-cols-2 gap-3 mb-3">
+        <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+          <h2 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 pb-1 mb-1.5 border-b border-slate-200">
             Dados do Cliente
           </h2>
-          <div className="text-sm space-y-1">
-            <p><span className="font-semibold">Nome:</span> {dav.cliente_nome || "—"}</p>
-            {dav.cliente_cnpj && <p><span className="font-semibold">CNPJ/CPF:</span> {dav.cliente_cnpj}</p>}
-            {dav.cliente_telefone && <p><span className="font-semibold">Telefone:</span> {dav.cliente_telefone}</p>}
-            {dav.cliente_endereco && <p><span className="font-semibold">Endereço:</span> {dav.cliente_endereco}</p>}
+          <div className="text-xs space-y-0.5 leading-snug">
+            <p className="truncate">
+              <span className="font-semibold text-slate-700">Nome:</span>{" "}
+              <span className="font-medium text-slate-950">{dav.cliente_nome || "—"}</span>
+            </p>
+            {(dav.cliente_cnpj || dav.cliente_telefone) && (
+              <p>
+                {dav.cliente_cnpj && (
+                  <span>
+                    <span className="font-semibold text-slate-700">CNPJ/CPF:</span> {dav.cliente_cnpj}
+                  </span>
+                )}
+                {dav.cliente_cnpj && dav.cliente_telefone && (
+                  <span className="text-slate-400"> &nbsp;•&nbsp; </span>
+                )}
+                {dav.cliente_telefone && (
+                  <span>
+                    <span className="font-semibold text-slate-700">Tel:</span> {dav.cliente_telefone}
+                  </span>
+                )}
+              </p>
+            )}
+            {dav.cliente_endereco && (
+              <p className="line-clamp-2">
+                <span className="font-semibold text-slate-700">Endereço:</span> {dav.cliente_endereco}
+              </p>
+            )}
           </div>
         </div>
 
-        <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-3">
+        <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+          <h2 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 pb-1 mb-1.5 border-b border-slate-200">
             Condições Comerciais
           </h2>
-          <div className="text-sm space-y-1">
-            {dav.condicao_pagamento && <p><span className="font-semibold">Pagamento:</span> {dav.condicao_pagamento}</p>}
-            {dav.frete_tipo && <p><span className="font-semibold">Frete:</span> {dav.frete_tipo}</p>}
-            {dav.prazo_entrega && <p><span className="font-semibold">Prazo:</span> {dav.prazo_entrega}</p>}
-            {dav.vendedor && <p><span className="font-semibold">Vendedor:</span> {dav.vendedor}</p>}
+          <div className="text-xs space-y-0.5 leading-snug">
+            <p>
+              <span className="font-semibold text-slate-700">Pagamento:</span>{" "}
+              <span className="text-slate-900">{dav.condicao_pagamento || "Não informado"}</span>
+            </p>
+            {dav.vendedor && (
+              <p>
+                <span className="font-semibold text-slate-700">Vendedor:</span>{" "}
+                <span className="text-slate-900">{dav.vendedor}</span>
+              </p>
+            )}
+            {(dav.frete_tipo || dav.prazo_entrega) && (
+              <p>
+                {dav.frete_tipo && (
+                  <span>
+                    <span className="font-semibold text-slate-700">Frete:</span> {dav.frete_tipo}
+                  </span>
+                )}
+                {dav.frete_tipo && dav.prazo_entrega && (
+                  <span className="text-slate-400"> &nbsp;•&nbsp; </span>
+                )}
+                {dav.prazo_entrega && (
+                  <span>
+                    <span className="font-semibold text-slate-700">Prazo:</span> {dav.prazo_entrega}
+                  </span>
+                )}
+              </p>
+            )}
           </div>
         </div>
       </div>
 
       {/* Itens */}
-      <div className="mb-6">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-3">Produtos</h2>
-        <table className="w-full text-sm border-collapse">
+      <div className="mb-3">
+        <h2 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Produtos</h2>
+        <table className="w-full text-xs border-collapse border border-slate-200">
           <thead>
             <tr className="bg-slate-900 text-white">
-              <th className="py-2 px-3 text-left">Código</th>
-              <th className="py-2 px-3 text-left">Produto</th>
-              <th className="py-2 px-3 text-center">Qtd</th>
-              <th className="py-2 px-3 text-right">Vlr. Unit</th>
-              <th className="py-2 px-3 text-right">Total</th>
+              <th className="py-1.5 px-2.5 text-left font-semibold">Código</th>
+              <th className="py-1.5 px-2.5 text-left font-semibold">Produto</th>
+              <th className="py-1.5 px-2.5 text-center font-semibold">Qtd</th>
+              <th className="py-1.5 px-2.5 text-right font-semibold">Vlr. Unit</th>
+              <th className="py-1.5 px-2.5 text-right font-semibold">Total</th>
             </tr>
           </thead>
           <tbody>
             {itens.map((item, i) => (
               <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-slate-50"}>
-                <td className="py-2 px-3 text-slate-500 text-xs">{item.codigo || "—"}</td>
-                <td className="py-2 px-3">{item.produto || "—"}</td>
-                <td className="py-2 px-3 text-center">{item.qtd}</td>
-                <td className="py-2 px-3 text-right">
+                <td className="py-1 px-2.5 text-slate-500 text-[11px] border-b border-slate-100">{item.codigo || "—"}</td>
+                <td className="py-1 px-2.5 text-slate-900 border-b border-slate-100">{item.produto || "—"}</td>
+                <td className="py-1 px-2.5 text-center text-slate-900 border-b border-slate-100">{item.qtd}</td>
+                <td className="py-1 px-2.5 text-right text-slate-900 border-b border-slate-100">
                   R$ {Number(item.valor_unitario).toFixed(2).replace(".", ",")}
                 </td>
-                <td className="py-2 px-3 text-right font-medium">
+                <td className="py-1 px-2.5 text-right font-semibold text-slate-950 border-b border-slate-100">
                   R$ {Number(item.total).toFixed(2).replace(".", ",")}
                 </td>
               </tr>
@@ -307,11 +353,11 @@ function ImprimirDAV() {
       </div>
 
       {/* Totais */}
-      <div className="flex justify-end">
-        <div className="w-72 bg-slate-50 p-4 rounded-lg border border-slate-200 text-sm space-y-2">
-          <div className="flex justify-between">
-            <span className="text-slate-600">Subtotal:</span>
-            <span>R$ {Number(dav.subtotal || 0).toFixed(2).replace(".", ",")}</span>
+      <div className="flex justify-end" style={{ breakInside: "avoid" }}>
+        <div className="w-64 bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-xs space-y-1">
+          <div className="flex justify-between text-slate-600">
+            <span>Subtotal:</span>
+            <span className="text-slate-900 font-medium">R$ {Number(dav.subtotal || 0).toFixed(2).replace(".", ",")}</span>
           </div>
           {Number(dav.desconto_valor) > 0 && (
             <div className="flex justify-between text-red-600 font-medium">
@@ -322,12 +368,12 @@ function ImprimirDAV() {
             </div>
           )}
           {Number(dav.frete_valor) > 0 && (
-            <div className="flex justify-between">
-              <span className="text-slate-600">Frete:</span>
-              <span>R$ {Number(dav.frete_valor).toFixed(2).replace(".", ",")}</span>
+            <div className="flex justify-between text-slate-600">
+              <span>Frete:</span>
+              <span className="text-slate-900 font-medium">R$ {Number(dav.frete_valor).toFixed(2).replace(".", ",")}</span>
             </div>
           )}
-          <div className="flex justify-between items-center text-lg font-bold border-t border-slate-200 pt-2 mt-2">
+          <div className="flex justify-between items-center text-sm font-bold border-t border-slate-200 pt-1.5 mt-1 text-slate-950">
             <span>Total:</span>
             <span>R$ {Number(dav.total || 0).toFixed(2).replace(".", ",")}</span>
           </div>
@@ -336,23 +382,23 @@ function ImprimirDAV() {
 
       {/* Observações */}
       {dav.observacoes && (
-        <div className="mt-6 bg-slate-50 p-4 rounded-lg border border-slate-200 text-sm">
-          <h2 className="font-bold uppercase tracking-wider text-slate-500 mb-2 text-xs">Observações</h2>
-          <p>{dav.observacoes}</p>
+        <div className="mt-3 bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-xs" style={{ breakInside: "avoid" }}>
+          <h2 className="font-bold uppercase tracking-wider text-slate-500 mb-1 text-[10px]">Observações</h2>
+          <p className="text-slate-700 leading-snug">{dav.observacoes}</p>
         </div>
       )}
 
       {/* Assinatura */}
-      <div className="mt-16 grid grid-cols-2 gap-12 text-center text-sm">
+      <div className="mt-8 print:mt-6 grid grid-cols-2 gap-10 text-center text-xs text-slate-700" style={{ breakInside: "avoid" }}>
         <div>
-          <div className="border-t border-slate-400 pt-2">Assinatura do Vendedor</div>
+          <div className="border-t border-slate-400 pt-1.5 font-medium">Assinatura do Vendedor</div>
         </div>
         <div>
-          <div className="border-t border-slate-400 pt-2">Assinatura do Cliente</div>
+          <div className="border-t border-slate-400 pt-1.5 font-medium">Assinatura do Cliente</div>
         </div>
       </div>
 
-      <div className="mt-8 text-center text-xs text-slate-400">
+      <div className="mt-4 print:mt-3 text-center text-[10px] text-slate-400" style={{ breakInside: "avoid" }}>
         {dav.isVenda
           ? "Este comprovante não possui valor fiscal."
           : "Este documento não possui valor fiscal. É apenas um Documento Auxiliar de Venda."}

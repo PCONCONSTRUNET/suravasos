@@ -4,10 +4,12 @@ import logoHorizontalImg from "@/assets/garden-prime-lado.png";
 
 export function GardenPrimeLogo({
   className,
+  imgClassName,
   size = "default",
   horizontal = false,
 }: {
   className?: string;
+  imgClassName?: string;
   size?: "small" | "default" | "large";
   horizontal?: boolean;
 }) {
@@ -28,7 +30,7 @@ export function GardenPrimeLogo({
       <img
         src={horizontal ? logoHorizontalImg : logoImg}
         alt="GARDEN PRIME"
-        className={cn("w-auto object-contain max-w-full", height)}
+        className={cn("w-auto object-contain max-w-full", imgClassName || height)}
       />
     </div>
   );

@@ -183,30 +183,29 @@ export function generateOrderPdfDoc(
 
   // 1. GARDEN PRIME (Lado Esquerdo - Completo com Contatos e CNPJ)
   const primeLogo = logoAssets?.prime;
-  const primeTextX = margin + 5;
   if (primeLogo) {
     try {
-      doc.addImage(primeLogo, "PNG", margin + 5, y + 4, 30, 9);
+      doc.addImage(primeLogo, "PNG", margin + 4, y + 4, 16, 14);
     } catch {
       // fallback sem imagem
     }
   }
 
+  const primeTextX = primeLogo ? margin + 22 : margin + 5;
   doc.setTextColor(15, 23, 42); // slate-900
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(10.5);
-  doc.text("GARDEN PRIME", primeTextX, primeLogo ? y + 17 : y + 9);
+  doc.setFontSize(10);
+  doc.text("GARDEN PRIME", primeTextX, y + 8);
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(7.2);
+  doc.setFontSize(6.8);
   doc.setTextColor(51, 65, 85); // slate-700
-  const primeLineStart = primeLogo ? y + 21.5 : y + 14;
-  doc.text("CNPJ: 63.874.628/0001-36  •  Insc. Estadual: 266.037.553.113", primeTextX, primeLineStart);
-  doc.text("Rua Santa Teresinha, 86 - Paraisolândia, Charqueada - SP", primeTextX, primeLineStart + 4);
-  doc.text("Fone: (19) 99714-1112  •  contatogardenprime@gmail.com", primeTextX, primeLineStart + 8);
+  doc.text("CNPJ: 63.874.628/0001-36  •  Insc. Estadual: 266.037.553.113", primeTextX, y + 12.5);
+  doc.text("Rua Santa Teresinha, 86 - Paraisolândia, Charqueada - SP", primeTextX, y + 16);
+  doc.text("Fone: (19) 99714-1112  •  contatogardenprime@gmail.com", primeTextX, y + 19.5);
 
   // Divisória vertical 1
-  const div1X = margin + 98;
+  const div1X = margin + 104;
   doc.setDrawColor(226, 232, 240);
   doc.line(div1X, y + 4, div1X, y + headerHeight - 4);
 
@@ -215,19 +214,15 @@ export function generateOrderPdfDoc(
   const plusX = div1X + 6;
   if (plusLogo) {
     try {
-      doc.addImage(plusLogo, "PNG", plusX, y + 4.5, 24, 8);
+      doc.addImage(plusLogo, "PNG", plusX, y + 4, 20, 13.5);
     } catch {
       // fallback
     }
   }
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(9);
+  doc.setFontSize(8.5);
   doc.setTextColor(30, 41, 59); // slate-800
-  doc.text("Garden Plus Ltda", plusX, plusLogo ? y + 17 : y + 12);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(6.8);
-  doc.setTextColor(100, 116, 139); // slate-500
-  doc.text("(Empresa Parceira)", plusX, plusLogo ? y + 21.5 : y + 16);
+  doc.text("Garden Plus Ltda", plusX, plusLogo ? y + 21 : y + 12);
 
   // Divisória vertical 2
   const div2X = pageWidth - margin - 48;
@@ -237,16 +232,16 @@ export function generateOrderPdfDoc(
   // 3. DADOS DO DOCUMENTO (Canto Superior Direito)
   const rightX = pageWidth - margin - 5;
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
+  doc.setFontSize(9.5);
   doc.setTextColor(15, 23, 42);
-  doc.text(`${docType} #${num}`, rightX, y + 9, { align: "right" });
+  doc.text(`${docType} #${num}`, rightX, y + 8, { align: "right" });
 
   const dataStr = new Date(order.created_at).toLocaleDateString("pt-BR");
   const horaStr = new Date(order.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(7.5);
+  doc.setFontSize(7);
   doc.setTextColor(71, 85, 105);
-  doc.text(`Emissão: ${dataStr} às ${horaStr}`, rightX, y + 15, { align: "right" });
+  doc.text(`Emissão: ${dataStr} às ${horaStr}`, rightX, y + 13.5, { align: "right" });
 
   const vendNome =
     order.vendedor_nome ||
@@ -256,57 +251,61 @@ export function generateOrderPdfDoc(
         ? order.vendedor
         : "");
   if (vendNome) {
-    doc.text(`Vendedor: ${vendNome}`, rightX, y + 20, { align: "right" });
+    doc.text(`Vendedor: ${vendNome}`, rightX, y + 17.5, { align: "right" });
   }
-  doc.text("Página 1/1", rightX, y + (vendNome ? 25 : 21), { align: "right" });
+  doc.text("Página 1/1", rightX, y + (vendNome ? 21.5 : 17.5), { align: "right" });
 
-  y += headerHeight + 5;
+  y += headerHeight + 4;
 
   // ── DADOS DO CLIENTE E CONDIÇÕES ───────────────────────
   const boxWidth = (pageWidth - margin * 2 - 4) / 2;
-  const boxHeight = 28;
+  const boxHeight = 22;
 
   // Caixa 1: Cliente
   doc.setFillColor(248, 250, 252);
   doc.setDrawColor(226, 232, 240);
-  doc.roundedRect(margin, y, boxWidth, boxHeight, 2, 2, "FD");
+  doc.roundedRect(margin, y, boxWidth, boxHeight, 1.5, 1.5, "FD");
 
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(9);
+  doc.setFontSize(8);
   doc.setTextColor(51, 65, 85);
-  doc.text("DADOS DO CLIENTE", margin + 4, y + 6);
+  doc.text("DADOS DO CLIENTE", margin + 4, y + 5);
 
   const clienteNome = getClientName(order);
   const clienteDoc = order.cliente?.cpf_cnpj || order.clientes?.cpf_cnpj || "";
   const clienteTel = order.cliente?.telefone || order.clientes?.telefone || "";
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.5);
+  doc.setFontSize(7.8);
   doc.setTextColor(30, 41, 59);
 
   // Truncar nome se for muito longo
   const clippedName = doc.splitTextToSize(clienteNome, boxWidth - 8);
-  doc.text(clippedName[0] || "—", margin + 4, y + 12);
+  doc.text(clippedName[0] || "—", margin + 4, y + 10);
 
-  let cliY = y + 17;
-  if (clienteDoc) {
-    doc.text(`CPF/CNPJ: ${clienteDoc}`, margin + 4, cliY);
-    cliY += 5;
+  const docAndTel = [clienteDoc ? `CPF/CNPJ: ${clienteDoc}` : "", clienteTel ? `Tel: ${clienteTel}` : ""]
+    .filter(Boolean)
+    .join("  •  ");
+  if (docAndTel) {
+    doc.text(docAndTel, margin + 4, y + 14.5);
   }
-  if (clienteTel) {
-    doc.text(`Telefone: ${clienteTel}`, margin + 4, cliY);
+
+  const clienteEnd = order.cliente?.endereco ? `End: ${order.cliente.endereco}` : "";
+  if (clienteEnd) {
+    const clippedEnd = doc.splitTextToSize(clienteEnd, boxWidth - 8);
+    doc.text(clippedEnd[0] || "", margin + 4, y + 18.5);
   }
 
   // Caixa 2: Informações Comerciais
   const box2X = margin + boxWidth + 4;
   doc.setFillColor(248, 250, 252);
   doc.setDrawColor(226, 232, 240);
-  doc.roundedRect(box2X, y, boxWidth, boxHeight, 2, 2, "FD");
+  doc.roundedRect(box2X, y, boxWidth, boxHeight, 1.5, 1.5, "FD");
 
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(9);
+  doc.setFontSize(8);
   doc.setTextColor(51, 65, 85);
-  doc.text("CONDIÇÕES COMERCIAIS", box2X + 4, y + 6);
+  doc.text("CONDIÇÕES COMERCIAIS", box2X + 4, y + 5);
 
   const pagamento = order.condicao_pagamento || order.metodo_pagamento || "Não informado";
   const vendedorNome =
@@ -315,12 +314,12 @@ export function generateOrderPdfDoc(
       : order.vendedor?.nome || order.vendedor_nome || "Parceiro Garden Prime";
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.5);
+  doc.setFontSize(7.8);
   doc.setTextColor(30, 41, 59);
-  doc.text(`Pagamento: ${pagamento}`, box2X + 4, y + 12);
-  doc.text(`Vendedor: ${vendedorNome}`, box2X + 4, y + 17);
+  doc.text(`Pagamento: ${pagamento}`, box2X + 4, y + 10);
+  doc.text(`Vendedor: ${vendedorNome}`, box2X + 4, y + 14.5);
 
-  y += boxHeight + 6;
+  y += boxHeight + 4;
 
   // ── TABELA DE PRODUTOS ─────────────────────────────────
   const tableRows = items.map((item, idx) => {
