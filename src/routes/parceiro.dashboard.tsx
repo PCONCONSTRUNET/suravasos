@@ -12,7 +12,18 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Wallet, Clock, CheckCircle2, TrendingUp, XCircle, FileText, Download, Loader2, Trash2, Ban } from "lucide-react";
+import {
+  Wallet,
+  Clock,
+  CheckCircle2,
+  TrendingUp,
+  XCircle,
+  FileText,
+  Download,
+  Loader2,
+  Trash2,
+  Ban,
+} from "lucide-react";
 import {
   WhatsAppIcon,
   shareOrderWhatsApp,
@@ -79,7 +90,8 @@ function ParceiroDashboard() {
   const handleDeleteSale = async (venda: any) => {
     const isDav = isOrderDav(venda);
     const label = isDav ? "orçamento" : "pedido";
-    if (!confirm(`Tem certeza que deseja excluir este ${label}? Esta ação não pode ser desfeita.`)) return;
+    if (!confirm(`Tem certeza que deseja excluir este ${label}? Esta ação não pode ser desfeita.`))
+      return;
 
     setDeletingOrder(true);
     try {
@@ -108,11 +120,13 @@ function ParceiroDashboard() {
       if (error) throw error;
 
       setVendas((prev) =>
-        prev.map((v) => (v.id === venda.id ? { ...v, status: "Cancelado", status_aprovacao: "Cancelado" } : v))
+        prev.map((v) =>
+          v.id === venda.id ? { ...v, status: "Cancelado", status_aprovacao: "Cancelado" } : v,
+        ),
       );
       if (selectedSaleForDetails?.id === venda.id) {
         setSelectedSaleForDetails((prev: any) =>
-          prev ? { ...prev, status: "Cancelado", status_aprovacao: "Cancelado" } : null
+          prev ? { ...prev, status: "Cancelado", status_aprovacao: "Cancelado" } : null,
         );
       }
     } catch (err: any) {
@@ -419,7 +433,7 @@ function ParceiroDashboard() {
         .eq("id", selectedSaleForDetails.cliente_id);
 
       if (error) throw error;
-      
+
       // Atualiza estado local
       setSelectedSaleForDetails((prev: any) => ({
         ...prev,
@@ -428,10 +442,16 @@ function ParceiroDashboard() {
           nome: editClientData.nome,
           cpf_cnpj: editClientData.cpf_cnpj,
           telefone: editClientData.telefone,
-        }
+        },
       }));
-      setVendas((prev) => prev.map(v => v.id === selectedSaleForDetails.id ? { ...v, cliente: { ...v.cliente, ...editClientData } } : v));
-      
+      setVendas((prev) =>
+        prev.map((v) =>
+          v.id === selectedSaleForDetails.id
+            ? { ...v, cliente: { ...v.cliente, ...editClientData } }
+            : v,
+        ),
+      );
+
       alert("Informações do cliente atualizadas!");
       setIsEditingClient(false);
     } catch (err: any) {
@@ -547,7 +567,10 @@ function ParceiroDashboard() {
                         R$ {Number(v.valor_total).toFixed(2).replace(".", ",")}
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        <span className="font-semibold text-slate-700">{isDav ? "Orçamento" : "Pedido"} #{num}</span> • {new Date(v.created_at).toLocaleDateString('pt-BR')}
+                        <span className="font-semibold text-slate-700">
+                          {isDav ? "Orçamento" : "Pedido"} #{num}
+                        </span>{" "}
+                        • {new Date(v.created_at).toLocaleDateString("pt-BR")}
                       </p>
                     </div>
                     <div className="text-right flex flex-col items-end gap-1">
@@ -648,8 +671,10 @@ function ParceiroDashboard() {
             </DialogTitle>
             <DialogDescription asChild>
               <div>
-                {isOrderDav(selectedSaleForDetails || {}) ? "Orçamento" : "Pedido"} #{getOrderNumber(selectedSaleForDetails || {})} •{" "}
-                {selectedSaleForDetails && new Date(selectedSaleForDetails?.created_at).toLocaleDateString('pt-BR')}
+                {isOrderDav(selectedSaleForDetails || {}) ? "Orçamento" : "Pedido"} #
+                {getOrderNumber(selectedSaleForDetails || {})} •{" "}
+                {selectedSaleForDetails &&
+                  new Date(selectedSaleForDetails?.created_at).toLocaleDateString("pt-BR")}
                 {selectedSaleForDetails?.cliente?.nome && (
                   <div className="mt-3 text-sm text-slate-700 bg-slate-100 p-3 rounded-xl border border-slate-200 text-left">
                     <p className="font-semibold text-slate-900 flex items-center gap-2">
@@ -692,12 +717,13 @@ function ParceiroDashboard() {
                               {item.produto?.nome || "Produto Excluído"}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              {item.quantidade}x R$ {Number(item.valor_unitario).toFixed(2).replace('.', ',')}
+                              {item.quantidade}x R${" "}
+                              {Number(item.valor_unitario).toFixed(2).replace(".", ",")}
                             </p>
                           </div>
                         </div>
                         <p className="font-bold text-brand">
-                          R$ {Number(item.subtotal).toFixed(2).replace('.', ',')}
+                          R$ {Number(item.subtotal).toFixed(2).replace(".", ",")}
                         </p>
                       </div>
                     ))
@@ -706,7 +732,10 @@ function ParceiroDashboard() {
                 <div className="flex justify-between items-center p-4 bg-slate-100 rounded-xl">
                   <span className="font-semibold text-slate-700">Total do Pedido:</span>
                   <span className="text-xl font-bold font-display text-slate-900">
-                    R$ {Number(selectedSaleForDetails?.valor_total || 0).toFixed(2).replace('.', ',')}
+                    R${" "}
+                    {Number(selectedSaleForDetails?.valor_total || 0)
+                      .toFixed(2)
+                      .replace(".", ",")}
                   </span>
                 </div>
               </div>
@@ -791,7 +820,9 @@ function ParceiroDashboard() {
                   onClick={() => handleDeleteSale(selectedSaleForDetails)}
                 >
                   <Trash2 className="h-4 w-4" />
-                  <span>{deletingOrder ? "Excluindo..." : "Excluir Orçamento Definitivamente"}</span>
+                  <span>
+                    {deletingOrder ? "Excluindo..." : "Excluir Orçamento Definitivamente"}
+                  </span>
                 </Button>
               </div>
             ) : (
@@ -825,28 +856,30 @@ function ParceiroDashboard() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Nome</label>
-              <Input 
-                value={editClientData.nome} 
-                onChange={(e) => setEditClientData(p => ({ ...p, nome: e.target.value }))}
+              <Input
+                value={editClientData.nome}
+                onChange={(e) => setEditClientData((p) => ({ ...p, nome: e.target.value }))}
               />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">CPF/CNPJ</label>
-              <Input 
-                value={editClientData.cpf_cnpj} 
-                onChange={(e) => setEditClientData(p => ({ ...p, cpf_cnpj: e.target.value }))}
+              <Input
+                value={editClientData.cpf_cnpj}
+                onChange={(e) => setEditClientData((p) => ({ ...p, cpf_cnpj: e.target.value }))}
               />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Telefone</label>
-              <Input 
-                value={editClientData.telefone} 
-                onChange={(e) => setEditClientData(p => ({ ...p, telefone: e.target.value }))}
+              <Input
+                value={editClientData.telefone}
+                onChange={(e) => setEditClientData((p) => ({ ...p, telefone: e.target.value }))}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditingClient(false)}>Cancelar</Button>
+            <Button variant="outline" onClick={() => setIsEditingClient(false)}>
+              Cancelar
+            </Button>
             <Button onClick={handleSalvarCliente} disabled={savingClient}>
               {savingClient ? "Salvando..." : "Salvar Alterações"}
             </Button>

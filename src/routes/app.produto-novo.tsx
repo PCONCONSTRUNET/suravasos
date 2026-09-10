@@ -389,15 +389,19 @@ function NovoProduto() {
                 </div>
               )}
             </div>
-            
+
             <div className="space-y-2">
               <Label>NCM (Nomenclatura Comum do Mercosul)</Label>
               <Input
                 value={produto.ncm}
-                onChange={(e) => setProduto({ ...produto, ncm: e.target.value.replace(/\D/g, "").slice(0, 8) })}
+                onChange={(e) =>
+                  setProduto({ ...produto, ncm: e.target.value.replace(/\D/g, "").slice(0, 8) })
+                }
                 placeholder="Ex: 39269090 (8 dígitos)"
               />
-              <p className="text-xs text-muted-foreground">Obrigatório para emissão de NF-e. Consulte seu contador.</p>
+              <p className="text-xs text-muted-foreground">
+                Obrigatório para emissão de NF-e. Consulte seu contador.
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

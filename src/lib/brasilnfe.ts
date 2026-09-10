@@ -204,15 +204,12 @@ export interface RespostaConsulta {
 // Edge Function do Supabase como proxy CORS confiável
 const PROXY_FUNCTION_URL = "https://mpbmssohpjwijkyhtucm.supabase.co/functions/v1/brasilnfe-proxy";
 
-async function brasilNFeRequest<T>(
-  path: string,
-  options: RequestInit = {},
-): Promise<T> {
+async function brasilNFeRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
   const response = await fetch(PROXY_FUNCTION_URL, {
     ...options,
     headers: {
       "Content-Type": "application/json",
-      "Token": BRASIL_NFE_TOKEN,
+      Token: BRASIL_NFE_TOKEN,
       "Target-Path": path,
       ...(options.headers || {}),
     },
@@ -220,9 +217,7 @@ async function brasilNFeRequest<T>(
 
   if (response.status === 429) {
     const retryAfter = response.headers.get("Retry-After") ?? "10";
-    throw new Error(
-      `Rate limit atingido. Aguarde ${retryAfter}s antes de tentar novamente.`,
-    );
+    throw new Error(`Rate limit atingido. Aguarde ${retryAfter}s antes de tentar novamente.`);
   }
 
   let data;
@@ -232,11 +227,14 @@ async function brasilNFeRequest<T>(
     throw new Error(`Erro na API (Status ${response.status})`);
   }
 
-  if (!response.ok || (data && typeof data === "object" && (
-    data.sucesso === false ||
-    (data.Error && data.Error !== "") ||
-    (data.ReturnNF && data.ReturnNF.Ok === false)
-  ))) {
+  if (
+    !response.ok ||
+    (data &&
+      typeof data === "object" &&
+      (data.sucesso === false ||
+        (data.Error && data.Error !== "") ||
+        (data.ReturnNF && data.ReturnNF.Ok === false)))
+  ) {
     const msg =
       data?.Error ||
       data?.message ||
@@ -291,10 +289,7 @@ export async function consultarNFe(id: number): Promise<RespostaConsulta> {
  * @param id - ID interno da nota no Brasil NFe
  * @param justificativa - Mínimo 15, máximo 255 caracteres
  */
-export async function cancelarNFe(
-  id: number,
-  justificativa: string,
-): Promise<RespostaNFe> {
+export async function cancelarNFe(id: number, justificativa: string): Promise<RespostaNFe> {
   return brasilNFeRequest<RespostaNFe>(`/services/Fiscal/CancelarNFe/${id}`, {
     method: "POST",
     body: JSON.stringify({ justificativa }),
@@ -316,10 +311,9 @@ export async function downloadDanfe(id: number): Promise<string> {
  * Baixa o XML da NF-e em Base64.
  */
 export async function downloadXml(id: number): Promise<string> {
-  const resp = await brasilNFeRequest<{ xmlBase64: string }>(
-    `/services/Fiscal/DownloadXml/${id}`,
-    { method: "GET" },
-  );
+  const resp = await brasilNFeRequest<{ xmlBase64: string }>(`/services/Fiscal/DownloadXml/${id}`, {
+    method: "GET",
+  });
   return resp.xmlBase64;
 }
 
@@ -340,11 +334,7 @@ export async function testarConexao(): Promise<boolean> {
 /**
  * Converte Base64 para Blob e inicia o download no browser.
  */
-export function downloadBase64File(
-  base64: string,
-  filename: string,
-  mimeType: string,
-): void {
+export function downloadBase64File(base64: string, filename: string, mimeType: string): void {
   const bytes = atob(base64);
   const buffer = new Uint8Array(bytes.length);
   for (let i = 0; i < bytes.length; i++) buffer[i] = bytes.charCodeAt(i);
@@ -387,8 +377,7 @@ export function descreverStatusSefaz(codStatus: number): string {
  */
 export function corStatusNFe(codStatus?: number, dsStatus?: string): string {
   if (!codStatus) return "bg-warning/15 text-warning border-0";
-  if (codStatus === 100 || codStatus === 150)
-    return "bg-success/15 text-success border-0";
+  if (codStatus === 100 || codStatus === 150) return "bg-success/15 text-success border-0";
   if (codStatus === 101) return "bg-info/15 text-info border-0";
   if (codStatus === 110) return "bg-destructive/10 text-destructive border-0";
   return "bg-muted text-muted-foreground border-0";

@@ -265,7 +265,11 @@ function VendedoresAdmin() {
     setCommissionType(vendedor.tipo_comissao || "porcentagem");
     setCommissionValue(vendedor.valor_comissao ? String(vendedor.valor_comissao) : "");
     setAcrescimoCatalogo(vendedor.acrescimo_catalogo || false);
-    setAcrescimoPercentual(vendedor.acrescimo_catalogo_percentual ? String(vendedor.acrescimo_catalogo_percentual) : "20");
+    setAcrescimoPercentual(
+      vendedor.acrescimo_catalogo_percentual
+        ? String(vendedor.acrescimo_catalogo_percentual)
+        : "20",
+    );
     setIsCommissionModalOpen(true);
   };
 
@@ -276,17 +280,21 @@ function VendedoresAdmin() {
     setProdutosParaTabela([]);
     setCustomPrices({});
 
-    const { data: prods } = await supabase.from("produtos").select("id, nome, valor").eq("status", "Ativo").order("nome");
+    const { data: prods } = await supabase
+      .from("produtos")
+      .select("id, nome, valor")
+      .eq("status", "Ativo")
+      .order("nome");
     if (prods) setProdutosParaTabela(prods);
 
     const { data: precos } = await supabase
       .from("parceiro_precos")
       .select("produto_id, preco_personalizado")
       .eq("vendedor_id", vendedor.id);
-    
+
     if (precos) {
       const pricesMap: Record<string, string> = {};
-      precos.forEach(p => {
+      precos.forEach((p) => {
         pricesMap[p.produto_id] = p.preco_personalizado.toString().replace(".", ",");
       });
       setCustomPrices(pricesMap);
@@ -296,7 +304,7 @@ function VendedoresAdmin() {
   const saveTabelaPrecos = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSavingPrices(true);
-    
+
     try {
       await supabase.from("parceiro_precos").delete().eq("vendedor_id", tabelaPrecosTarget.id);
 
@@ -308,7 +316,7 @@ function VendedoresAdmin() {
           inserts.push({
             vendedor_id: tabelaPrecosTarget.id,
             produto_id: prodId,
-            preco_personalizado: numPrice
+            preco_personalizado: numPrice,
           });
         }
       }
@@ -671,7 +679,9 @@ function VendedoresAdmin() {
                   >
                     <TableCell>
                       <p className="font-medium">{v.vendedor?.nome || "Desconhecido"}</p>
-                      <p className="text-xs text-muted-foreground">#{v.numero_venda || v.numero || v.id.substring(0, 6)}</p>
+                      <p className="text-xs text-muted-foreground">
+                        #{v.numero_venda || v.numero || v.id.substring(0, 6)}
+                      </p>
                     </TableCell>
                     <TableCell className="font-semibold">
                       R$ {Number(v.valor_total).toFixed(2)}
@@ -897,10 +907,7 @@ function VendedoresAdmin() {
                       Aumenta o preço dos produtos no catálogo e PDV deste parceiro.
                     </p>
                   </div>
-                  <Switch 
-                    checked={acrescimoCatalogo} 
-                    onCheckedChange={setAcrescimoCatalogo} 
-                  />
+                  <Switch checked={acrescimoCatalogo} onCheckedChange={setAcrescimoCatalogo} />
                 </div>
                 {acrescimoCatalogo && (
                   <div className="pt-3 border-t mt-1">
@@ -1080,11 +1087,11 @@ function VendedoresAdmin() {
           <DialogHeader>
             <DialogTitle>Tabela de Preços Personalizada</DialogTitle>
             <DialogDescription className="text-xs sm:text-sm">
-              Defina os preços específicos por produto para {tabelaPrecosTarget?.nome}. 
-              Se deixar em branco, será usada a regra padrão do sistema.
+              Defina os preços específicos por produto para {tabelaPrecosTarget?.nome}. Se deixar em
+              branco, será usada a regra padrão do sistema.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="relative mt-1 sm:mt-2">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -1097,44 +1104,66 @@ function VendedoresAdmin() {
 
           <div className="flex-1 overflow-y-auto pr-1 mt-2 space-y-2">
             {produtosParaTabela
-              .filter(p => p.nome.toLowerCase().includes(searchProduct.toLowerCase()))
-              .map(prod => (
-                <div key={prod.id} className="flex items-center justify-between p-2.5 sm:p-3 border rounded-2xl bg-slate-50/50 gap-2">
+              .filter((p) => p.nome.toLowerCase().includes(searchProduct.toLowerCase()))
+              .map((prod) => (
+                <div
+                  key={prod.id}
+                  className="flex items-center justify-between p-2.5 sm:p-3 border rounded-2xl bg-slate-50/50 gap-2"
+                >
                   <div className="flex-1 pr-2">
                     <p className="font-medium text-xs sm:text-sm leading-tight">{prod.nome}</p>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">Preço base: R$ {prod.valor.toFixed(2).replace(".", ",")}</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
+                      Preço base: R$ {prod.valor.toFixed(2).replace(".", ",")}
+                    </p>
                   </div>
                   <div className="w-24 sm:w-28">
                     <div className="relative">
-                      <span className="absolute left-2.5 top-1.5 sm:top-2 text-muted-foreground text-[10px] sm:text-xs">R$</span>
+                      <span className="absolute left-2.5 top-1.5 sm:top-2 text-muted-foreground text-[10px] sm:text-xs">
+                        R$
+                      </span>
                       <Input
                         className="pl-7 text-right h-7 sm:h-8 text-xs sm:text-sm rounded-xl"
                         placeholder="Padrão"
                         value={customPrices[prod.id] || ""}
-                        onChange={(e) => setCustomPrices(prev => ({ ...prev, [prod.id]: e.target.value }))}
+                        onChange={(e) =>
+                          setCustomPrices((prev) => ({ ...prev, [prod.id]: e.target.value }))
+                        }
                       />
                     </div>
                   </div>
                 </div>
               ))}
-            
+
             {produtosParaTabela.length === 0 && (
-              <p className="text-center text-xs text-muted-foreground py-8">Carregando produtos...</p>
+              <p className="text-center text-xs text-muted-foreground py-8">
+                Carregando produtos...
+              </p>
             )}
           </div>
 
           <DialogFooter className="mt-4 flex gap-2 sm:gap-0">
-            <Button variant="outline" className="rounded-xl flex-1 sm:flex-none h-9 sm:h-10" onClick={() => setIsTabelaPrecosModalOpen(false)}>
+            <Button
+              variant="outline"
+              className="rounded-xl flex-1 sm:flex-none h-9 sm:h-10"
+              onClick={() => setIsTabelaPrecosModalOpen(false)}
+            >
               Cancelar
             </Button>
-            <Button onClick={saveTabelaPrecos} disabled={isSavingPrices} className="bg-green-600 text-white hover:bg-green-700 rounded-xl flex-1 sm:flex-none h-9 sm:h-10">
+            <Button
+              onClick={saveTabelaPrecos}
+              disabled={isSavingPrices}
+              className="bg-green-600 text-white hover:bg-green-700 rounded-xl flex-1 sm:flex-none h-9 sm:h-10"
+            >
               {isSavingPrices ? "Salvando..." : "Salvar Tabela"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={successAlertModal.isOpen} onOpenChange={(open) => setSuccessAlertModal({ ...successAlertModal, isOpen: open })}>
+      <Dialog
+        open={successAlertModal.isOpen}
+        onOpenChange={(open) => setSuccessAlertModal({ ...successAlertModal, isOpen: open })}
+      >
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
             <DialogTitle>Sucesso</DialogTitle>
@@ -1143,7 +1172,10 @@ function VendedoresAdmin() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="sm:justify-center">
-            <Button className="w-full bg-green-600 text-white hover:bg-green-700" onClick={() => setSuccessAlertModal({ ...successAlertModal, isOpen: false })}>
+            <Button
+              className="w-full bg-green-600 text-white hover:bg-green-700"
+              onClick={() => setSuccessAlertModal({ ...successAlertModal, isOpen: false })}
+            >
               OK
             </Button>
           </DialogFooter>

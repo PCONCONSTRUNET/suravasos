@@ -7,7 +7,21 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Database, Shield, Users, User, Settings as Cog, Plus, Trash2, FileText, CheckCircle2, XCircle, Loader2, Eye, EyeOff } from "lucide-react";
+import {
+  Database,
+  Shield,
+  Users,
+  User,
+  Settings as Cog,
+  Plus,
+  Trash2,
+  FileText,
+  CheckCircle2,
+  XCircle,
+  Loader2,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import { useState, useEffect } from "react";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import { supabase } from "@/lib/supabase";
@@ -219,72 +233,76 @@ function Configuracoes() {
                 </div>
               ) : (
                 <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <Label>Razão Social</Label>
-                <Input
-                  className="mt-1.5"
-                  value={perfil.razao_social || ""}
-                  onChange={(e) => setPerfil((p) => ({ ...p, razao_social: e.target.value }))}
-                />
-              </div>
-              <div>
-                <Label>CNPJ</Label>
-                <Input
-                  className="mt-1.5"
-                  value={perfil.cnpj || ""}
-                  onChange={(e) => setPerfil((p) => ({ ...p, cnpj: e.target.value }))}
-                />
-              </div>
-              <div>
-                <Label>Inscrição Estadual</Label>
-                <Input
-                  className="mt-1.5"
-                  value={perfil.inscricao_estadual || ""}
-                  onChange={(e) => setPerfil((p) => ({ ...p, inscricao_estadual: e.target.value }))}
-                />
-              </div>
-              <div>
-                <Label>Regime Tributário</Label>
-                <Input
-                  className="mt-1.5"
-                  value={perfil.regime_tributario || ""}
-                  onChange={(e) => setPerfil((p) => ({ ...p, regime_tributario: e.target.value }))}
-                />
-              </div>
-              <div className="md:col-span-2">
-                <Label>Endereço</Label>
-                <Input
-                  className="mt-1.5"
-                  value={perfil.endereco || ""}
-                  onChange={(e) => setPerfil((p) => ({ ...p, endereco: e.target.value }))}
-                />
-              </div>
-              <div>
-                <Label>Telefone</Label>
-                <Input
-                  className="mt-1.5"
-                  value={perfil.telefone || ""}
-                  onChange={(e) => setPerfil((p) => ({ ...p, telefone: e.target.value }))}
-                />
-              </div>
-              <div>
-                <Label>E-mail de Contato</Label>
-                <Input
-                  className="mt-1.5"
-                  value={perfil.email_contato || ""}
-                  onChange={(e) => setPerfil((p) => ({ ...p, email_contato: e.target.value }))}
-                />
-              </div>
-              <div className="md:col-span-2 flex justify-end">
-                <Button
-                  onClick={handleSaveSettings}
-                  disabled={savingProfile}
-                  className="bg-gradient-brand text-primary-foreground"
-                >
-                  {savingProfile ? "Salvando..." : "Salvar alterações"}
-                </Button>
-              </div>
-              </div>
+                  <div>
+                    <Label>Razão Social</Label>
+                    <Input
+                      className="mt-1.5"
+                      value={perfil.razao_social || ""}
+                      onChange={(e) => setPerfil((p) => ({ ...p, razao_social: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label>CNPJ</Label>
+                    <Input
+                      className="mt-1.5"
+                      value={perfil.cnpj || ""}
+                      onChange={(e) => setPerfil((p) => ({ ...p, cnpj: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label>Inscrição Estadual</Label>
+                    <Input
+                      className="mt-1.5"
+                      value={perfil.inscricao_estadual || ""}
+                      onChange={(e) =>
+                        setPerfil((p) => ({ ...p, inscricao_estadual: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Label>Regime Tributário</Label>
+                    <Input
+                      className="mt-1.5"
+                      value={perfil.regime_tributario || ""}
+                      onChange={(e) =>
+                        setPerfil((p) => ({ ...p, regime_tributario: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label>Endereço</Label>
+                    <Input
+                      className="mt-1.5"
+                      value={perfil.endereco || ""}
+                      onChange={(e) => setPerfil((p) => ({ ...p, endereco: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label>Telefone</Label>
+                    <Input
+                      className="mt-1.5"
+                      value={perfil.telefone || ""}
+                      onChange={(e) => setPerfil((p) => ({ ...p, telefone: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label>E-mail de Contato</Label>
+                    <Input
+                      className="mt-1.5"
+                      value={perfil.email_contato || ""}
+                      onChange={(e) => setPerfil((p) => ({ ...p, email_contato: e.target.value }))}
+                    />
+                  </div>
+                  <div className="md:col-span-2 flex justify-end">
+                    <Button
+                      onClick={handleSaveSettings}
+                      disabled={savingProfile}
+                      className="bg-gradient-brand text-primary-foreground"
+                    >
+                      {savingProfile ? "Salvando..." : "Salvar alterações"}
+                    </Button>
+                  </div>
+                </div>
               )}
             </CardContent>
           </Card>
@@ -499,7 +517,10 @@ function FiscalTab() {
                 className="shrink-0"
               >
                 {testando ? (
-                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Testando…</>
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Testando…
+                  </>
                 ) : (
                   <>Testar Conexão</>
                 )}
@@ -525,8 +546,8 @@ function FiscalTab() {
               <div>
                 <p className="font-semibold text-sm">Ambiente Padrão: Homologação</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  As emissões são feitas em homologação por padrão (sem valor fiscal).
-                  Para produção, altere o ambiente diretamente no modal de emissão de cada NF-e.
+                  As emissões são feitas em homologação por padrão (sem valor fiscal). Para
+                  produção, altere o ambiente diretamente no modal de emissão de cada NF-e.
                 </p>
               </div>
               <Badge className="bg-warning/15 text-warning border-0 shrink-0 ml-4">
@@ -545,10 +566,30 @@ function FiscalTab() {
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-2">
             {[
-              { doc: "NF-e", mod: "Modelo 55", desc: "Nota Fiscal Eletrônica para operações entre empresas", status: "Ativo" },
-              { doc: "NFC-e", mod: "Modelo 65", desc: "Nota Fiscal ao Consumidor Eletrônica (PDV)", status: "Em breve" },
-              { doc: "NFS-e", mod: "Modelo 10", desc: "Nota Fiscal de Serviços Eletrônica", status: "Em breve" },
-              { doc: "CT-e", mod: "Modelo 57", desc: "Conhecimento de Transporte Eletrônico", status: "Em breve" },
+              {
+                doc: "NF-e",
+                mod: "Modelo 55",
+                desc: "Nota Fiscal Eletrônica para operações entre empresas",
+                status: "Ativo",
+              },
+              {
+                doc: "NFC-e",
+                mod: "Modelo 65",
+                desc: "Nota Fiscal ao Consumidor Eletrônica (PDV)",
+                status: "Em breve",
+              },
+              {
+                doc: "NFS-e",
+                mod: "Modelo 10",
+                desc: "Nota Fiscal de Serviços Eletrônica",
+                status: "Em breve",
+              },
+              {
+                doc: "CT-e",
+                mod: "Modelo 57",
+                desc: "Conhecimento de Transporte Eletrônico",
+                status: "Em breve",
+              },
             ].map((item) => (
               <div key={item.doc} className="flex items-start gap-3 rounded-lg border p-3">
                 <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary/10 text-primary shrink-0">
@@ -558,7 +599,9 @@ function FiscalTab() {
                   <div className="flex items-center justify-between gap-2">
                     <p className="font-semibold text-sm">
                       {item.doc}{" "}
-                      <span className="text-muted-foreground font-normal text-xs">({item.mod})</span>
+                      <span className="text-muted-foreground font-normal text-xs">
+                        ({item.mod})
+                      </span>
                     </p>
                     <Badge
                       className={

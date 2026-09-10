@@ -51,14 +51,14 @@
   --radius: 0.75rem;
 
   /* Brand: deep forest green primary */
-  --background: oklch(0.985 0.005 200);     /* #F8FAFC-ish */
-  --foreground: oklch(0.18 0.03 250);        /* #0F172A */
+  --background: oklch(0.985 0.005 200); /* #F8FAFC-ish */
+  --foreground: oklch(0.18 0.03 250); /* #0F172A */
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.18 0.03 250);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.18 0.03 250);
 
-  --primary: oklch(0.42 0.13 150);           /* #166534 deep green */
+  --primary: oklch(0.42 0.13 150); /* #166534 deep green */
   --primary-foreground: oklch(0.985 0.005 200);
 
   --secondary: oklch(0.96 0.01 200);
@@ -67,29 +67,29 @@
   --muted: oklch(0.965 0.008 220);
   --muted-foreground: oklch(0.5 0.02 250);
 
-  --accent: oklch(0.95 0.04 150);            /* soft green tint */
+  --accent: oklch(0.95 0.04 150); /* soft green tint */
   --accent-foreground: oklch(0.32 0.1 150);
 
   --destructive: oklch(0.6 0.22 27);
   --destructive-foreground: oklch(0.985 0 0);
 
-  --success: oklch(0.72 0.18 145);           /* #22C55E */
+  --success: oklch(0.72 0.18 145); /* #22C55E */
   --success-foreground: oklch(0.15 0.03 150);
 
   --warning: oklch(0.82 0.16 80);
   --warning-foreground: oklch(0.2 0.04 80);
 
-  --info: oklch(0.58 0.18 260);              /* #2563EB */
+  --info: oklch(0.58 0.18 260); /* #2563EB */
   --info-foreground: oklch(0.985 0 0);
 
-  --terra: oklch(0.48 0.12 50);              /* #92400E earthy brown */
+  --terra: oklch(0.48 0.12 50); /* #92400E earthy brown */
   --terra-foreground: oklch(0.985 0 0);
 
-  --border: oklch(0.91 0.01 220);            /* #E2E8F0 */
+  --border: oklch(0.91 0.01 220); /* #E2E8F0 */
   --input: oklch(0.91 0.01 220);
   --ring: oklch(0.42 0.13 150);
 
-  --sidebar: oklch(0.22 0.04 155);           /* deep forest */
+  --sidebar: oklch(0.22 0.04 155); /* deep forest */
   --sidebar-foreground: oklch(0.95 0.02 150);
   --sidebar-accent: oklch(0.3 0.06 150);
   --sidebar-accent-foreground: oklch(0.98 0.01 150);
@@ -129,22 +129,43 @@
 }
 
 @layer base {
-  * { border-color: var(--color-border); }
-  html, body { font-family: var(--font-sans); }
+  * {
+    border-color: var(--color-border);
+  }
+  html,
+  body {
+    font-family: var(--font-sans);
+  }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     -webkit-font-smoothing: antialiased;
   }
-  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.01em; }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
 }
 
 @layer utilities {
-  .bg-gradient-brand { background-image: var(--gradient-brand); }
-  .bg-gradient-sidebar { background-image: var(--gradient-sidebar); }
-  .shadow-card { box-shadow: var(--shadow-card); }
-  .shadow-elevated { box-shadow: var(--shadow-elevated); }
-  .text-balance { text-wrap: balance; }
+  .bg-gradient-brand {
+    background-image: var(--gradient-brand);
+  }
+  .bg-gradient-sidebar {
+    background-image: var(--gradient-sidebar);
+  }
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+  .shadow-elevated {
+    box-shadow: var(--shadow-elevated);
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
 }
 
 /* --- CUSTOM SCROLLBAR --- */

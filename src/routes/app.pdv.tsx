@@ -31,16 +31,16 @@ export const Route = createFileRoute("/app/pdv")({
 function PDV() {
   const [produtos, setProdutos] = useState<any[]>([]);
   const [cart, setCart] = useState<any[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('pdv_cart_main');
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("pdv_cart_main");
       if (saved) return JSON.parse(saved);
     }
     return [];
   });
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('pdv_cart_main', JSON.stringify(cart));
+    if (typeof window !== "undefined") {
+      localStorage.setItem("pdv_cart_main", JSON.stringify(cart));
     }
   }, [cart]);
 
@@ -54,8 +54,10 @@ function PDV() {
   const [orcamentoIdSelecionado, setOrcamentoIdSelecionado] = useState<string | null>(null);
   const [orcamentoNumeroSelecionado, setOrcamentoNumeroSelecionado] = useState<number | null>(null);
   const [orcamentoOrigem, setOrcamentoOrigem] = useState<"vendas" | "davs" | null>(null);
-  const [clienteSelecionado, setClienteSelecionado] = useState<{ id: string; nome: string } | null>(null);
-  
+  const [clienteSelecionado, setClienteSelecionado] = useState<{ id: string; nome: string } | null>(
+    null,
+  );
+
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [clientSearch, setClientSearch] = useState("");
@@ -83,7 +85,7 @@ function PDV() {
       .eq("tipo", "DAV")
       .in("status", ["Orçamento", "Aguardando Pagamento"])
       .order("created_at", { ascending: false });
-      
+
     // Busca Novos DAVs da tabela davs
     const { data: davData, error: davError } = await supabase
       .from("davs")
@@ -92,7 +94,10 @@ function PDV() {
       .order("created_at", { ascending: false });
 
     if (davError) {
-      console.error("Erro ao buscar novos DAVs (Verifique se as migrations foram rodadas):", davError);
+      console.error(
+        "Erro ao buscar novos DAVs (Verifique se as migrations foram rodadas):",
+        davError,
+      );
     }
 
     let combined: any[] = [];
@@ -108,18 +113,22 @@ function PDV() {
         created_at: d.created_at,
         cliente_id: d.cliente_id,
         cliente: { nome: d.cliente_nome },
-        isNovoDav: true
+        isNovoDav: true,
       }));
       combined = [...combined, ...mappedDavs];
     }
-    
+
     combined.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     setOrcamentos(combined);
   };
 
   useEffect(() => {
     const fetchProdutos = async () => {
-      const { data } = await supabase.from("produtos").select("*").eq("status", "Ativo").order("nome");
+      const { data } = await supabase
+        .from("produtos")
+        .select("*")
+        .eq("status", "Ativo")
+        .order("nome");
       if (data) {
         setProdutos(data);
 
@@ -171,7 +180,7 @@ function PDV() {
         }
         if (data && data.length > 0) {
           const novoCarrinho = data.map((item) => ({
-            id: item.produto_id || item.codigo || Math.random().toString(), 
+            id: item.produto_id || item.codigo || Math.random().toString(),
             p: item.produtos?.nome || item.produto || "Produto não encontrado",
             q: item.qtd,
             u: Number(item.valor_unitario),
@@ -179,14 +188,17 @@ function PDV() {
             emoji: item.produtos?.emoji || "📦",
             imagem: item.produtos?.imagem || null,
             max: item.produtos?.estoque || 0,
-            hasDbId: !!item.produto_id
+            hasDbId: !!item.produto_id,
           }));
           setCart(novoCarrinho);
           setOrcamentoIdSelecionado(orcamento.id);
           setOrcamentoNumeroSelecionado(orcamento.numero || orcamento.numero_venda || null);
           setOrcamentoOrigem("davs");
           if (orcamento.cliente?.nome) {
-            setClienteSelecionado({ id: orcamento.cliente_id || "avulso", nome: orcamento.cliente.nome });
+            setClienteSelecionado({
+              id: orcamento.cliente_id || "avulso",
+              nome: orcamento.cliente.nome,
+            });
           }
           setIsOrcamentoModalOpen(false);
         } else {
@@ -214,14 +226,17 @@ function PDV() {
             emoji: item.produto?.emoji || "📦",
             imagem: item.produto?.imagem || null,
             max: item.produto?.estoque || 0,
-            hasDbId: true
+            hasDbId: true,
           }));
           setCart(novoCarrinho);
           setOrcamentoIdSelecionado(orcamento.id);
           setOrcamentoNumeroSelecionado(orcamento.numero || orcamento.numero_venda || null);
           setOrcamentoOrigem("vendas");
           if (orcamento.cliente?.nome) {
-            setClienteSelecionado({ id: orcamento.cliente_id || "avulso", nome: orcamento.cliente.nome });
+            setClienteSelecionado({
+              id: orcamento.cliente_id || "avulso",
+              nome: orcamento.cliente.nome,
+            });
           }
           setIsOrcamentoModalOpen(false);
         } else {
@@ -339,7 +354,7 @@ function PDV() {
     try {
       // Pega o último número gerado para evitar pulos
       let nextNumero = 1;
-      
+
       if (orcamentoNumeroSelecionado) {
         nextNumero = Number(orcamentoNumeroSelecionado);
       } else {
@@ -409,14 +424,14 @@ function PDV() {
         if (prod) {
           const novoEstoque = prod.estoque - item.q;
           await supabase.from("produtos").update({ estoque: novoEstoque }).eq("id", item.id);
-          
+
           await supabase.from("movimentacoes_estoque").insert({
             produto_id: item.id,
             tipo: "Saída",
             quantidade: -item.q,
-            motivo: `Venda PDV #${vendaData.numero_venda}`
+            motivo: `Venda PDV #${vendaData.numero_venda}`,
           });
-          
+
           prod.estoque = novoEstoque; // Atualiza local
         }
       }
@@ -475,7 +490,11 @@ function PDV() {
                     className="rounded-full pl-2 pr-3 h-9"
                   >
                     {p.imagem ? (
-                      <img src={p.imagem} className="h-6 w-6 rounded-full object-cover mr-2" alt="" />
+                      <img
+                        src={p.imagem}
+                        className="h-6 w-6 rounded-full object-cover mr-2"
+                        alt=""
+                      />
                     ) : (
                       <span className="mr-1">{p.emoji}</span>
                     )}
@@ -525,7 +544,11 @@ function PDV() {
                     >
                       <div className="grid h-10 w-10 sm:h-12 sm:w-12 place-items-center rounded-lg bg-accent text-xl sm:text-2xl overflow-hidden relative">
                         {i.imagem ? (
-                          <img src={i.imagem} alt={i.p} className="absolute inset-0 w-full h-full object-cover" />
+                          <img
+                            src={i.imagem}
+                            alt={i.p}
+                            className="absolute inset-0 w-full h-full object-cover"
+                          />
                         ) : (
                           i.emoji || "📦"
                         )}
@@ -533,7 +556,7 @@ function PDV() {
                       <div className="min-w-0">
                         <p className="font-semibold text-sm sm:text-base truncate">{i.p}</p>
                         <div className="flex items-center gap-0.5 sm:gap-1 text-[11px] sm:text-xs text-muted-foreground mt-0.5">
-                          R$ 
+                          R$
                           <input
                             type="number"
                             min="0"
@@ -570,7 +593,9 @@ function PDV() {
                           +
                         </Button>
                       </div>
-                      <p className="font-bold text-primary text-sm sm:text-base">R$ {i.t.toFixed(2)}</p>
+                      <p className="font-bold text-primary text-sm sm:text-base">
+                        R$ {i.t.toFixed(2)}
+                      </p>
                       <Button
                         onClick={() => removeFromCart(i.id)}
                         size="icon"
@@ -606,8 +631,8 @@ function PDV() {
                   </Button>
                 </div>
               ) : (
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="w-full mb-3 border-dashed"
                   onClick={() => setIsClientModalOpen(true)}
                 >
@@ -635,7 +660,9 @@ function PDV() {
             </div>
             <div className="rounded-xl bg-gradient-brand p-5 text-primary-foreground">
               <p className="text-xs uppercase tracking-widest opacity-80">Total a pagar</p>
-              <p className="font-display text-4xl font-extrabold mt-1">R$ {totalPagamento.toFixed(2)}</p>
+              <p className="font-display text-4xl font-extrabold mt-1">
+                R$ {totalPagamento.toFixed(2)}
+              </p>
             </div>
             <div>
               <p className="text-xs font-semibold uppercase text-muted-foreground tracking-wider mb-2">
@@ -693,8 +720,8 @@ function PDV() {
               </div>
               {metodoPagamento === "Boleto" && (
                 <div className="mt-3">
-                  <Input 
-                    placeholder="Prazos (Ex: 30/60/90 Dias)" 
+                  <Input
+                    placeholder="Prazos (Ex: 30/60/90 Dias)"
                     value={condicaoPagamento}
                     onChange={(e) => setCondicaoPagamento(e.target.value)}
                   />
@@ -757,9 +784,7 @@ function PDV() {
                   className="bg-slate-50 p-4 rounded-xl border border-slate-200 cursor-pointer hover:bg-brand/5 hover:border-brand/30 transition-colors flex justify-between items-center"
                 >
                   <div>
-                    <p className="font-semibold text-slate-800">
-                      #{orc.numero_venda}
-                    </p>
+                    <p className="font-semibold text-slate-800">#{orc.numero_venda}</p>
                     <p className="text-sm text-slate-600 font-medium">
                       👤 {orc.cliente?.nome || "Cliente Desconhecido"}
                     </p>
@@ -784,14 +809,22 @@ function PDV() {
           <div className="flex flex-col items-center justify-center py-6">
             <div className="h-16 w-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4">
               <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={3}
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
             </div>
             <DialogTitle className="text-2xl mb-2">Venda Aprovada!</DialogTitle>
             <DialogDescription className="text-base mb-6">
               A venda foi registrada com sucesso e o estoque foi atualizado.
             </DialogDescription>
-            <Button className="w-full bg-brand hover:bg-brand/90 text-white" onClick={() => setIsSuccessModalOpen(false)}>
+            <Button
+              className="w-full bg-brand hover:bg-brand/90 text-white"
+              onClick={() => setIsSuccessModalOpen(false)}
+            >
               Nova Venda
             </Button>
           </div>
@@ -805,17 +838,17 @@ function PDV() {
             <DialogDescription>Busque um cliente para vincular a esta venda.</DialogDescription>
           </DialogHeader>
           <div className="mt-4">
-            <Input 
-              placeholder="Buscar por nome..." 
+            <Input
+              placeholder="Buscar por nome..."
               value={clientSearch}
               onChange={(e) => handleSearchClients(e.target.value)}
               className="mb-4"
             />
             <div className="max-h-60 overflow-y-auto space-y-2">
-              {clientesBuscaLista.map(c => (
-                <Button 
-                  key={c.id} 
-                  variant="outline" 
+              {clientesBuscaLista.map((c) => (
+                <Button
+                  key={c.id}
+                  variant="outline"
                   className="w-full justify-start h-auto py-3"
                   onClick={() => {
                     setClienteSelecionado({ id: c.id, nome: c.nome });
@@ -826,12 +859,16 @@ function PDV() {
                 >
                   <div className="flex flex-col items-start">
                     <span className="font-semibold">{c.nome}</span>
-                    {c.cpf_cnpj && <span className="text-xs text-muted-foreground">{c.cpf_cnpj}</span>}
+                    {c.cpf_cnpj && (
+                      <span className="text-xs text-muted-foreground">{c.cpf_cnpj}</span>
+                    )}
                   </div>
                 </Button>
               ))}
               {clientSearch && clientesBuscaLista.length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-4">Nenhum cliente encontrado.</p>
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  Nenhum cliente encontrado.
+                </p>
               )}
             </div>
           </div>

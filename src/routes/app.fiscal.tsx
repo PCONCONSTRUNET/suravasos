@@ -28,12 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   FileText,
   Download,
@@ -214,11 +209,7 @@ function Fiscal() {
       }
 
       // Buscar configurações da empresa
-      const { data: cfg } = await supabase
-        .from("configuracoes")
-        .select("*")
-        .eq("id", 1)
-        .single();
+      const { data: cfg } = await supabase.from("configuracoes").select("*").eq("id", 1).single();
       if (cfg) setConfiguracoes(cfg);
     } finally {
       setLoading(false);
@@ -308,17 +299,26 @@ function Fiscal() {
       const uf = configEmissao.uf.toUpperCase();
       const res = await fetch(`https://brasilapi.com.br/api/ibge/municipios/v1/${uf}`);
       const cidades = await res.json();
-      
-      const cidadeTarget = configEmissao.nomeMunicipio.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      
-      const encontrada = cidades.find((c: any) => 
-        c.nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === cidadeTarget
+
+      const cidadeTarget = configEmissao.nomeMunicipio
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+
+      const encontrada = cidades.find(
+        (c: any) =>
+          c.nome
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "") === cidadeTarget,
       );
 
       if (encontrada) {
         setConfigEmissao((p) => ({ ...p, codigoMunicipio: String(encontrada.codigo_ibge) }));
       } else {
-        alert("Município não encontrado nesta UF. Verifique se o nome está correto (ex: São Paulo).");
+        alert(
+          "Município não encontrado nesta UF. Verifique se o nome está correto (ex: São Paulo).",
+        );
       }
     } catch (err) {
       alert("Erro ao buscar código IBGE. Tente digitar manualmente.");
@@ -329,7 +329,7 @@ function Fiscal() {
 
   const updateItem = (id: string, field: keyof ItemEmissao, value: any) => {
     setItensEmissao((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
+      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item)),
     );
   };
 
@@ -337,7 +337,9 @@ function Fiscal() {
 
   const handleEmitir = async () => {
     if (!configuracoes) {
-      setErroEmissao("Configure os dados da empresa em Configurações → Perfil da Empresa antes de emitir.");
+      setErroEmissao(
+        "Configure os dados da empresa em Configurações → Perfil da Empresa antes de emitir.",
+      );
       return;
     }
     if (!configuracoes.cnpj) {
@@ -423,9 +425,7 @@ function Fiscal() {
         modFrete: Number(configEmissao.modFrete) as 0 | 1 | 2 | 3 | 4 | 9,
       },
       pagamentos: [{ tPag: configEmissao.tPag, vPag: valorTotal }],
-      infAdic: configEmissao.infCpl
-        ? { infCpl: configEmissao.infCpl }
-        : undefined,
+      infAdic: configEmissao.infCpl ? { infCpl: configEmissao.infCpl } : undefined,
     };
 
     setEmitindo(true);
@@ -435,22 +435,23 @@ function Fiscal() {
       const resultado = await emitirNFe(payload);
 
       // Salvar no Supabase
-      await supabase.from("notas_fiscais").insert([{
-        venda_id: vendaSelecionada.id,
-        numero: String(resultado.numero || ""),
-        chave_acesso: resultado.chaveAcesso || "",
-        status: resultado.codStatus === 100 || resultado.codStatus === 150
-          ? "Autorizada"
-          : "Erro",
-        brasilnfe_id: resultado.id ?? null,
-        cod_lote: resultado.codLote ?? null,
-        numero_protocolo: resultado.numeroProtocolo ?? null,
-        tipo_ambiente: configEmissao.tipoAmbiente,
-        cod_status: resultado.codStatus ?? null,
-        ds_status: resultado.dsStatus ?? resultado.erro ?? null,
-        error_message: resultado.erro ?? null,
-        payload_enviado: payload,
-      }]);
+      await supabase.from("notas_fiscais").insert([
+        {
+          venda_id: vendaSelecionada.id,
+          numero: String(resultado.numero || ""),
+          chave_acesso: resultado.chaveAcesso || "",
+          status:
+            resultado.codStatus === 100 || resultado.codStatus === 150 ? "Autorizada" : "Erro",
+          brasilnfe_id: resultado.id ?? null,
+          cod_lote: resultado.codLote ?? null,
+          numero_protocolo: resultado.numeroProtocolo ?? null,
+          tipo_ambiente: configEmissao.tipoAmbiente,
+          cod_status: resultado.codStatus ?? null,
+          ds_status: resultado.dsStatus ?? resultado.erro ?? null,
+          error_message: resultado.erro ?? null,
+          payload_enviado: payload,
+        },
+      ]);
 
       setModalOpen(false);
       fetchFiscalData();
@@ -535,7 +536,9 @@ function Fiscal() {
           <CardContent className="pt-6">
             <p className="text-sm text-muted-foreground">NF-e Autorizadas</p>
             <p className="text-3xl font-bold text-success mt-1">
-              {loading ? "—" : notas.filter((n) => n.cod_status === 100 || n.status === "Autorizada").length}
+              {loading
+                ? "—"
+                : notas.filter((n) => n.cod_status === 100 || n.status === "Autorizada").length}
             </p>
           </CardContent>
         </Card>
@@ -590,13 +593,16 @@ function Fiscal() {
                 pendentes.map((p) => (
                   <TableRow key={p.id}>
                     <TableCell className="font-mono text-xs">
-                      {p.numero ? String(p.numero).padStart(3, "0") : p.id.substring(0, 8).toUpperCase()}
+                      {p.numero
+                        ? String(p.numero).padStart(3, "0")
+                        : p.id.substring(0, 8).toUpperCase()}
                     </TableCell>
                     <TableCell className="font-semibold">
                       {p.clientes?.nome || "Consumidor Final"}
                     </TableCell>
                     <TableCell className="text-right font-semibold">
-                      R$ {Number(p.valor_total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      R${" "}
+                      {Number(p.valor_total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                     </TableCell>
                     <TableCell className="text-right">
                       <Button
@@ -754,12 +760,7 @@ function Fiscal() {
               em <strong>Configurações → Fiscal</strong>.
             </p>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="shrink-0"
-            onClick={fetchFiscalData}
-          >
+          <Button variant="outline" size="sm" className="shrink-0" onClick={fetchFiscalData}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Atualizar
           </Button>
@@ -813,10 +814,7 @@ function Fiscal() {
             </div>
             <div className="flex items-center gap-3">
               <Label className="text-sm font-medium">Regime:</Label>
-              <Select
-                value={String(usarCRT)}
-                onValueChange={(v) => setUsarCRT(Number(v) as 1 | 3)}
-              >
+              <Select value={String(usarCRT)} onValueChange={(v) => setUsarCRT(Number(v) as 1 | 3)}>
                 <SelectTrigger className="h-8 w-48">
                   <SelectValue />
                 </SelectTrigger>
@@ -855,9 +853,7 @@ function Fiscal() {
                   <Label className="text-xs mb-1.5 block">CPF/CNPJ do Destinatário</Label>
                   <Input
                     value={configEmissao.cpfCnpj}
-                    onChange={(e) =>
-                      setConfigEmissao((p) => ({ ...p, cpfCnpj: e.target.value }))
-                    }
+                    onChange={(e) => setConfigEmissao((p) => ({ ...p, cpfCnpj: e.target.value }))}
                     placeholder="00.000.000/0000-00"
                   />
                 </div>
@@ -865,9 +861,7 @@ function Fiscal() {
                   <Label className="text-xs mb-1.5 block">Nome / Razão Social</Label>
                   <Input
                     value={configEmissao.xNome}
-                    onChange={(e) =>
-                      setConfigEmissao((p) => ({ ...p, xNome: e.target.value }))
-                    }
+                    onChange={(e) => setConfigEmissao((p) => ({ ...p, xNome: e.target.value }))}
                     placeholder="CONSUMIDOR FINAL"
                   />
                 </div>
@@ -876,9 +870,7 @@ function Fiscal() {
                   <Input
                     type="email"
                     value={configEmissao.email}
-                    onChange={(e) =>
-                      setConfigEmissao((p) => ({ ...p, email: e.target.value }))
-                    }
+                    onChange={(e) => setConfigEmissao((p) => ({ ...p, email: e.target.value }))}
                     placeholder="email@destinatario.com"
                   />
                 </div>
@@ -921,9 +913,7 @@ function Fiscal() {
                     <Label className="text-xs mb-1.5 block">Número</Label>
                     <Input
                       value={configEmissao.numero}
-                      onChange={(e) =>
-                        setConfigEmissao((p) => ({ ...p, numero: e.target.value }))
-                      }
+                      onChange={(e) => setConfigEmissao((p) => ({ ...p, numero: e.target.value }))}
                       placeholder="123"
                     />
                   </div>
@@ -931,9 +921,7 @@ function Fiscal() {
                     <Label className="text-xs mb-1.5 block">Bairro</Label>
                     <Input
                       value={configEmissao.bairro}
-                      onChange={(e) =>
-                        setConfigEmissao((p) => ({ ...p, bairro: e.target.value }))
-                      }
+                      onChange={(e) => setConfigEmissao((p) => ({ ...p, bairro: e.target.value }))}
                       placeholder="Centro"
                     />
                   </div>
@@ -950,8 +938,8 @@ function Fiscal() {
                   <div>
                     <Label className="text-xs mb-1.5 flex items-center justify-between">
                       <span>Cód. Município IBGE</span>
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         onClick={handleBuscarIBGE}
                         className="text-[10px] text-brand hover:underline"
                         title="Buscar código pelo nome do município"
@@ -988,9 +976,7 @@ function Fiscal() {
                     <Label className="text-xs mb-1.5 block">CEP</Label>
                     <Input
                       value={configEmissao.cep}
-                      onChange={(e) =>
-                        setConfigEmissao((p) => ({ ...p, cep: e.target.value }))
-                      }
+                      onChange={(e) => setConfigEmissao((p) => ({ ...p, cep: e.target.value }))}
                       placeholder="00000-000"
                     />
                   </div>
@@ -1003,16 +989,13 @@ function Fiscal() {
               <div className="flex items-center gap-2 p-3 rounded-lg bg-info/5 border border-info/20">
                 <Info className="h-4 w-4 text-info shrink-0" />
                 <p className="text-xs text-muted-foreground">
-                  Preencha o NCM (8 dígitos) e CFOP para cada item. Estes dados são
-                  obrigatórios pela SEFAZ.
+                  Preencha o NCM (8 dígitos) e CFOP para cada item. Estes dados são obrigatórios
+                  pela SEFAZ.
                 </p>
               </div>
 
               {itensEmissao.map((item, idx) => (
-                <div
-                  key={item.id}
-                  className="border rounded-xl p-4 space-y-3 bg-muted/10"
-                >
+                <div key={item.id} className="border rounded-xl p-4 space-y-3 bg-muted/10">
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="font-semibold text-sm">{item.produto_nome}</p>
@@ -1038,21 +1021,21 @@ function Fiscal() {
                   <div className="grid gap-3 sm:grid-cols-3">
                     <div>
                       <Label className="text-xs mb-1.5 block">
-                        NCM{" "}
-                        <span className="text-destructive">*</span>
+                        NCM <span className="text-destructive">*</span>
                       </Label>
                       <Input
                         value={item.ncm}
                         onChange={(e) => updateItem(item.id, "ncm", e.target.value)}
                         placeholder="00000000"
                         maxLength={8}
-                        className={!item.ncm ? "border-warning/50 focus-visible:ring-warning/30" : ""}
+                        className={
+                          !item.ncm ? "border-warning/50 focus-visible:ring-warning/30" : ""
+                        }
                       />
                     </div>
                     <div>
                       <Label className="text-xs mb-1.5 block">
-                        CFOP{" "}
-                        <span className="text-destructive">*</span>
+                        CFOP <span className="text-destructive">*</span>
                       </Label>
                       <Select
                         value={item.cfop}
@@ -1081,7 +1064,9 @@ function Fiscal() {
                         </SelectTrigger>
                         <SelectContent>
                           {["UN", "PC", "KG", "CX", "LT", "M", "M2", "M3"].map((u) => (
-                            <SelectItem key={u} value={u}>{u}</SelectItem>
+                            <SelectItem key={u} value={u}>
+                              {u}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -1098,7 +1083,9 @@ function Fiscal() {
                         <SelectContent>
                           <SelectItem value="0">0 — Nacional</SelectItem>
                           <SelectItem value="1">1 — Estrangeira (importação direta)</SelectItem>
-                          <SelectItem value="2">2 — Estrangeira (adquirida no mercado interno)</SelectItem>
+                          <SelectItem value="2">
+                            2 — Estrangeira (adquirida no mercado interno)
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -1153,9 +1140,7 @@ function Fiscal() {
                   <Label className="text-xs mb-1.5 block">Forma de Pagamento</Label>
                   <Select
                     value={configEmissao.tPag}
-                    onValueChange={(v) =>
-                      setConfigEmissao((p) => ({ ...p, tPag: v }))
-                    }
+                    onValueChange={(v) => setConfigEmissao((p) => ({ ...p, tPag: v }))}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -1185,9 +1170,12 @@ function Fiscal() {
                 <p className="text-xs text-muted-foreground mb-2">Resumo da Nota</p>
                 <div className="space-y-1.5">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Produtos ({itensEmissao.length} itens)</span>
+                    <span className="text-muted-foreground">
+                      Produtos ({itensEmissao.length} itens)
+                    </span>
                     <span className="font-semibold">
-                      R$ {itensEmissao
+                      R${" "}
+                      {itensEmissao
                         .reduce((a, i) => a + i.subtotal, 0)
                         .toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                     </span>
@@ -1195,7 +1183,8 @@ function Fiscal() {
                   <div className="flex justify-between text-sm border-t pt-1.5">
                     <span className="font-semibold">Total NF-e</span>
                     <span className="font-bold text-primary">
-                      R$ {itensEmissao
+                      R${" "}
+                      {itensEmissao
                         .reduce((a, i) => a + i.subtotal, 0)
                         .toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                     </span>
@@ -1210,9 +1199,7 @@ function Fiscal() {
                 <Label className="text-xs mb-1.5 block">Modalidade de Frete</Label>
                 <Select
                   value={configEmissao.modFrete}
-                  onValueChange={(v) =>
-                    setConfigEmissao((p) => ({ ...p, modFrete: v }))
-                  }
+                  onValueChange={(v) => setConfigEmissao((p) => ({ ...p, modFrete: v }))}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -1230,9 +1217,7 @@ function Fiscal() {
                 <textarea
                   className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
                   value={configEmissao.infCpl}
-                  onChange={(e) =>
-                    setConfigEmissao((p) => ({ ...p, infCpl: e.target.value }))
-                  }
+                  onChange={(e) => setConfigEmissao((p) => ({ ...p, infCpl: e.target.value }))}
                   placeholder="Ex: Nota emitida em homologação. Sem valor fiscal."
                 />
               </div>
@@ -1254,17 +1239,17 @@ function Fiscal() {
           <div className="flex justify-between items-center gap-3 pt-2 border-t">
             <p className="text-xs text-muted-foreground">
               {configEmissao.tipoAmbiente === 2 ? (
-                <span className="text-warning font-semibold">⚠ Modo Homologação — sem valor fiscal</span>
+                <span className="text-warning font-semibold">
+                  ⚠ Modo Homologação — sem valor fiscal
+                </span>
               ) : (
-                <span className="text-success font-semibold">✓ Modo Produção — válido na SEFAZ</span>
+                <span className="text-success font-semibold">
+                  ✓ Modo Produção — válido na SEFAZ
+                </span>
               )}
             </p>
             <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setModalOpen(false)}
-                disabled={emitindo}
-              >
+              <Button variant="outline" onClick={() => setModalOpen(false)} disabled={emitindo}>
                 Cancelar
               </Button>
               <Button

@@ -12,7 +12,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, FileText, Download, Printer, Trash2, Pencil, ArrowUpDown, ArrowUp, ArrowDown, Ban } from "lucide-react";
+import {
+  Plus,
+  Search,
+  FileText,
+  Download,
+  Printer,
+  Trash2,
+  Pencil,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  Ban,
+} from "lucide-react";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { useConfirm } from "@/contexts/ConfirmContext";
@@ -90,7 +102,8 @@ function DAVList() {
   const handleDelete = async (id: string) => {
     if (
       !(await confirm({
-        description: "Tem certeza que deseja excluir permanentemente este orçamento? Essa ação não pode ser desfeita.",
+        description:
+          "Tem certeza que deseja excluir permanentemente este orçamento? Essa ação não pode ser desfeita.",
         variant: "destructive",
       }))
     )
@@ -137,10 +150,7 @@ function DAVList() {
 
   const handleShareWhatsApp = async (dav: any) => {
     try {
-      const { data: itens } = await supabase
-        .from("dav_items")
-        .select("*")
-        .eq("dav_id", dav.id);
+      const { data: itens } = await supabase.from("dav_items").select("*").eq("dav_id", dav.id);
 
       let msg = `*ORÇAMENTO - GARDEN PRIME*\n`;
       msg += `Nº: ${dav.numero ? String(dav.numero).padStart(3, "0") : dav.id.substring(0, 8).toUpperCase()}\n`;
@@ -169,7 +179,8 @@ function DAVList() {
 
   const getTone = (status: string) => {
     if (status === "Aprovado") return "bg-success/15 text-success border-0";
-    if (status === "Rejeitado" || status === "Cancelado") return "bg-destructive/10 text-destructive border-0";
+    if (status === "Rejeitado" || status === "Cancelado")
+      return "bg-destructive/10 text-destructive border-0";
     return "bg-info/15 text-info border-0"; // Orçamento Aberto
   };
 
@@ -222,7 +233,8 @@ function DAVList() {
   }, [davs, sortColumn, sortDirection, searchTerm]);
 
   const SortIcon = ({ column }: { column: SortColumn }) => {
-    if (sortColumn !== column) return <ArrowUpDown className="ml-1 h-3 w-3 inline-block opacity-50" />;
+    if (sortColumn !== column)
+      return <ArrowUpDown className="ml-1 h-3 w-3 inline-block opacity-50" />;
     return sortDirection === "asc" ? (
       <ArrowUp className="ml-1 h-3 w-3 inline-block" />
     ) : (
@@ -244,7 +256,7 @@ function DAVList() {
           </Button>
         }
       />
-      
+
       <div className="mb-4 flex items-center gap-2">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -262,19 +274,34 @@ function DAVList() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort("numero")}>
+              <TableHead
+                className="cursor-pointer select-none hover:bg-muted/50"
+                onClick={() => handleSort("numero")}
+              >
                 Nº <SortIcon column="numero" />
               </TableHead>
-              <TableHead className="cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort("cliente_nome")}>
+              <TableHead
+                className="cursor-pointer select-none hover:bg-muted/50"
+                onClick={() => handleSort("cliente_nome")}
+              >
                 Cliente <SortIcon column="cliente_nome" />
               </TableHead>
-              <TableHead className="cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort("created_at")}>
+              <TableHead
+                className="cursor-pointer select-none hover:bg-muted/50"
+                onClick={() => handleSort("created_at")}
+              >
                 Data <SortIcon column="created_at" />
               </TableHead>
-              <TableHead className="text-right cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort("total")}>
+              <TableHead
+                className="text-right cursor-pointer select-none hover:bg-muted/50"
+                onClick={() => handleSort("total")}
+              >
                 Valor <SortIcon column="total" />
               </TableHead>
-              <TableHead className="cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort("status")}>
+              <TableHead
+                className="cursor-pointer select-none hover:bg-muted/50"
+                onClick={() => handleSort("status")}
+              >
                 Status <SortIcon column="status" />
               </TableHead>
               <TableHead className="text-right">Ações</TableHead>
@@ -301,14 +328,17 @@ function DAVList() {
                   onClick={() => handleOpenDetails(v)}
                 >
                   <TableCell className="font-mono text-xs">
-                    {v.numero ? String(v.numero).padStart(3, "0") : v.id.substring(0, 8).toUpperCase()}
+                    {v.numero
+                      ? String(v.numero).padStart(3, "0")
+                      : v.id.substring(0, 8).toUpperCase()}
                   </TableCell>
-                  <TableCell className="font-semibold">
-                    {v.cliente_nome || "—"}
-                  </TableCell>
+                  <TableCell className="font-semibold">{v.cliente_nome || "—"}</TableCell>
                   <TableCell>{new Date(v.created_at).toLocaleDateString()}</TableCell>
                   <TableCell className="text-right font-semibold">
-                    R$ {Number(v.total || 0).toFixed(2).replace(".", ",")}
+                    R${" "}
+                    {Number(v.total || 0)
+                      .toFixed(2)
+                      .replace(".", ",")}
                   </TableCell>
                   <TableCell>
                     <Badge className={getTone(v.status || "Aberto")}>{v.status || "Aberto"}</Badge>
@@ -366,9 +396,7 @@ function DAVList() {
         <SheetContent className="w-[400px] sm:w-[540px] sm:max-w-md overflow-y-auto">
           <SheetHeader>
             <SheetTitle>Detalhes do Orçamento</SheetTitle>
-            <SheetDescription>
-              DAV Nº {selectedDav?.numero_venda}
-            </SheetDescription>
+            <SheetDescription>DAV Nº {selectedDav?.numero_venda}</SheetDescription>
           </SheetHeader>
 
           <div className="mt-6 space-y-6">
@@ -377,9 +405,7 @@ function DAVList() {
                 <span className="text-muted-foreground block text-xs uppercase tracking-wider">
                   Cliente
                 </span>
-                <span className="font-medium">
-                  {selectedDav?.cliente_nome || "—"}
-                </span>
+                <span className="font-medium">{selectedDav?.cliente_nome || "—"}</span>
               </div>
               <div>
                 <span className="text-muted-foreground block text-xs uppercase tracking-wider">
@@ -426,7 +452,14 @@ function DAVList() {
                     >
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded bg-muted overflow-hidden relative flex items-center justify-center text-lg flex-shrink-0">
-                          {item.produtos?.imagem ? <img src={item.produtos.imagem} className="absolute inset-0 w-full h-full object-cover" /> : "📦"}
+                          {item.produtos?.imagem ? (
+                            <img
+                              src={item.produtos.imagem}
+                              className="absolute inset-0 w-full h-full object-cover"
+                            />
+                          ) : (
+                            "📦"
+                          )}
                         </div>
                         <div>
                           <div className="font-semibold text-sm">

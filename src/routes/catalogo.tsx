@@ -9,7 +9,14 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { GardenPrimeLogo } from "@/components/garden-prime-logo";
 import { ColorDock } from "@/components/color-dock";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Command,
@@ -45,7 +52,7 @@ function PublicCatalogo() {
   const [openCategoria, setOpenCategoria] = useState(false);
   const [cart, setCart] = useState<{ produto: any; qtd: number }[]>([]);
   const [partner, setPartner] = useState<any>(null);
-  
+
   const [modalOpen, setModalOpen] = useState(false);
   const [empresaData, setEmpresaData] = useState({
     nome: "",
@@ -100,7 +107,11 @@ function PublicCatalogo() {
 
   useEffect(() => {
     const fetchProdutos = async () => {
-      const { data } = await supabase.from("produtos").select("*").eq("status", "Ativo").order("nome");
+      const { data } = await supabase
+        .from("produtos")
+        .select("*")
+        .eq("status", "Ativo")
+        .order("nome");
 
       const params = new URLSearchParams(window.location.search);
       const p = params.get("p");
@@ -111,7 +122,10 @@ function PublicCatalogo() {
 
       if (identifier) {
         // Busca o parceiro pelo ID (formato antigo) ou pelo Nome (novo formato)
-        let query = supabase.from("vendedores").select("id, nome, telefone, acrescimo_catalogo, acrescimo_catalogo_percentual").eq("status", "Ativo");
+        let query = supabase
+          .from("vendedores")
+          .select("id, nome, telefone, acrescimo_catalogo, acrescimo_catalogo_percentual")
+          .eq("status", "Ativo");
 
         if (identifier.length === 8 && /^[0-9a-fA-F-]+$/.test(identifier)) {
           query = query.ilike("id", `${identifier}%`);
@@ -134,18 +148,20 @@ function PublicCatalogo() {
             .select("produto_id, preco_personalizado")
             .eq("vendedor_id", partnerData.id);
           if (precos) {
-            precos.forEach(p => {
+            precos.forEach((p) => {
               customPricesMap[p.produto_id] = Number(p.preco_personalizado);
             });
           }
         }
 
         if (partnerData?.acrescimo_catalogo || Object.keys(customPricesMap).length > 0) {
-          const percentual = partnerData?.acrescimo_catalogo_percentual !== null && partnerData?.acrescimo_catalogo_percentual !== undefined 
-            ? Number(partnerData.acrescimo_catalogo_percentual) 
-            : 20;
-          const multiplier = 1 + (percentual / 100);
-          
+          const percentual =
+            partnerData?.acrescimo_catalogo_percentual !== null &&
+            partnerData?.acrescimo_catalogo_percentual !== undefined
+              ? Number(partnerData.acrescimo_catalogo_percentual)
+              : 20;
+          const multiplier = 1 + percentual / 100;
+
           const produtosComPreco = data.map((prod: any) => {
             let finalPrice = partnerData?.acrescimo_catalogo ? prod.valor * multiplier : prod.valor;
             if (customPricesMap[prod.id] !== undefined) {
@@ -153,7 +169,7 @@ function PublicCatalogo() {
             }
             return {
               ...prod,
-              valor: finalPrice
+              valor: finalPrice,
             };
           });
           setProdutos(produtosComPreco);
@@ -172,7 +188,9 @@ function PublicCatalogo() {
   ) as string[];
 
   const filtrados = produtos.filter((p) => {
-    const matchBusca = p.nome.toLowerCase().includes(busca.toLowerCase()) || (p.codigo && p.codigo.toLowerCase().includes(busca.toLowerCase()));
+    const matchBusca =
+      p.nome.toLowerCase().includes(busca.toLowerCase()) ||
+      (p.codigo && p.codigo.toLowerCase().includes(busca.toLowerCase()));
     const matchCategoria = categoriaAtiva === "Todas" || p.categoria === categoriaAtiva;
     return matchBusca && matchCategoria;
   });
@@ -209,7 +227,8 @@ function PublicCatalogo() {
     mensagem += `Nome: ${empresaData.nome}\n`;
     mensagem += `CNPJ: ${empresaData.cnpj}\n`;
     if (empresaData.cep) mensagem += `CEP: ${empresaData.cep}\n`;
-    if (empresaData.endereco) mensagem += `Endereço: ${empresaData.endereco}, ${empresaData.numero}\n`;
+    if (empresaData.endereco)
+      mensagem += `Endereço: ${empresaData.endereco}, ${empresaData.numero}\n`;
     if (empresaData.bairro) mensagem += `Bairro: ${empresaData.bairro}\n`;
     if (empresaData.cidade) mensagem += `Cidade/UF: ${empresaData.cidade}/${empresaData.uf}\n`;
     if (empresaData.telefone) mensagem += `Telefone: ${empresaData.telefone}\n`;
@@ -256,7 +275,9 @@ function PublicCatalogo() {
           <div className="h-8 w-[1px] bg-slate-200"></div>
           <div className="flex items-center gap-2">
             <img src="/garden-plus.png" alt="Garden Plus" className="h-6 sm:h-8 object-contain" />
-            <span className="font-bold text-slate-800 text-sm hidden sm:inline-block">Garden Plus</span>
+            <span className="font-bold text-slate-800 text-sm hidden sm:inline-block">
+              Garden Plus
+            </span>
           </div>
         </div>
       </header>
@@ -352,19 +373,21 @@ function PublicCatalogo() {
 
         <div className="space-y-12">
           {loading ? (
-            <p className="text-center text-muted-foreground py-8">
-              Carregando catálogo...
-            </p>
+            <p className="text-center text-muted-foreground py-8">Carregando catálogo...</p>
           ) : filtrados.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">
               Nenhum produto encontrado com essa busca.
             </p>
           ) : (
-            Array.from(new Set(filtrados.map(p => p.categoria || "Outros"))).map((cat) => {
-              const produtosDaCategoria = filtrados.filter(p => (p.categoria || "Outros") === cat);
+            Array.from(new Set(filtrados.map((p) => p.categoria || "Outros"))).map((cat) => {
+              const produtosDaCategoria = filtrados.filter(
+                (p) => (p.categoria || "Outros") === cat,
+              );
               return (
                 <div key={cat} className="space-y-5">
-                  <h2 className="text-2xl md:text-3xl font-display font-bold text-slate-800 border-b pb-2">{cat}</h2>
+                  <h2 className="text-2xl md:text-3xl font-display font-bold text-slate-800 border-b pb-2">
+                    {cat}
+                  </h2>
                   <div className="grid grid-cols-2 gap-4 sm:gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                     {produtosDaCategoria.map((p, index) => (
                       <Card
@@ -375,7 +398,11 @@ function PublicCatalogo() {
                           className={`relative aspect-square overflow-hidden bg-gradient-to-br ${getGradient(index)} grid place-items-center text-7xl`}
                         >
                           {p.imagem ? (
-                            <img src={p.imagem} alt={p.nome} className="w-full h-full object-cover" />
+                            <img
+                              src={p.imagem}
+                              alt={p.nome}
+                              className="w-full h-full object-cover"
+                            />
                           ) : (
                             p.emoji || "🪴"
                           )}
@@ -396,17 +423,20 @@ function PublicCatalogo() {
                           <div className="py-3 text-xs text-slate-500 space-y-1.5 border-b mb-4 flex-1">
                             {p.numero && (
                               <p>
-                                <span className="font-medium text-slate-700">Número:</span> {p.numero}
+                                <span className="font-medium text-slate-700">Número:</span>{" "}
+                                {p.numero}
                               </p>
                             )}
                             {p.dimensao && (
                               <p>
-                                <span className="font-medium text-slate-700">Dimensões:</span> {p.dimensao}
+                                <span className="font-medium text-slate-700">Dimensões:</span>{" "}
+                                {p.dimensao}
                               </p>
                             )}
                             {p.volume && (
                               <p>
-                                <span className="font-medium text-slate-700">Volume:</span> {p.volume} L
+                                <span className="font-medium text-slate-700">Volume:</span>{" "}
+                                {p.volume} L
                               </p>
                             )}
                             {p.comprimento && (
@@ -417,7 +447,9 @@ function PublicCatalogo() {
                             )}
                             {p.cores && p.cores.length > 0 && (
                               <div className="mt-2">
-                                <p className="font-medium text-slate-700 mb-1">Cores disponíveis:</p>
+                                <p className="font-medium text-slate-700 mb-1">
+                                  Cores disponíveis:
+                                </p>
                                 <ColorDock colors={p.cores} />
                               </div>
                             )}
@@ -512,7 +544,11 @@ function PublicCatalogo() {
                     </button>
                     <div className="w-16 h-16 bg-slate-50 rounded-lg flex items-center justify-center text-3xl shrink-0 overflow-hidden relative">
                       {item.produto.imagem ? (
-                        <img src={item.produto.imagem} alt={item.produto.nome} className="w-full h-full object-cover" />
+                        <img
+                          src={item.produto.imagem}
+                          alt={item.produto.nome}
+                          className="w-full h-full object-cover"
+                        />
                       ) : (
                         item.produto.emoji || "🪴"
                       )}
@@ -697,7 +733,10 @@ function PublicCatalogo() {
               <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" className="bg-success text-success-foreground hover:bg-success/90">
+              <Button
+                type="submit"
+                className="bg-success text-success-foreground hover:bg-success/90"
+              >
                 <WhatsAppIcon className="mr-2 h-4 w-4" />
                 Enviar Pedido
               </Button>
@@ -713,9 +752,15 @@ function PublicCatalogo() {
               <GardenPrimeLogo size="small" />
             </div>
             <p className="font-bold text-white text-base mb-1 tracking-wide">GARDEN PRIME</p>
-            <p className="text-slate-400 text-sm">CNPJ: 63.874.628/0001-36 • Insc. Estadual: 266.037.553.113</p>
-            <p className="text-slate-400 text-sm">Rua Santa Teresinha, 86 - Paraisolândia, Charqueada - SP</p>
-            <p className="text-slate-400 text-sm">Telefone: (19) 99714-1112 • E-mail: contatogardenprime@gmail.com</p>
+            <p className="text-slate-400 text-sm">
+              CNPJ: 63.874.628/0001-36 • Insc. Estadual: 266.037.553.113
+            </p>
+            <p className="text-slate-400 text-sm">
+              Rua Santa Teresinha, 86 - Paraisolândia, Charqueada - SP
+            </p>
+            <p className="text-slate-400 text-sm">
+              Telefone: (19) 99714-1112 • E-mail: contatogardenprime@gmail.com
+            </p>
           </div>
           <div className="md:text-right flex flex-col md:items-end justify-start">
             <div className="mb-4 inline-block bg-white p-2.5 rounded-xl shadow-xs">
@@ -725,7 +770,8 @@ function PublicCatalogo() {
           </div>
         </div>
         <div className="max-w-6xl mx-auto mt-8 pt-8 border-t border-slate-800 text-sm text-center text-slate-500">
-          &copy; {new Date().getFullYear()} Garden Prime & Garden Plus. Todos os direitos reservados.
+          &copy; {new Date().getFullYear()} Garden Prime & Garden Plus. Todos os direitos
+          reservados.
         </div>
       </footer>
     </div>

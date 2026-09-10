@@ -55,10 +55,18 @@ function Catalogo() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const { data: prodData } = await supabase.from("produtos").select("*").eq("status", "Ativo").order("nome");
+      const { data: prodData } = await supabase
+        .from("produtos")
+        .select("*")
+        .eq("status", "Ativo")
+        .order("nome");
       if (prodData) setProdutos(prodData);
 
-      const { data: vendData } = await supabase.from("vendedores").select("*").eq("status", "Ativo").order("nome");
+      const { data: vendData } = await supabase
+        .from("vendedores")
+        .select("*")
+        .eq("status", "Ativo")
+        .order("nome");
       if (vendData) setVendedores(vendData);
     } finally {
       setLoading(false);
@@ -75,21 +83,21 @@ function Catalogo() {
         setPrecosPersonalizados({});
         return;
       }
-      
+
       const { data } = await supabase
         .from("parceiro_precos")
         .select("produto_id, preco_personalizado")
         .eq("vendedor_id", vendedorSelecionado);
-        
+
       if (data) {
         const precos: Record<string, number> = {};
-        data.forEach(p => {
+        data.forEach((p) => {
           precos[p.produto_id] = Number(p.preco_personalizado);
         });
         setPrecosPersonalizados(precos);
       }
     };
-    
+
     fetchPrecos();
   }, [vendedorSelecionado]);
 
@@ -115,7 +123,9 @@ function Catalogo() {
   };
 
   const filtrados = produtos.filter((p) => {
-    const matchBusca = p.nome.toLowerCase().includes(busca.toLowerCase()) || (p.codigo && p.codigo.toLowerCase().includes(busca.toLowerCase()));
+    const matchBusca =
+      p.nome.toLowerCase().includes(busca.toLowerCase()) ||
+      (p.codigo && p.codigo.toLowerCase().includes(busca.toLowerCase()));
     const matchCategoria = categoria === "Todos" || p.categoria === categoria;
     return matchBusca && matchCategoria;
   });
@@ -151,12 +161,14 @@ function Catalogo() {
     const [gardenPrimeLogo64, gardenPlusLogo64, ...loadedImages] = await Promise.all([
       toBase64("/garden-prime-logo.png"), // ou import se estivesse no escopo, mas podemos usar public path
       toBase64("/garden-plus.png"),
-      ...filtrados.filter((p) => p.imagem).map((p) => toBase64(p.imagem))
+      ...filtrados.filter((p) => p.imagem).map((p) => toBase64(p.imagem)),
     ]);
 
-    filtrados.filter((p) => p.imagem).forEach((p, index) => {
-      imageCache[p.id] = loadedImages[index];
-    });
+    filtrados
+      .filter((p) => p.imagem)
+      .forEach((p, index) => {
+        imageCache[p.id] = loadedImages[index];
+      });
 
     // Helper: desenha título da categoria
     const drawTitle = (label: string, y: number) => {
@@ -167,7 +179,7 @@ function Catalogo() {
 
     // Cabeçalho com Logos e CNPJs
     let yPos = 15;
-    
+
     // Garden Prime
     if (gardenPrimeLogo64) {
       doc.addImage(gardenPrimeLogo64, "PNG", margin, yPos, 45, 13);
@@ -286,17 +298,16 @@ function Catalogo() {
         const precoFinal = getPrecoProduto(p);
         doc.setFontSize(8);
         doc.setTextColor(22, 163, 74);
-        doc.text(
-          `R$ ${precoFinal.toFixed(2).replace(".", ",")}`,
-          xPos + 3,
-          textY + 11,
-        );
+        doc.text(`R$ ${precoFinal.toFixed(2).replace(".", ",")}`, xPos + 3, textY + 11);
 
         col++;
       }
 
       yPos = rowStartY + cardHeight + 12;
-      if (yPos > pageHeight - 10) { doc.addPage(); yPos = 15; }
+      if (yPos > pageHeight - 10) {
+        doc.addPage();
+        yPos = 15;
+      }
     }
 
     doc.save("catalogo-garden-prime.pdf");
@@ -328,11 +339,7 @@ function Catalogo() {
         subtitle="Compartilhe seus produtos pelo WhatsApp, link público ou QR Code"
         actions={
           <div className="flex gap-2">
-            <Button
-              onClick={gerarPDF}
-              variant="outline"
-              className="border-slate-200"
-            >
+            <Button onClick={gerarPDF} variant="outline" className="border-slate-200">
               <FileText className="mr-2 h-4 w-4" />
               Gerar PDF
             </Button>
@@ -358,7 +365,7 @@ function Catalogo() {
               onChange={(e) => setBusca(e.target.value)}
             />
           </div>
-          
+
           <Select value={vendedorSelecionado} onValueChange={setVendedorSelecionado}>
             <SelectTrigger className="w-full sm:w-[240px]">
               <SelectValue placeholder="Catálogo do Parceiro" />
@@ -419,19 +426,19 @@ function Catalogo() {
 
       <div className="space-y-10">
         {loading ? (
-          <p className="text-center text-muted-foreground py-8">
-            Carregando catálogo...
-          </p>
+          <p className="text-center text-muted-foreground py-8">Carregando catálogo...</p>
         ) : filtrados.length === 0 ? (
           <p className="text-center text-muted-foreground py-8">
             Nenhum produto encontrado na busca.
           </p>
         ) : (
-          Array.from(new Set(filtrados.map(p => p.categoria || "Outros"))).map((cat) => {
-            const produtosDaCategoria = filtrados.filter(p => (p.categoria || "Outros") === cat);
+          Array.from(new Set(filtrados.map((p) => p.categoria || "Outros"))).map((cat) => {
+            const produtosDaCategoria = filtrados.filter((p) => (p.categoria || "Outros") === cat);
             return (
               <div key={cat} className="space-y-4">
-                <h2 className="text-2xl font-display font-bold text-slate-800 border-b pb-2">{cat}</h2>
+                <h2 className="text-2xl font-display font-bold text-slate-800 border-b pb-2">
+                  {cat}
+                </h2>
                 <div className="grid grid-cols-2 gap-3 sm:gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                   {produtosDaCategoria.map((p, index) => (
                     <Card
@@ -456,7 +463,9 @@ function Catalogo() {
                         )}
                       </div>
                       <div className="p-4 flex flex-col h-full">
-                        <h3 className="font-display text-base font-bold mt-0.5 truncate">{p.nome}</h3>
+                        <h3 className="font-display text-base font-bold mt-0.5 truncate">
+                          {p.nome}
+                        </h3>
 
                         <div className="mt-2 flex items-baseline justify-between border-b pb-2 mb-2">
                           <p className="text-primary font-display text-xl font-extrabold">
@@ -469,17 +478,20 @@ function Catalogo() {
                         <div className="py-1 text-xs text-muted-foreground space-y-1 border-b pb-3 mb-3 flex-1">
                           {p.numero && (
                             <p>
-                              <span className="font-semibold text-foreground">Número:</span> {p.numero}
+                              <span className="font-semibold text-foreground">Número:</span>{" "}
+                              {p.numero}
                             </p>
                           )}
                           {p.dimensao && (
                             <p>
-                              <span className="font-semibold text-foreground">Dimensões:</span> {p.dimensao}
+                              <span className="font-semibold text-foreground">Dimensões:</span>{" "}
+                              {p.dimensao}
                             </p>
                           )}
                           {p.volume && (
                             <p>
-                              <span className="font-semibold text-foreground">Volume:</span> {p.volume} L
+                              <span className="font-semibold text-foreground">Volume:</span>{" "}
+                              {p.volume} L
                             </p>
                           )}
                           {p.comprimento && (

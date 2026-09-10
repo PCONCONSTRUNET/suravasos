@@ -17,13 +17,13 @@ export function GardenPrimeLogo({
     ? size === "small"
       ? "h-9"
       : size === "large"
-      ? "h-14"
-      : "h-11"
+        ? "h-14"
+        : "h-11"
     : size === "small"
-    ? "h-8"
-    : size === "large"
-    ? "h-20"
-    : "h-10";
+      ? "h-8"
+      : size === "large"
+        ? "h-20"
+        : "h-10";
 
   return (
     <div className={cn("flex items-center gap-2.5", className)}>

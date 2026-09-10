@@ -12,7 +12,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Filter, Plus, Search, Pencil, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import {
+  Filter,
+  Plus,
+  Search,
+  Pencil,
+  Trash2,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+} from "lucide-react";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { useConfirm } from "@/contexts/ConfirmContext";
@@ -138,7 +147,7 @@ function Produtos() {
       if (sortColumn === "codigo") {
         const strA = valA ? String(valA) : "";
         const strB = valB ? String(valB) : "";
-        const compare = strA.localeCompare(strB, undefined, { numeric: true, sensitivity: 'base' });
+        const compare = strA.localeCompare(strB, undefined, { numeric: true, sensitivity: "base" });
         return sortDirection === "asc" ? compare : -compare;
       } else if (sortColumn === "nome" || sortColumn === "categoria" || sortColumn === "status") {
         valA = valA ? String(valA).toLowerCase() : "";
@@ -160,7 +169,8 @@ function Produtos() {
   }, [products, busca, categoriaFilter, sortColumn, sortDirection]);
 
   const SortIcon = ({ column }: { column: SortColumn }) => {
-    if (sortColumn !== column) return <ArrowUpDown className="ml-1 h-3 w-3 inline-block opacity-50" />;
+    if (sortColumn !== column)
+      return <ArrowUpDown className="ml-1 h-3 w-3 inline-block opacity-50" />;
     return sortDirection === "asc" ? (
       <ArrowUp className="ml-1 h-3 w-3 inline-block" />
     ) : (
@@ -239,22 +249,40 @@ function Produtos() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort("codigo")}>
+                <TableHead
+                  className="cursor-pointer select-none hover:bg-muted/50"
+                  onClick={() => handleSort("codigo")}
+                >
                   Código <SortIcon column="codigo" />
                 </TableHead>
-                <TableHead className="cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort("nome")}>
+                <TableHead
+                  className="cursor-pointer select-none hover:bg-muted/50"
+                  onClick={() => handleSort("nome")}
+                >
                   Produto <SortIcon column="nome" />
                 </TableHead>
-                <TableHead className="cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort("categoria")}>
+                <TableHead
+                  className="cursor-pointer select-none hover:bg-muted/50"
+                  onClick={() => handleSort("categoria")}
+                >
                   Categoria <SortIcon column="categoria" />
                 </TableHead>
-                <TableHead className="text-right cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort("estoque")}>
+                <TableHead
+                  className="text-right cursor-pointer select-none hover:bg-muted/50"
+                  onClick={() => handleSort("estoque")}
+                >
                   Estoque <SortIcon column="estoque" />
                 </TableHead>
-                <TableHead className="text-right cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort("valor")}>
+                <TableHead
+                  className="text-right cursor-pointer select-none hover:bg-muted/50"
+                  onClick={() => handleSort("valor")}
+                >
                   Valor <SortIcon column="valor" />
                 </TableHead>
-                <TableHead className="cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort("status")}>
+                <TableHead
+                  className="cursor-pointer select-none hover:bg-muted/50"
+                  onClick={() => handleSort("status")}
+                >
                   Status <SortIcon column="status" />
                 </TableHead>
                 <TableHead className="text-right">Ações</TableHead>

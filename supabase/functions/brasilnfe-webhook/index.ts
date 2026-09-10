@@ -83,7 +83,12 @@ Deno.serve(async (req: Request) => {
   console.log(`[BrasilNFe] event=${event || "?"} delivery=${deliveryId} attempt=${attempt}`);
 
   // Parse do payload
-  let envelope: { event: string; deliveryId: string; timestamp: string; data: Record<string, unknown> };
+  let envelope: {
+    event: string;
+    deliveryId: string;
+    timestamp: string;
+    data: Record<string, unknown>;
+  };
   try {
     envelope = JSON.parse(bodyRaw);
   } catch {
@@ -131,7 +136,6 @@ Deno.serve(async (req: Request) => {
 
   try {
     switch (envelope.event) {
-
       // Teste de conectividade
       case "test.ping": {
         console.log("✅ test.ping recebido — webhook funcionando!");
@@ -160,10 +164,13 @@ Deno.serve(async (req: Request) => {
 
         for (const nota of data.notas ?? []) {
           const statusStr =
-            nota.codStatus === 100 || nota.codStatus === 150 ? "Autorizada"
-            : nota.codStatus === 101 ? "Cancelada"
-            : nota.codStatus === 110 ? "Denegada"
-            : "Erro";
+            nota.codStatus === 100 || nota.codStatus === 150
+              ? "Autorizada"
+              : nota.codStatus === 101
+                ? "Cancelada"
+                : nota.codStatus === 110
+                  ? "Denegada"
+                  : "Erro";
 
           const { error: upErr } = await supabase
             .from("notas_fiscais")
@@ -233,8 +240,8 @@ Deno.serve(async (req: Request) => {
     // (o erro foi logado para investigação)
   }
 
-  return new Response(
-    JSON.stringify({ ok: true, event: envelope.event, deliveryId }),
-    { status: 200, headers: { "Content-Type": "application/json" } },
-  );
+  return new Response(JSON.stringify({ ok: true, event: envelope.event, deliveryId }), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
 });

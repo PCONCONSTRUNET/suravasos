@@ -36,11 +36,14 @@ function ParceiroCatalogo() {
         .select("id, acrescimo_catalogo, acrescimo_catalogo_percentual")
         .eq("user_id", session.user.id)
         .single();
-      
+
       if (vData) {
         vendedorId = vData.id;
         aplicaAcrescimo = vData.acrescimo_catalogo;
-        if (vData.acrescimo_catalogo_percentual !== null && vData.acrescimo_catalogo_percentual !== undefined) {
+        if (
+          vData.acrescimo_catalogo_percentual !== null &&
+          vData.acrescimo_catalogo_percentual !== undefined
+        ) {
           percentual = Number(vData.acrescimo_catalogo_percentual);
         }
       }
@@ -52,7 +55,7 @@ function ParceiroCatalogo() {
           .select("produto_id, preco_personalizado")
           .eq("vendedor_id", vendedorId);
         if (precos) {
-          precos.forEach(p => {
+          precos.forEach((p) => {
             customPricesMap[p.produto_id] = Number(p.preco_personalizado);
           });
         }
@@ -67,7 +70,7 @@ function ParceiroCatalogo() {
 
       if (error) console.error("[catalogo] erro ao buscar produtos:", error);
       if (data) {
-        const multiplier = 1 + (percentual / 100);
+        const multiplier = 1 + percentual / 100;
         const produtosComPreco = data.map((prod: any) => {
           let finalPrice = aplicaAcrescimo ? prod.valor * multiplier : prod.valor;
           if (customPricesMap[prod.id] !== undefined) {
@@ -75,7 +78,7 @@ function ParceiroCatalogo() {
           }
           return {
             ...prod,
-            valor: finalPrice
+            valor: finalPrice,
           };
         });
         setProdutos(produtosComPreco);
@@ -102,7 +105,6 @@ function ParceiroCatalogo() {
 
   return (
     <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
-
       {/* Page Title */}
       <div>
         <h1 className="text-2xl font-bold font-display text-slate-800 flex items-center gap-2">
@@ -219,9 +221,10 @@ function ParceiroCatalogo() {
                   className={`
                     w-full flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-bold
                     transition-all duration-200 active:scale-95 select-none
-                    ${addedId === p.id
-                      ? "bg-emerald-500 text-white opacity-90 scale-95"
-                      : "bg-gradient-brand text-primary-foreground hover:opacity-90"
+                    ${
+                      addedId === p.id
+                        ? "bg-emerald-500 text-white opacity-90 scale-95"
+                        : "bg-gradient-brand text-primary-foreground hover:opacity-90"
                     }
                   `}
                 >

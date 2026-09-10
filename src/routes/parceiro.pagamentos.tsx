@@ -96,8 +96,7 @@ function ParceiroPagamentos() {
   const qtdPendentes = vendas.filter((v) => v.status_aprovacao === "Pendente").length;
   const qtdRejeitadas = vendas.filter((v) => v.status_aprovacao === "Rejeitada").length;
 
-  const fmt = (v: number) =>
-    v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
   const fmtData = (d: string) =>
     new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit" });
@@ -121,7 +120,6 @@ function ParceiroPagamentos() {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
-
       {/* Título */}
       <div>
         <h1 className="text-2xl font-bold font-display text-slate-800 flex items-center gap-2">
@@ -170,9 +168,7 @@ function ParceiroPagamentos() {
               <TrendingUp className="h-4 w-4" />
               <span className="text-xs font-semibold">Volume Vendido</span>
             </div>
-            <p className="text-2xl font-extrabold font-display text-brand">
-              {fmt(totalVendas)}
-            </p>
+            <p className="text-2xl font-extrabold font-display text-brand">{fmt(totalVendas)}</p>
             <p className="text-[10px] text-brand/60 mt-0.5">em vendas aprovadas</p>
           </CardContent>
         </Card>
@@ -182,15 +178,27 @@ function ParceiroPagamentos() {
           <CardContent className="p-4 grid grid-cols-3 gap-1 text-center">
             <div>
               <p className="text-lg font-extrabold text-emerald-600">{qtdAprovadas}</p>
-              <p className="text-[9px] text-muted-foreground font-medium leading-tight">Aprova-<br/>das</p>
+              <p className="text-[9px] text-muted-foreground font-medium leading-tight">
+                Aprova-
+                <br />
+                das
+              </p>
             </div>
             <div>
               <p className="text-lg font-extrabold text-amber-500">{qtdPendentes}</p>
-              <p className="text-[9px] text-muted-foreground font-medium leading-tight">Penden-<br/>tes</p>
+              <p className="text-[9px] text-muted-foreground font-medium leading-tight">
+                Penden-
+                <br />
+                tes
+              </p>
             </div>
             <div>
               <p className="text-lg font-extrabold text-destructive">{qtdRejeitadas}</p>
-              <p className="text-[9px] text-muted-foreground font-medium leading-tight">Rejei-<br/>tadas</p>
+              <p className="text-[9px] text-muted-foreground font-medium leading-tight">
+                Rejei-
+                <br />
+                tadas
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -268,11 +276,11 @@ function ParceiroPagamentos() {
                     </div>
 
                     <div className="text-right shrink-0">
-                      <p className="font-bold text-slate-800">
-                        {fmt(Number(v.valor_total))}
-                      </p>
+                      <p className="font-bold text-slate-800">{fmt(Number(v.valor_total))}</p>
                       {Number(v.valor_comissao) > 0 && (
-                        <p className={`text-xs font-semibold mt-0.5 ${comissaoPaga ? "text-emerald-600" : "text-amber-600"}`}>
+                        <p
+                          className={`text-xs font-semibold mt-0.5 ${comissaoPaga ? "text-emerald-600" : "text-amber-600"}`}
+                        >
                           + {fmt(Number(v.valor_comissao))}
                         </p>
                       )}
@@ -317,17 +325,25 @@ function ParceiroPagamentos() {
 
                           {/* Totais do pedido */}
                           <div className="flex justify-between items-center px-4 py-3 bg-white">
-                            <span className="text-xs font-semibold text-slate-600">Total do Pedido</span>
+                            <span className="text-xs font-semibold text-slate-600">
+                              Total do Pedido
+                            </span>
                             <span className="text-sm font-extrabold text-slate-900">
                               {fmt(Number(v.valor_total))}
                             </span>
                           </div>
                           {Number(v.valor_comissao) > 0 && (
-                            <div className={`flex justify-between items-center px-4 py-2 ${comissaoPaga ? "bg-emerald-50" : "bg-amber-50"}`}>
-                              <span className={`text-xs font-semibold ${comissaoPaga ? "text-emerald-700" : "text-amber-700"}`}>
+                            <div
+                              className={`flex justify-between items-center px-4 py-2 ${comissaoPaga ? "bg-emerald-50" : "bg-amber-50"}`}
+                            >
+                              <span
+                                className={`text-xs font-semibold ${comissaoPaga ? "text-emerald-700" : "text-amber-700"}`}
+                              >
                                 {comissaoPaga ? "✅ Comissão Recebida" : "⏳ Comissão a Receber"}
                               </span>
-                              <span className={`text-sm font-extrabold ${comissaoPaga ? "text-emerald-700" : "text-amber-700"}`}>
+                              <span
+                                className={`text-sm font-extrabold ${comissaoPaga ? "text-emerald-700" : "text-amber-700"}`}
+                              >
                                 {fmt(Number(v.valor_comissao))}
                               </span>
                             </div>

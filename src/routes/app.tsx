@@ -19,7 +19,7 @@ export const Route = createFileRoute("/app")({
     const envAdmin = import.meta.env.VITE_ADMIN_EMAIL || "";
     // Adicionamos os e-mails fixos garantindo que nunca percam o acesso
     const adminEmail = `${envAdmin},douglasalmeida156@hotmail.com`;
-    
+
     const ADMIN_EMAILS = adminEmail
       .split(",")
       .map((e: string) => e.trim().toLowerCase())

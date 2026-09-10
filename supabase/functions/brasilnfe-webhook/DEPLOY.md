@@ -11,6 +11,7 @@ supabase link --project-ref <seu-project-ref>
 ## 1. Configurar o Secret do Webhook
 
 No painel Brasil NFe (**Perfil → Webhooks → Adicionar webhook**):
+
 - **Nome:** Integração GARDEN PRIME ERP
 - **URL:** `https://<seu-project-ref>.supabase.co/functions/v1/brasilnfe-webhook`
 - Clique **Salvar** e **copie o secret gerado**
@@ -48,12 +49,12 @@ Substitua `<seu-project-ref>` pelo ID do seu projeto Supabase (visível em **Pro
 
 ## Eventos Tratados
 
-| Evento | O que faz |
-|---|---|
-| `test.ping` | Confirma que o webhook está ativo (retorna 200) |
-| `nfe.lote.finalizado` | Atualiza `notas_fiscais` com chave, protocolo e status real da SEFAZ |
-| `documento.entrada.recebida` | Registra NF-e/CT-e recebida na tabela `documentos_entrada` |
-| `documento.entrada.cancelada` | Marca NF-e de entrada como cancelada |
+| Evento                        | O que faz                                                            |
+| ----------------------------- | -------------------------------------------------------------------- |
+| `test.ping`                   | Confirma que o webhook está ativo (retorna 200)                      |
+| `nfe.lote.finalizado`         | Atualiza `notas_fiscais` com chave, protocolo e status real da SEFAZ |
+| `documento.entrada.recebida`  | Registra NF-e/CT-e recebida na tabela `documentos_entrada`           |
+| `documento.entrada.cancelada` | Marca NF-e de entrada como cancelada                                 |
 
 ## Segurança
 

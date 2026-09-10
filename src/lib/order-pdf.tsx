@@ -65,9 +65,12 @@ export interface OrderData {
     cpf_cnpj?: string;
     telefone?: string;
   } | null;
-  vendedor?: {
-    nome?: string;
-  } | string | null;
+  vendedor?:
+    | {
+        nome?: string;
+      }
+    | string
+    | null;
   vendedor_nome?: string;
 }
 
@@ -155,7 +158,7 @@ export async function preloadLogos(): Promise<{ prime: string | null; plus: stri
 export function generateOrderPdfDoc(
   order: OrderData,
   items: OrderItem[],
-  logos?: { prime?: string | null; plus?: string | null }
+  logos?: { prime?: string | null; plus?: string | null },
 ): { doc: jsPDF; blob: Blob; file: File; filename: string } {
   const isDAV = isOrderDav(order);
   const docType = isDAV ? "ORÇAMENTO" : "PEDIDO DE VENDA";
@@ -237,7 +240,10 @@ export function generateOrderPdfDoc(
   doc.text(`${docType} #${num}`, rightX, y + 8, { align: "right" });
 
   const dataStr = new Date(order.created_at).toLocaleDateString("pt-BR");
-  const horaStr = new Date(order.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  const horaStr = new Date(order.created_at).toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7);
   doc.setTextColor(71, 85, 105);
@@ -283,7 +289,10 @@ export function generateOrderPdfDoc(
   const clippedName = doc.splitTextToSize(clienteNome, boxWidth - 8);
   doc.text(clippedName[0] || "—", margin + 4, y + 10);
 
-  const docAndTel = [clienteDoc ? `CPF/CNPJ: ${clienteDoc}` : "", clienteTel ? `Tel: ${clienteTel}` : ""]
+  const docAndTel = [
+    clienteDoc ? `CPF/CNPJ: ${clienteDoc}` : "",
+    clienteTel ? `Tel: ${clienteTel}` : "",
+  ]
     .filter(Boolean)
     .join("  •  ");
   if (docAndTel) {
@@ -323,8 +332,13 @@ export function generateOrderPdfDoc(
 
   // ── TABELA DE PRODUTOS ─────────────────────────────────
   const tableRows = items.map((item, idx) => {
-    const cod = item.produto?.codigo || item.produtos?.codigo || item.codigo || String(idx + 1).padStart(2, "0");
-    const nome = item.produto?.nome || item.produtos?.nome || item.produto_nome || "Produto sem descrição";
+    const cod =
+      item.produto?.codigo ||
+      item.produtos?.codigo ||
+      item.codigo ||
+      String(idx + 1).padStart(2, "0");
+    const nome =
+      item.produto?.nome || item.produtos?.nome || item.produto_nome || "Produto sem descrição";
     const qtd = item.quantidade ?? item.qtd ?? 1;
     const vlrUnit = Number(item.valor_unitario || 0);
     const sub = Number(item.subtotal ?? item.total ?? vlrUnit * qtd);
@@ -414,12 +428,16 @@ export function generateOrderPdfDoc(
   doc.setTextColor(100, 116, 139);
   doc.text("Subtotal:", totalBoxX + 4, totalY + 6);
   doc.setTextColor(30, 41, 59);
-  doc.text(`R$ ${subtotal.toFixed(2).replace(".", ",")}`, totalBoxX + totalBoxW - 4, totalY + 6, { align: "right" });
+  doc.text(`R$ ${subtotal.toFixed(2).replace(".", ",")}`, totalBoxX + totalBoxW - 4, totalY + 6, {
+    align: "right",
+  });
 
   if (desc > 0) {
     doc.setTextColor(225, 29, 72);
     doc.text(`Desconto:`, totalBoxX + 4, totalY + 11);
-    doc.text(`- R$ ${desc.toFixed(2).replace(".", ",")}`, totalBoxX + totalBoxW - 4, totalY + 11, { align: "right" });
+    doc.text(`- R$ ${desc.toFixed(2).replace(".", ",")}`, totalBoxX + totalBoxW - 4, totalY + 11, {
+      align: "right",
+    });
   }
 
   // Linha divisória
@@ -431,7 +449,12 @@ export function generateOrderPdfDoc(
   doc.setFontSize(11);
   doc.setTextColor(22, 101, 52); // Emerald-800
   doc.text("Total:", totalBoxX + 4, totalY + 22);
-  doc.text(`R$ ${totalFinal.toFixed(2).replace(".", ",")}`, totalBoxX + totalBoxW - 4, totalY + 22, { align: "right" });
+  doc.text(
+    `R$ ${totalFinal.toFixed(2).replace(".", ",")}`,
+    totalBoxX + totalBoxW - 4,
+    totalY + 22,
+    { align: "right" },
+  );
 
   // ── RODAPÉ ─────────────────────────────────────────────
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -444,7 +467,7 @@ export function generateOrderPdfDoc(
       : "Comprovante de pedido emitido para conferência do cliente. Não possui valor fiscal.",
     pageWidth / 2,
     pageHeight - 8,
-    { align: "center" }
+    { align: "center" },
   );
 
   const blob = doc.output("blob");
@@ -482,7 +505,9 @@ export function buildWhatsAppMessage(order: OrderData, items: OrderItem[]): stri
     msg += `(Consulte os itens no anexo em PDF)\n`;
   }
 
-  const total = Number(order.valor_total ?? order.total ?? 0).toFixed(2).replace(".", ",");
+  const total = Number(order.valor_total ?? order.total ?? 0)
+    .toFixed(2)
+    .replace(".", ",");
   msg += `\n*TOTAL: R$ ${total}*\n\n`;
 
   const linkPdf = `${window.location.origin}/orcamento/${order.id}`;

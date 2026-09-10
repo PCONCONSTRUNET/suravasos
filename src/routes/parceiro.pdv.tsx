@@ -4,7 +4,26 @@ import { supabaseParceiro as supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Trash2, ShoppingCart, CheckCircle2, Loader2, Camera, Mic, Star, Flame, Clock, Grid, RefreshCw, Plus, Minus, ArrowRight, ChevronRight, FileText, Download } from "lucide-react";
+import {
+  Search,
+  Trash2,
+  ShoppingCart,
+  CheckCircle2,
+  Loader2,
+  Camera,
+  Mic,
+  Star,
+  Flame,
+  Clock,
+  Grid,
+  RefreshCw,
+  Plus,
+  Minus,
+  ArrowRight,
+  ChevronRight,
+  FileText,
+  Download,
+} from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import {
   Dialog,
@@ -14,12 +33,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  WhatsAppIcon,
-  shareOrderWhatsApp,
-  openOrderPdf,
-  downloadOrderPdf,
-} from "@/lib/order-pdf";
+import { WhatsAppIcon, shareOrderWhatsApp, openOrderPdf, downloadOrderPdf } from "@/lib/order-pdf";
 
 export const Route = createFileRoute("/parceiro/pdv")({
   head: () => ({ meta: [{ title: "Nova Venda — GARDEN PRIME" }] }),
@@ -30,16 +44,16 @@ function ParceiroPDV() {
   const navigate = useNavigate();
   const [produtos, setProdutos] = useState<any[]>([]);
   const [cart, setCart] = useState<any[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('pdv_cart_parceiro');
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("pdv_cart_parceiro");
       if (saved) return JSON.parse(saved);
     }
     return [];
   });
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('pdv_cart_parceiro', JSON.stringify(cart));
+    if (typeof window !== "undefined") {
+      localStorage.setItem("pdv_cart_parceiro", JSON.stringify(cart));
     }
   }, [cart]);
 
@@ -47,8 +61,8 @@ function ParceiroPDV() {
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [clientForm, setClientForm] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('pdv_client_parceiro');
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("pdv_client_parceiro");
       if (saved) return JSON.parse(saved);
     }
     return {
@@ -69,8 +83,8 @@ function ParceiroPDV() {
   });
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('pdv_client_parceiro', JSON.stringify(clientForm));
+    if (typeof window !== "undefined") {
+      localStorage.setItem("pdv_client_parceiro", JSON.stringify(clientForm));
     }
   }, [clientForm]);
   const [vendedorInfo, setVendedorInfo] = useState<{ id: string; nome: string } | null>(null);
@@ -84,8 +98,10 @@ function ParceiroPDV() {
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [initError, setInitError] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
-  
-  const dynamicCategories = Array.from(new Set(produtos.map((p) => p.categoria))).filter(Boolean) as string[];
+
+  const dynamicCategories = Array.from(new Set(produtos.map((p) => p.categoria))).filter(
+    Boolean,
+  ) as string[];
   const categorias = dynamicCategories;
 
   const toggleCategory = (cat: string) => {
@@ -101,156 +117,163 @@ function ParceiroPDV() {
     const init = async () => {
       try {
         const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      let aplicaAcrescimo = false;
-      let acrescimoPercentual = 20;
-      let vendedorId = null;
-      if (session) {
-        const { data: vData, error } = await supabase
-          .from("vendedores")
-          .select("id, status, nome, acrescimo_catalogo, acrescimo_catalogo_percentual")
-          .eq("user_id", session.user.id)
-          .maybeSingle();
+          data: { session },
+        } = await supabase.auth.getSession();
+        let aplicaAcrescimo = false;
+        let acrescimoPercentual = 20;
+        let vendedorId = null;
+        if (session) {
+          const { data: vData, error } = await supabase
+            .from("vendedores")
+            .select("id, status, nome, acrescimo_catalogo, acrescimo_catalogo_percentual")
+            .eq("user_id", session.user.id)
+            .maybeSingle();
 
-        if (error || !vData) {
-          console.error("Vendedor não encontrado ou erro:", error);
-          setVendedorInfo({ id: "error", nome: "Erro ao carregar perfil" });
-          alert("Não foi possível carregar seu perfil de parceiro. Você será redirecionado.");
-          navigate({ to: "/parceiro/dashboard" });
-          return;
-        }
-
-        if (vData) {
-          vendedorId = vData.id;
-          setVendedorInfo({ id: vData.id, nome: vData.nome });
-          aplicaAcrescimo = vData.acrescimo_catalogo;
-          if (vData.acrescimo_catalogo_percentual !== null && vData.acrescimo_catalogo_percentual !== undefined) {
-            acrescimoPercentual = Number(vData.acrescimo_catalogo_percentual);
-          }
-          if (vData.status === "Aguardando Aprovação") {
+          if (error || !vData) {
+            console.error("Vendedor não encontrado ou erro:", error);
+            setVendedorInfo({ id: "error", nome: "Erro ao carregar perfil" });
+            alert("Não foi possível carregar seu perfil de parceiro. Você será redirecionado.");
             navigate({ to: "/parceiro/dashboard" });
             return;
           }
-        }
-      } else {
-        navigate({ to: "/parceiro/login" });
-        return;
-      }
 
-      let customPricesMap: Record<string, number> = {};
-      if (vendedorId) {
-        const { data: precos } = await supabase
-          .from("parceiro_precos")
-          .select("produto_id, preco_personalizado")
-          .eq("vendedor_id", vendedorId);
-        if (precos) {
-          precos.forEach(p => {
-            customPricesMap[p.produto_id] = Number(p.preco_personalizado);
-          });
-        }
-      }
-
-      const { data } = await supabase.from("produtos").select("*").eq("status", "Ativo").order("nome");
-      if (data) {
-        const multiplier = 1 + (acrescimoPercentual / 100);
-        const produtosComPreco = data.map((p: any) => {
-          let finalPrice = aplicaAcrescimo ? p.valor * multiplier : p.valor;
-          if (customPricesMap[p.id] !== undefined) {
-            finalPrice = customPricesMap[p.id];
-          }
-          return {
-            ...p,
-            valor: finalPrice
-          };
-        });
-        setProdutos(produtosComPreco);
-        
-        // Verifica se veio um produto mágico pela URL (formato antigo)
-        const dataForMagic = produtosComPreco;
-        const params = new URLSearchParams(window.location.search);
-
-        const eParam = params.get("e");
-        const cnjParam = params.get("cnpj");
-        const cepParam = params.get("cep");
-        const endParam = params.get("end");
-        const numParam = params.get("num");
-        const bairroParam = params.get("bairro");
-        const cidParam = params.get("cid");
-        const ufParam = params.get("uf");
-        const telParam = params.get("tel");
-
-        if (eParam || cnjParam) {
-          setClientForm((prev: any) => ({
-            ...prev,
-            nome: eParam || "",
-            documento: cnjParam || "",
-            cep: cepParam || "",
-            endereco: endParam || "",
-            numero: numParam || "",
-            bairro: bairroParam || "",
-            cidade: cidParam || "",
-            uf: ufParam || "",
-            telefone: telParam || "",
-          }));
-        }
-
-        const produtoIdMagic = params.get("produto");
-        if (produtoIdMagic) {
-          const magicProduct = dataForMagic.find((p: any) => p.id === produtoIdMagic);
-          if (magicProduct) {
-            setCart([
-              {
-                id: magicProduct.id,
-                p: magicProduct.nome,
-                q: 1,
-                u: Number(magicProduct.valor),
-                t: Number(magicProduct.valor),
-                emoji: magicProduct.emoji,
-                imagem: magicProduct.imagem,
-              },
-            ]);
-            // Limpa a URL para não adicionar de novo num refresh
-            window.history.replaceState({}, "", "/parceiro/pdv");
-          }
-        }
-
-        // Novo formato do Carrinho via Catálogo
-        const cartMagic = params.get("c");
-        if (cartMagic) {
-          const parsedCart: any[] = [];
-          const items = cartMagic.split(",");
-          items.forEach((item) => {
-            const [id, qStr] = item.split(":");
-            const qty = parseInt(qStr) || 1;
-            const prod = dataForMagic.find((p: any) => p.id === id);
-            if (prod) {
-              parsedCart.push({
-                id: prod.id,
-                p: prod.nome,
-                q: qty,
-                u: Number(prod.valor),
-                t: qty * Number(prod.valor),
-                emoji: prod.emoji,
-                imagem: prod.imagem,
-              });
+          if (vData) {
+            vendedorId = vData.id;
+            setVendedorInfo({ id: vData.id, nome: vData.nome });
+            aplicaAcrescimo = vData.acrescimo_catalogo;
+            if (
+              vData.acrescimo_catalogo_percentual !== null &&
+              vData.acrescimo_catalogo_percentual !== undefined
+            ) {
+              acrescimoPercentual = Number(vData.acrescimo_catalogo_percentual);
             }
-          });
-          if (parsedCart.length > 0) {
-            setCart(parsedCart);
-            window.history.replaceState({}, "", "/parceiro/pdv");
+            if (vData.status === "Aguardando Aprovação") {
+              navigate({ to: "/parceiro/dashboard" });
+              return;
+            }
+          }
+        } else {
+          navigate({ to: "/parceiro/login" });
+          return;
+        }
+
+        let customPricesMap: Record<string, number> = {};
+        if (vendedorId) {
+          const { data: precos } = await supabase
+            .from("parceiro_precos")
+            .select("produto_id, preco_personalizado")
+            .eq("vendedor_id", vendedorId);
+          if (precos) {
+            precos.forEach((p) => {
+              customPricesMap[p.produto_id] = Number(p.preco_personalizado);
+            });
           }
         }
+
+        const { data } = await supabase
+          .from("produtos")
+          .select("*")
+          .eq("status", "Ativo")
+          .order("nome");
+        if (data) {
+          const multiplier = 1 + acrescimoPercentual / 100;
+          const produtosComPreco = data.map((p: any) => {
+            let finalPrice = aplicaAcrescimo ? p.valor * multiplier : p.valor;
+            if (customPricesMap[p.id] !== undefined) {
+              finalPrice = customPricesMap[p.id];
+            }
+            return {
+              ...p,
+              valor: finalPrice,
+            };
+          });
+          setProdutos(produtosComPreco);
+
+          // Verifica se veio um produto mágico pela URL (formato antigo)
+          const dataForMagic = produtosComPreco;
+          const params = new URLSearchParams(window.location.search);
+
+          const eParam = params.get("e");
+          const cnjParam = params.get("cnpj");
+          const cepParam = params.get("cep");
+          const endParam = params.get("end");
+          const numParam = params.get("num");
+          const bairroParam = params.get("bairro");
+          const cidParam = params.get("cid");
+          const ufParam = params.get("uf");
+          const telParam = params.get("tel");
+
+          if (eParam || cnjParam) {
+            setClientForm((prev: any) => ({
+              ...prev,
+              nome: eParam || "",
+              documento: cnjParam || "",
+              cep: cepParam || "",
+              endereco: endParam || "",
+              numero: numParam || "",
+              bairro: bairroParam || "",
+              cidade: cidParam || "",
+              uf: ufParam || "",
+              telefone: telParam || "",
+            }));
+          }
+
+          const produtoIdMagic = params.get("produto");
+          if (produtoIdMagic) {
+            const magicProduct = dataForMagic.find((p: any) => p.id === produtoIdMagic);
+            if (magicProduct) {
+              setCart([
+                {
+                  id: magicProduct.id,
+                  p: magicProduct.nome,
+                  q: 1,
+                  u: Number(magicProduct.valor),
+                  t: Number(magicProduct.valor),
+                  emoji: magicProduct.emoji,
+                  imagem: magicProduct.imagem,
+                },
+              ]);
+              // Limpa a URL para não adicionar de novo num refresh
+              window.history.replaceState({}, "", "/parceiro/pdv");
+            }
+          }
+
+          // Novo formato do Carrinho via Catálogo
+          const cartMagic = params.get("c");
+          if (cartMagic) {
+            const parsedCart: any[] = [];
+            const items = cartMagic.split(",");
+            items.forEach((item) => {
+              const [id, qStr] = item.split(":");
+              const qty = parseInt(qStr) || 1;
+              const prod = dataForMagic.find((p: any) => p.id === id);
+              if (prod) {
+                parsedCart.push({
+                  id: prod.id,
+                  p: prod.nome,
+                  q: qty,
+                  u: Number(prod.valor),
+                  t: qty * Number(prod.valor),
+                  emoji: prod.emoji,
+                  imagem: prod.imagem,
+                });
+              }
+            });
+            if (parsedCart.length > 0) {
+              setCart(parsedCart);
+              window.history.replaceState({}, "", "/parceiro/pdv");
+            }
+          }
+        }
+      } catch (err: any) {
+        console.error("Erro na inicialização do PDV:", err);
+        setInitError(err.message || "Ocorreu um erro ao carregar o PDV.");
+      } finally {
+        setIsInitializing(false);
       }
-    } catch (err: any) {
-      console.error("Erro na inicialização do PDV:", err);
-      setInitError(err.message || "Ocorreu um erro ao carregar o PDV.");
-    } finally {
-      setIsInitializing(false);
-    }
-  };
-  init();
-}, []);
+    };
+    init();
+  }, []);
 
   const addToCart = (produto: any) => {
     setCart((prev) => {
@@ -322,9 +345,8 @@ function ParceiroPDV() {
   };
 
   const rawSubtotal = cart.reduce((s, i) => s + i.t, 0);
-  const subtotal = descontoPercentual > 0
-    ? rawSubtotal * (1 - descontoPercentual / 100)
-    : rawSubtotal;
+  const subtotal =
+    descontoPercentual > 0 ? rawSubtotal * (1 - descontoPercentual / 100) : rawSubtotal;
   const descontoAplicado = rawSubtotal - subtotal;
 
   const buscarCnpj = async () => {
@@ -345,9 +367,7 @@ function ParceiroPDV() {
       const tel = data.ddd_telefone_1
         ? data.ddd_telefone_1.replace(/(\d{2})(\d{4,5})(\d{4})/, "($1) $2-$3")
         : clientForm.telefone;
-      const cepFmt = data.cep
-        ? data.cep.replace(/\D/g, "").replace(/(\d{5})(\d{3})/, "$1-$2")
-        : "";
+      const cepFmt = data.cep ? data.cep.replace(/\D/g, "").replace(/(\d{5})(\d{3})/, "$1-$2") : "";
       const tipoLogradouro = data.descricao_tipo_de_logradouro
         ? data.descricao_tipo_de_logradouro + " "
         : "";
@@ -380,7 +400,7 @@ function ParceiroPDV() {
   const submitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
-    
+
     if (!clientForm.nome) {
       alert("Por favor, preencha o nome do cliente.");
       return;
@@ -465,7 +485,10 @@ function ParceiroPDV() {
             cliente_id: finalClienteId,
             desconto_valor: descontoAplicado,
             desconto_percentual: descontoPercentual,
-            condicao_pagamento: clientForm.pagamento === "Boleto a Prazo" ? clientForm.condicaoBoleto || "Boleto a Prazo" : clientForm.pagamento,
+            condicao_pagamento:
+              clientForm.pagamento === "Boleto a Prazo"
+                ? clientForm.condicaoBoleto || "Boleto a Prazo"
+                : clientForm.pagamento,
           },
         ])
         .select()
@@ -546,7 +569,10 @@ function ParceiroPDV() {
           telefone: clientForm.telefone,
           endereco: `${clientForm.endereco || ""}${clientForm.numero ? `, ${clientForm.numero}` : ""}`,
         },
-        condicao_pagamento: clientForm.pagamento === "Boleto a Prazo" ? clientForm.condicaoBoleto || "Boleto a Prazo" : clientForm.pagamento,
+        condicao_pagamento:
+          clientForm.pagamento === "Boleto a Prazo"
+            ? clientForm.condicaoBoleto || "Boleto a Prazo"
+            : clientForm.pagamento,
         vendedor_nome: vendedorInfo?.nome,
       };
 
@@ -581,20 +607,22 @@ function ParceiroPDV() {
 
   // Filter products by search and category
   const filteredProducts = produtos.filter((p) => {
-    const matchesSearch = p.nome.toLowerCase().includes(searchTerm.toLowerCase()) || (p.codigo && p.codigo.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesSearch =
+      p.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (p.codigo && p.codigo.toLowerCase().includes(searchTerm.toLowerCase()));
     if (selectedCategory === "Todos") return matchesSearch;
-    
+
     const prodCat = (p.categoria || "").toLowerCase();
     const selCat = selectedCategory.toLowerCase();
-    
+
     let matchesCategory = prodCat === selCat;
-    
+
     // Fuzzy matching para as categorias fixas no plural
     if (selCat === "vasos" && prodCat.includes("vaso")) matchesCategory = true;
     if (selCat === "pratos" && prodCat.includes("prato")) matchesCategory = true;
     if (selCat === "cuias" && prodCat.includes("cuia")) matchesCategory = true;
     if (selCat === "floreiras" && prodCat.includes("floreira")) matchesCategory = true;
-    
+
     return matchesSearch && matchesCategory;
   });
 
@@ -607,14 +635,25 @@ function ParceiroPDV() {
             <p className="text-xs font-semibold text-brand">Cliente</p>
             {clientForm.nome ? (
               <>
-                <h2 className="text-lg font-bold text-slate-800 leading-tight">{clientForm.nome}</h2>
-                {clientForm.documento && <p className="text-xs text-muted-foreground mt-0.5">CNPJ: {clientForm.documento}</p>}
+                <h2 className="text-lg font-bold text-slate-800 leading-tight">
+                  {clientForm.nome}
+                </h2>
+                {clientForm.documento && (
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    CNPJ: {clientForm.documento}
+                  </p>
+                )}
               </>
             ) : (
               <h2 className="text-lg font-bold text-slate-400 leading-tight">Nenhum cliente</h2>
             )}
           </div>
-          <Button variant="outline" size="sm" onClick={() => setIsClientModalOpen(true)} className="h-9 px-3 rounded-lg text-xs font-semibold shadow-sm">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsClientModalOpen(true)}
+            className="h-9 px-3 rounded-lg text-xs font-semibold shadow-sm"
+          >
             <RefreshCw className="w-3 h-3 mr-1.5" />
             {clientForm.nome ? "Trocar cliente" : "Selecionar"}
           </Button>
@@ -631,7 +670,9 @@ function ParceiroPDV() {
               className="h-11 pl-9 pr-10 rounded-xl bg-white border-slate-200 shadow-sm text-sm"
             />
             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 text-muted-foreground">
-              <button className="p-1.5 hover:text-brand"><Camera className="w-4 h-4" /></button>
+              <button className="p-1.5 hover:text-brand">
+                <Camera className="w-4 h-4" />
+              </button>
             </div>
           </div>
           <button className="h-11 w-11 rounded-xl bg-slate-100 flex items-center justify-center text-muted-foreground hover:bg-slate-200 shrink-0">
@@ -661,24 +702,40 @@ function ParceiroPDV() {
         <div>
           <div className="flex justify-between items-center mb-3">
             <h3 className="font-bold text-sm text-slate-800">Mais comprados por este cliente</h3>
-            <button className="text-xs font-semibold text-muted-foreground hover:text-brand">Ver todos</button>
+            <button className="text-xs font-semibold text-muted-foreground hover:text-brand">
+              Ver todos
+            </button>
           </div>
           <div className="flex overflow-x-auto gap-3 pb-2 no-scrollbar">
             {produtos.slice(0, 5).map((p) => (
-              <div key={`fav-${p.id}`} className="flex-shrink-0 w-36 bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex flex-col">
+              <div
+                key={`fav-${p.id}`}
+                className="flex-shrink-0 w-36 bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex flex-col"
+              >
                 <div className="h-24 w-full bg-slate-50 rounded-xl mb-3 flex items-center justify-center overflow-hidden">
                   {p.imagem ? (
-                    <img src={p.imagem} alt={p.nome} className="h-full w-full object-cover mix-blend-multiply" />
+                    <img
+                      src={p.imagem}
+                      alt={p.nome}
+                      className="h-full w-full object-cover mix-blend-multiply"
+                    />
                   ) : (
                     <span className="text-3xl opacity-50">{p.emoji || "🪴"}</span>
                   )}
                 </div>
-                <p className="text-[11px] font-bold text-slate-800 leading-tight line-clamp-2 h-7">{p.nome}</p>
-                <p className="text-[11px] font-extrabold text-slate-900 mt-1 mb-3">R$ {Number(p.valor).toFixed(2).replace(".", ",")}</p>
-                
+                <p className="text-[11px] font-bold text-slate-800 leading-tight line-clamp-2 h-7">
+                  {p.nome}
+                </p>
+                <p className="text-[11px] font-extrabold text-slate-900 mt-1 mb-3">
+                  R$ {Number(p.valor).toFixed(2).replace(".", ",")}
+                </p>
+
                 {getCartQuantity(p.id) !== 0 ? (
                   <div className="mt-auto flex items-center justify-between border rounded-lg p-0.5 border-brand/20 bg-brand/5">
-                    <button onClick={() => updateQuantity(p.id, -1)} className="w-7 h-7 flex items-center justify-center text-brand hover:bg-brand/10 rounded-md">
+                    <button
+                      onClick={() => updateQuantity(p.id, -1)}
+                      className="w-7 h-7 flex items-center justify-center text-brand hover:bg-brand/10 rounded-md"
+                    >
                       <Minus className="w-3 h-3" />
                     </button>
                     <input
@@ -688,15 +745,22 @@ function ParceiroPDV() {
                       value={getCartQuantity(p.id)}
                       onChange={(e) => setQuantity(p.id, e.target.value)}
                       onBlur={(e) => {
-                        if (e.target.value === "" || parseInt(e.target.value) <= 0) removeFromCart(p.id);
+                        if (e.target.value === "" || parseInt(e.target.value) <= 0)
+                          removeFromCart(p.id);
                       }}
                     />
-                    <button onClick={() => updateQuantity(p.id, 1)} className="w-7 h-7 flex items-center justify-center text-brand hover:bg-brand/10 rounded-md">
+                    <button
+                      onClick={() => updateQuantity(p.id, 1)}
+                      className="w-7 h-7 flex items-center justify-center text-brand hover:bg-brand/10 rounded-md"
+                    >
                       <Plus className="w-3 h-3" />
                     </button>
                   </div>
                 ) : (
-                  <button onClick={() => addToCart(p)} className="mt-auto w-full bg-emerald-700 text-white py-1.5 rounded-lg shadow-sm hover:bg-emerald-800 active:scale-95 transition-transform flex items-center justify-center gap-1 text-xs font-bold">
+                  <button
+                    onClick={() => addToCart(p)}
+                    className="mt-auto w-full bg-emerald-700 text-white py-1.5 rounded-lg shadow-sm hover:bg-emerald-800 active:scale-95 transition-transform flex items-center justify-center gap-1 text-xs font-bold"
+                  >
                     <ShoppingCart className="w-3.5 h-3.5" /> Adicionar
                   </button>
                 )}
@@ -709,15 +773,15 @@ function ParceiroPDV() {
         <div className="flex overflow-x-auto gap-2 pb-2 no-scrollbar bg-slate-50 py-1">
           <button
             onClick={() => toggleCategory("Todos")}
-            className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-colors ${selectedCategory === "Todos" ? 'bg-emerald-700 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200'}`}
+            className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-colors ${selectedCategory === "Todos" ? "bg-emerald-700 text-white shadow-md" : "bg-white text-slate-600 border border-slate-200"}`}
           >
             Todos
           </button>
-          {categorias.map(cat => (
+          {categorias.map((cat) => (
             <button
               key={cat}
               onClick={() => toggleCategory(cat)}
-              className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-colors ${selectedCategory === cat ? 'bg-emerald-700 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200'}`}
+              className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-colors ${selectedCategory === cat ? "bg-emerald-700 text-white shadow-md" : "bg-white text-slate-600 border border-slate-200"}`}
             >
               {cat}
             </button>
@@ -729,10 +793,17 @@ function ParceiroPDV() {
           {filteredProducts.map((p) => {
             const qtd = getCartQuantity(p.id);
             return (
-              <div key={p.id} className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
+              <div
+                key={p.id}
+                className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3"
+              >
                 <div className="h-16 w-16 bg-slate-50 rounded-xl shrink-0 flex items-center justify-center overflow-hidden">
                   {p.imagem ? (
-                    <img src={p.imagem} alt={p.nome} className="h-full w-full object-cover mix-blend-multiply" />
+                    <img
+                      src={p.imagem}
+                      alt={p.nome}
+                      className="h-full w-full object-cover mix-blend-multiply"
+                    />
                   ) : (
                     <span className="text-2xl opacity-50">{p.emoji || "🪴"}</span>
                   )}
@@ -740,15 +811,24 @@ function ParceiroPDV() {
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-bold text-slate-800 leading-tight mb-1">{p.nome}</p>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] text-muted-foreground">Código: {p.codigo || "N/A"}</span>
+                    <span className="text-[10px] text-muted-foreground">
+                      Código: {p.codigo || "N/A"}
+                    </span>
                   </div>
-                  <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">Estoque: {p.estoque || 0} und</span>
+                  <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
+                    Estoque: {p.estoque || 0} und
+                  </span>
                 </div>
                 <div className="flex flex-col items-end gap-2 shrink-0">
-                  <p className="text-sm font-extrabold text-slate-900">R$ {Number(p.valor).toFixed(2).replace(".", ",")}</p>
+                  <p className="text-sm font-extrabold text-slate-900">
+                    R$ {Number(p.valor).toFixed(2).replace(".", ",")}
+                  </p>
                   {qtd !== 0 ? (
                     <div className="flex items-center gap-1 border rounded-lg p-0.5 border-brand/20 bg-brand/5">
-                      <button onClick={() => updateQuantity(p.id, -1)} className="w-6 h-6 flex items-center justify-center text-brand">
+                      <button
+                        onClick={() => updateQuantity(p.id, -1)}
+                        className="w-6 h-6 flex items-center justify-center text-brand"
+                      >
                         <Minus className="w-3 h-3" />
                       </button>
                       <input
@@ -758,15 +838,22 @@ function ParceiroPDV() {
                         value={qtd}
                         onChange={(e) => setQuantity(p.id, e.target.value)}
                         onBlur={(e) => {
-                          if (e.target.value === "" || parseInt(e.target.value) <= 0) removeFromCart(p.id);
+                          if (e.target.value === "" || parseInt(e.target.value) <= 0)
+                            removeFromCart(p.id);
                         }}
                       />
-                      <button onClick={() => updateQuantity(p.id, 1)} className="w-6 h-6 flex items-center justify-center text-brand">
+                      <button
+                        onClick={() => updateQuantity(p.id, 1)}
+                        className="w-6 h-6 flex items-center justify-center text-brand"
+                      >
                         <Plus className="w-3 h-3" />
                       </button>
                     </div>
                   ) : (
-                    <button onClick={() => addToCart(p)} className="bg-emerald-700 text-white p-1.5 px-2.5 rounded-lg shadow-sm hover:bg-emerald-800 active:scale-95 transition-transform flex items-center gap-1">
+                    <button
+                      onClick={() => addToCart(p)}
+                      className="bg-emerald-700 text-white p-1.5 px-2.5 rounded-lg shadow-sm hover:bg-emerald-800 active:scale-95 transition-transform flex items-center gap-1"
+                    >
                       <ShoppingCart className="w-4 h-4" />
                     </button>
                   )}
@@ -792,35 +879,63 @@ function ParceiroPDV() {
               </div>
               <div>
                 <p className="text-xs font-bold text-slate-800">{cart.length} itens</p>
-                <p className="text-[10px] text-muted-foreground flex items-center font-semibold">Ver carrinho <ChevronRight className="w-3 h-3 ml-0.5 -rotate-90" /></p>
+                <p className="text-[10px] text-muted-foreground flex items-center font-semibold">
+                  Ver carrinho <ChevronRight className="w-3 h-3 ml-0.5 -rotate-90" />
+                </p>
               </div>
             </button>
           </SheetTrigger>
           <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl p-0 flex flex-col">
             <SheetHeader className="p-4 border-b text-left">
               <div className="flex justify-between items-center">
-                <SheetTitle className="flex items-center gap-2 text-lg"><ShoppingCart className="w-5 h-5"/> Seu Carrinho</SheetTitle>
-                <Button variant="ghost" size="sm" onClick={() => setCart([])} className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 h-8 text-xs">Esvaziar</Button>
+                <SheetTitle className="flex items-center gap-2 text-lg">
+                  <ShoppingCart className="w-5 h-5" /> Seu Carrinho
+                </SheetTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setCart([])}
+                  className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 h-8 text-xs"
+                >
+                  Esvaziar
+                </Button>
               </div>
             </SheetHeader>
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {cart.length === 0 ? (
-                <div className="text-center py-10 text-muted-foreground text-sm">Seu carrinho está vazio.</div>
+                <div className="text-center py-10 text-muted-foreground text-sm">
+                  Seu carrinho está vazio.
+                </div>
               ) : (
                 cart.map((i) => (
-                  <div key={i.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                  <div
+                    key={i.id}
+                    className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100"
+                  >
                     <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-white shadow-sm text-2xl">
-                      {i.imagem ? <img src={i.imagem} alt={i.p} className="h-full w-full object-cover" /> : <span className="opacity-50">{i.emoji || "🪴"}</span>}
+                      {i.imagem ? (
+                        <img src={i.imagem} alt={i.p} className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="opacity-50">{i.emoji || "🪴"}</span>
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-1">
-                        <p className="text-xs font-bold text-slate-800 leading-tight mb-1 truncate">{i.p}</p>
-                        <button onClick={() => removeFromCart(i.id)} className="text-slate-400 hover:text-rose-500 transition-colors p-0.5" title="Remover item">
+                        <p className="text-xs font-bold text-slate-800 leading-tight mb-1 truncate">
+                          {i.p}
+                        </p>
+                        <button
+                          onClick={() => removeFromCart(i.id)}
+                          className="text-slate-400 hover:text-rose-500 transition-colors p-0.5"
+                          title="Remover item"
+                        >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-muted-foreground line-through">R$ {Number(i.u).toFixed(2)}</span>
+                        <span className="text-[10px] text-muted-foreground line-through">
+                          R$ {Number(i.u).toFixed(2)}
+                        </span>
                         <input
                           type="number"
                           step="0.01"
@@ -833,7 +948,12 @@ function ParceiroPDV() {
                     <div className="flex flex-col items-end gap-2 shrink-0">
                       <p className="text-xs font-extrabold text-slate-900">R$ {i.t.toFixed(2)}</p>
                       <div className="flex items-center gap-1.5 bg-white border rounded-lg p-0.5">
-                        <button onClick={() => updateQuantity(i.id, -1)} className="w-5 h-5 flex items-center justify-center text-slate-600"><Minus className="w-3 h-3" /></button>
+                        <button
+                          onClick={() => updateQuantity(i.id, -1)}
+                          className="w-5 h-5 flex items-center justify-center text-slate-600"
+                        >
+                          <Minus className="w-3 h-3" />
+                        </button>
                         <input
                           type="number"
                           min="0"
@@ -841,10 +961,16 @@ function ParceiroPDV() {
                           value={i.q}
                           onChange={(e) => setQuantity(i.id, e.target.value)}
                           onBlur={(e) => {
-                            if (e.target.value === "" || parseInt(e.target.value) <= 0) removeFromCart(i.id);
+                            if (e.target.value === "" || parseInt(e.target.value) <= 0)
+                              removeFromCart(i.id);
                           }}
                         />
-                        <button onClick={() => updateQuantity(i.id, 1)} className="w-5 h-5 flex items-center justify-center text-slate-600"><Plus className="w-3 h-3" /></button>
+                        <button
+                          onClick={() => updateQuantity(i.id, 1)}
+                          className="w-5 h-5 flex items-center justify-center text-slate-600"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -852,23 +978,38 @@ function ParceiroPDV() {
               )}
             </div>
             <div className="p-4 border-t bg-slate-50">
-               <div className="flex justify-between items-center mb-2">
-                 <span className="text-sm font-semibold text-slate-600">Subtotal</span>
-                 <span className="font-bold text-slate-800">R$ {rawSubtotal.toFixed(2)}</span>
-               </div>
-               <Button onClick={() => { document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape'})); handleOpenClientModal(); }} disabled={cart.length === 0} className="w-full h-12 bg-gradient-brand text-white font-bold text-base shadow-lg shadow-brand/25">
-                 Avançar para Pagamento
-               </Button>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-semibold text-slate-600">Subtotal</span>
+                <span className="font-bold text-slate-800">R$ {rawSubtotal.toFixed(2)}</span>
+              </div>
+              <Button
+                onClick={() => {
+                  document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+                  handleOpenClientModal();
+                }}
+                disabled={cart.length === 0}
+                className="w-full h-12 bg-gradient-brand text-white font-bold text-base shadow-lg shadow-brand/25"
+              >
+                Avançar para Pagamento
+              </Button>
             </div>
           </SheetContent>
         </Sheet>
-        
+
         <div className="flex-1 flex flex-col items-center">
-           <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Total</span>
-           <span className="text-sm font-black text-emerald-600 font-display">R$ {subtotal.toFixed(2).replace(".", ",")}</span>
+          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+            Total
+          </span>
+          <span className="text-sm font-black text-emerald-600 font-display">
+            R$ {subtotal.toFixed(2).replace(".", ",")}
+          </span>
         </div>
 
-        <Button onClick={handleOpenClientModal} disabled={cart.length === 0} className="h-12 bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-4 sm:px-6 shadow-lg shadow-emerald-700/20 rounded-xl shrink-0 gap-2">
+        <Button
+          onClick={handleOpenClientModal}
+          disabled={cart.length === 0}
+          className="h-12 bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-4 sm:px-6 shadow-lg shadow-emerald-700/20 rounded-xl shrink-0 gap-2"
+        >
           FINALIZAR PEDIDO <ArrowRight className="w-4 h-4" />
         </Button>
       </div>
@@ -933,7 +1074,10 @@ function ParceiroPDV() {
                           telefone: clientForm.telefone,
                           endereco: `${clientForm.endereco || ""}${clientForm.numero ? `, ${clientForm.numero}` : ""}`,
                         },
-                        condicao_pagamento: clientForm.pagamento === "Boleto a Prazo" ? clientForm.condicaoBoleto || "Boleto a Prazo" : clientForm.pagamento,
+                        condicao_pagamento:
+                          clientForm.pagamento === "Boleto a Prazo"
+                            ? clientForm.condicaoBoleto || "Boleto a Prazo"
+                            : clientForm.pagamento,
                         vendedor_nome: vendedorInfo?.nome,
                       };
                       const itemsList = cart.map((i) => ({
@@ -1012,9 +1156,7 @@ function ParceiroPDV() {
                       )}
                     </Button>
                   </div>
-                  {cnpjErro && (
-                    <p className="text-xs text-destructive">{cnpjErro}</p>
-                  )}
+                  {cnpjErro && <p className="text-xs text-destructive">{cnpjErro}</p>}
                 </div>
                 <div className="grid gap-2">
                   <label className="text-sm font-medium">Telefone / WhatsApp</label>
@@ -1094,17 +1236,19 @@ function ParceiroPDV() {
                     <option>Boleto a Prazo</option>
                   </select>
                   {clientForm.pagamento === "Boleto a Prazo" && (
-                    <Input 
-                      placeholder="Ex: 30/60/90 Dias" 
+                    <Input
+                      placeholder="Ex: 30/60/90 Dias"
                       value={clientForm.condicaoBoleto}
-                      onChange={(e) => setClientForm({ ...clientForm, condicaoBoleto: e.target.value })}
+                      onChange={(e) =>
+                        setClientForm({ ...clientForm, condicaoBoleto: e.target.value })
+                      }
                       className="mt-1"
                     />
                   )}
                   <div className="mt-2">
                     <label className="text-sm font-medium">Aplicar Desconto (%)</label>
                     <div className="flex items-center mt-1 border rounded-md px-3 bg-white focus-within:ring-1 focus-within:ring-brand">
-                      <input 
+                      <input
                         type="number"
                         min="0"
                         max="100"
@@ -1172,7 +1316,6 @@ function ParceiroPDV() {
           </form>
         </DialogContent>
       </Dialog>
-
     </div>
   );
 }

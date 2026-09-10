@@ -2,7 +2,8 @@ import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, token, Target-Path",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, token, Target-Path",
   "Access-Control-Allow-Methods": "POST, GET, OPTIONS, PUT, DELETE",
 };
 
@@ -18,7 +19,7 @@ serve(async (req) => {
     }
 
     const token = req.headers.get("token") || "";
-    
+
     // Ler body apenas se houver
     let body = null;
     if (req.method !== "GET" && req.method !== "HEAD") {
@@ -31,7 +32,7 @@ serve(async (req) => {
       method: req.method,
       headers: {
         "Content-Type": "application/json",
-        "Token": token,
+        Token: token,
       },
       body: body || undefined,
     });

@@ -597,9 +597,7 @@ function Logistica() {
             ) : (
               vendas.map((v) => (
                 <TableRow key={v.id}>
-                  <TableCell className="font-mono text-xs">
-                    {v.numero_venda}
-                  </TableCell>
+                  <TableCell className="font-mono text-xs">{v.numero_venda}</TableCell>
                   <TableCell className="font-semibold">
                     {v.clientes?.nome || "Cliente não informado"}
                   </TableCell>

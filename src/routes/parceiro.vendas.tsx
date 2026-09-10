@@ -1,7 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabaseParceiro as supabase } from "@/lib/supabase";
-import { Loader2, PackageOpen, FileText, Search, X, Trash2, Download, Copy, Ban } from "lucide-react";
+import {
+  Loader2,
+  PackageOpen,
+  FileText,
+  Search,
+  X,
+  Trash2,
+  Download,
+  Copy,
+  Ban,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,7 +41,7 @@ function VendasParceiro() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
   const [sharingId, setSharingId] = useState<string | null>(null);
-  
+
   const [selectedVenda, setSelectedVenda] = useState<any>(null);
   const [vendaItens, setVendaItens] = useState<any[]>([]);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
@@ -63,26 +73,28 @@ function VendasParceiro() {
       setLoadingItens(false);
     }
   };
-  
+
   useEffect(() => {
     async function fetchVendas() {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         if (!session) return;
-        
+
         const { data: vendedor } = await supabase
           .from("vendedores")
           .select("id")
           .eq("user_id", session.user.id)
           .single();
-          
+
         if (vendedor) {
           const { data, error } = await supabase
             .from("vendas")
             .select("*, clientes(nome)")
             .eq("vendedor_id", vendedor.id)
             .order("created_at", { ascending: false });
-            
+
           if (data) setVendas(data);
         }
       } catch (err) {
@@ -95,33 +107,38 @@ function VendasParceiro() {
   }, []);
 
   const getStatusColor = (status: string) => {
-    switch(status?.toLowerCase()) {
-      case 'aprovado':
-      case 'aceito':
-      case 'pago':
-      case 'entregue':
-      case 'faturado':
-        return 'bg-emerald-100 text-emerald-800 border-emerald-200';
-      case 'pendente':
-        return 'bg-amber-100 text-amber-800 border-amber-200';
-      case 'rejeitado':
-      case 'cancelado':
-        return 'bg-rose-100 text-rose-800 border-rose-200';
+    switch (status?.toLowerCase()) {
+      case "aprovado":
+      case "aceito":
+      case "pago":
+      case "entregue":
+      case "faturado":
+        return "bg-emerald-100 text-emerald-800 border-emerald-200";
+      case "pendente":
+        return "bg-amber-100 text-amber-800 border-amber-200";
+      case "rejeitado":
+      case "cancelado":
+        return "bg-rose-100 text-rose-800 border-rose-200";
       default:
-        return 'bg-slate-100 text-slate-800 border-slate-200';
+        return "bg-slate-100 text-slate-800 border-slate-200";
     }
   };
 
   const deleteVenda = async (id: string, isDav: boolean = false) => {
     const label = isDav ? "orçamento" : "pedido";
-    if (!window.confirm(`Tem certeza que deseja excluir este ${label}? Essa ação não pode ser desfeita.`)) return;
-    
+    if (
+      !window.confirm(
+        `Tem certeza que deseja excluir este ${label}? Essa ação não pode ser desfeita.`,
+      )
+    )
+      return;
+
     try {
       // Exclui itens da venda primeiro para integridade referencial
       await supabase.from("vendas_itens").delete().eq("venda_id", id);
       const { error } = await supabase.from("vendas").delete().eq("id", id);
       if (error) throw error;
-      setVendas(prev => prev.filter(v => v.id !== id));
+      setVendas((prev) => prev.filter((v) => v.id !== id));
       if (selectedVenda?.id === id) {
         setSelectedVenda(null);
       }
@@ -140,38 +157,46 @@ function VendasParceiro() {
         .eq("id", id);
       if (error) throw error;
 
-      setVendas(prev =>
-        prev.map(v => (v.id === id ? { ...v, status: "Cancelado", status_aprovacao: "Cancelado" } : v))
+      setVendas((prev) =>
+        prev.map((v) =>
+          v.id === id ? { ...v, status: "Cancelado", status_aprovacao: "Cancelado" } : v,
+        ),
       );
       if (selectedVenda?.id === id) {
-        setSelectedVenda((prev: any) => (prev ? { ...prev, status: "Cancelado", status_aprovacao: "Cancelado" } : null));
+        setSelectedVenda((prev: any) =>
+          prev ? { ...prev, status: "Cancelado", status_aprovacao: "Cancelado" } : null,
+        );
       }
     } catch (err: any) {
       alert("Erro ao cancelar orçamento: " + err.message);
     }
   };
 
-  const filteredVendas = vendas.filter(v => {
+  const filteredVendas = vendas.filter((v) => {
     let matchesSearch = true;
     let matchesDate = true;
-    
+
     if (searchTerm) {
       const nome = (v.clientes?.nome || "").toLowerCase();
       matchesSearch = nome.includes(searchTerm.toLowerCase());
     }
-    
+
     if (selectedDate) {
       matchesDate = v.created_at.startsWith(selectedDate);
     }
-    
+
     return matchesSearch && matchesDate;
   });
 
   return (
     <div className="p-4 sm:p-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold font-display text-slate-800">Minhas Vendas</h1>
-        <p className="text-sm text-muted-foreground mt-1">Acompanhe o histórico e status dos seus pedidos.</p>
+        <h1 className="text-2xl sm:text-3xl font-bold font-display text-slate-800">
+          Minhas Vendas
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Acompanhe o histórico e status dos seus pedidos.
+        </p>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">
@@ -184,7 +209,10 @@ function VendasParceiro() {
             className="pl-9 pr-9 h-11 bg-white border-slate-200 rounded-xl"
           />
           {searchTerm && (
-            <button onClick={() => setSearchTerm("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+            <button
+              onClick={() => setSearchTerm("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+            >
               <X className="w-4 h-4" />
             </button>
           )}
@@ -207,7 +235,9 @@ function VendasParceiro() {
         <div className="text-center py-16 bg-white rounded-2xl border border-slate-100 shadow-sm">
           <PackageOpen className="w-12 h-12 text-slate-300 mx-auto mb-3" />
           <p className="font-semibold text-slate-600">Nenhuma venda encontrada</p>
-          <p className="text-sm text-muted-foreground">Suas vendas aparecerão aqui após você enviar um pedido no PDV.</p>
+          <p className="text-sm text-muted-foreground">
+            Suas vendas aparecerão aqui após você enviar um pedido no PDV.
+          </p>
         </div>
       ) : filteredVendas.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-2xl border border-slate-100 shadow-sm">
@@ -223,8 +253,8 @@ function VendasParceiro() {
             const isSharing = sharingId === v.id;
 
             return (
-              <div 
-                key={v.id} 
+              <div
+                key={v.id}
                 className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-3 cursor-pointer hover:border-brand/30 transition-all hover:shadow-md active:scale-[0.99]"
                 onClick={() => openDetails(v)}
               >
@@ -238,14 +268,24 @@ function VendasParceiro() {
                         {v.clientes?.nome || "Cliente não informado"}
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        <span className="font-semibold text-slate-700">{isDav ? "Orçamento" : "Pedido"} #{num}</span> • {new Date(v.created_at).toLocaleDateString('pt-BR')} às {new Date(v.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                        <span className="font-semibold text-slate-700">
+                          {isDav ? "Orçamento" : "Pedido"} #{num}
+                        </span>{" "}
+                        • {new Date(v.created_at).toLocaleDateString("pt-BR")} às{" "}
+                        {new Date(v.created_at).toLocaleTimeString("pt-BR", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     {isDav && v.status !== "Cancelado" && (
                       <button
-                        onClick={(e) => { e.stopPropagation(); cancelarOrcamento(v.id); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          cancelarOrcamento(v.id);
+                        }}
                         className="p-1.5 text-amber-600 hover:text-amber-800 hover:bg-amber-50 rounded-lg transition-colors"
                         title="Cancelar orçamento"
                       >
@@ -253,7 +293,10 @@ function VendasParceiro() {
                       </button>
                     )}
                     <button
-                      onClick={(e) => { e.stopPropagation(); deleteVenda(v.id, isDav); }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteVenda(v.id, isDav);
+                      }}
                       className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
                       title={isDav ? "Excluir orçamento" : "Excluir pedido"}
                     >
@@ -261,22 +304,33 @@ function VendasParceiro() {
                     </button>
                   </div>
                 </div>
-                
+
                 <div className="border-t border-dashed my-0.5 border-slate-200"></div>
-                
+
                 <div className="flex justify-between items-end">
                   <div>
-                    <p className="text-[10px] uppercase font-semibold text-muted-foreground">Valor Total</p>
-                    <p className="font-black text-brand text-lg">R$ {Number(v.valor_total || 0).toFixed(2).replace('.', ',')}</p>
+                    <p className="text-[10px] uppercase font-semibold text-muted-foreground">
+                      Valor Total
+                    </p>
+                    <p className="font-black text-brand text-lg">
+                      R${" "}
+                      {Number(v.valor_total || 0)
+                        .toFixed(2)
+                        .replace(".", ",")}
+                    </p>
                   </div>
                   <div className="flex flex-col items-end gap-1">
                     {v.status_aprovacao && (
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${getStatusColor(v.status_aprovacao)}`}>
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded border ${getStatusColor(v.status_aprovacao)}`}
+                      >
                         Aprovação: {v.status_aprovacao}
                       </span>
                     )}
                     {v.status && v.status !== v.status_aprovacao && (
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${getStatusColor(v.status)}`}>
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded border ${getStatusColor(v.status)}`}
+                      >
                         {isDav ? "Orçamento" : "Pedido"}: {v.status}
                       </span>
                     )}
@@ -330,8 +384,9 @@ function VendasParceiro() {
             </DialogTitle>
             <DialogDescription asChild>
               <div>
-                {isOrderDav(selectedVenda || {}) ? "Orçamento" : "Pedido"} #{getOrderNumber(selectedVenda || {})} •{" "}
-                {selectedVenda && new Date(selectedVenda.created_at).toLocaleDateString('pt-BR')}
+                {isOrderDav(selectedVenda || {}) ? "Orçamento" : "Pedido"} #
+                {getOrderNumber(selectedVenda || {})} •{" "}
+                {selectedVenda && new Date(selectedVenda.created_at).toLocaleDateString("pt-BR")}
                 {selectedVenda?.clientes?.nome && (
                   <div className="mt-3 text-sm text-slate-700 bg-slate-100 p-3 rounded-xl border border-slate-200 text-left">
                     <p className="font-semibold text-slate-900 flex items-center gap-2">
@@ -368,12 +423,13 @@ function VendasParceiro() {
                               {item.produto?.nome || "Produto Excluído"}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              {item.quantidade}x R$ {Number(item.valor_unitario).toFixed(2).replace('.', ',')}
+                              {item.quantidade}x R${" "}
+                              {Number(item.valor_unitario).toFixed(2).replace(".", ",")}
                             </p>
                           </div>
                         </div>
                         <p className="font-bold text-brand">
-                          R$ {Number(item.subtotal).toFixed(2).replace('.', ',')}
+                          R$ {Number(item.subtotal).toFixed(2).replace(".", ",")}
                         </p>
                       </div>
                     ))
@@ -382,12 +438,15 @@ function VendasParceiro() {
                 <div className="flex justify-between items-center p-4 bg-slate-100 rounded-xl">
                   <span className="font-semibold text-slate-700">Total do Pedido:</span>
                   <span className="text-xl font-bold font-display text-slate-900">
-                    R$ {Number(selectedVenda?.valor_total || 0).toFixed(2).replace('.', ',')}
+                    R${" "}
+                    {Number(selectedVenda?.valor_total || 0)
+                      .toFixed(2)
+                      .replace(".", ",")}
                   </span>
                 </div>
               </div>
             )}
-            
+
             {!loadingItens && selectedVenda && (
               <div className="pt-4 space-y-2.5">
                 {/* Botão principal de WhatsApp com PDF */}
@@ -433,7 +492,9 @@ function VendasParceiro() {
                     variant="secondary"
                     className="w-full h-10 font-bold border border-slate-200 rounded-xl flex items-center justify-center gap-1.5 text-xs text-slate-700"
                     onClick={() => {
-                      const itemsMagic = vendaItens.map(i => `${i.produto_id}:${i.quantidade}`).join(',');
+                      const itemsMagic = vendaItens
+                        .map((i) => `${i.produto_id}:${i.quantidade}`)
+                        .join(",");
                       window.location.href = `/parceiro/pdv?c=${itemsMagic}`;
                     }}
                   >
@@ -484,7 +545,6 @@ function VendasParceiro() {
           </div>
         </DialogContent>
       </Dialog>
-
     </div>
   );
 }

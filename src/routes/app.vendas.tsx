@@ -47,7 +47,7 @@ function Vendas() {
   const [openSheet, setOpenSheet] = useState(false);
   const [vendaItens, setVendaItens] = useState<any[]>([]);
   const [loadingItens, setLoadingItens] = useState(false);
-  
+
   const [isEditingTotal, setIsEditingTotal] = useState(false);
   const [newTotalValue, setNewTotalValue] = useState("");
 
@@ -197,7 +197,7 @@ function Vendas() {
 
       if (selectedVenda?.id === venda.id) {
         setSelectedVenda((prev: any) =>
-          prev ? { ...prev, status: "Cancelado", status_aprovacao: "Cancelado" } : null
+          prev ? { ...prev, status: "Cancelado", status_aprovacao: "Cancelado" } : null,
         );
       }
       fetchVendas();
@@ -239,15 +239,23 @@ function Vendas() {
       return;
     }
     try {
-      const { error: err1 } = await supabase.from("vendas").update({ valor_total: val }).eq("id", selectedVenda.id);
+      const { error: err1 } = await supabase
+        .from("vendas")
+        .update({ valor_total: val })
+        .eq("id", selectedVenda.id);
       if (err1) throw err1;
-      
+
       // Also update contas_receber if it exists
-      const { error: err2 } = await supabase.from("contas_receber").update({ valor: val }).eq("venda_id", selectedVenda.id);
+      const { error: err2 } = await supabase
+        .from("contas_receber")
+        .update({ valor: val })
+        .eq("venda_id", selectedVenda.id);
       if (err2) throw err2;
-      
+
       setSelectedVenda((prev: any) => ({ ...prev, valor_total: val }));
-      setVendas((prev) => prev.map((v) => (v.id === selectedVenda.id ? { ...v, valor_total: val } : v)));
+      setVendas((prev) =>
+        prev.map((v) => (v.id === selectedVenda.id ? { ...v, valor_total: val } : v)),
+      );
       setIsEditingTotal(false);
     } catch (err: any) {
       alert("Erro ao atualizar valor: " + err.message);
@@ -324,20 +332,31 @@ function Vendas() {
                   className="cursor-pointer hover:bg-muted/50"
                   onClick={() => handleOpenDetails(v)}
                 >
-                  <TableCell className="font-mono text-xs">
-                    {v.numero_venda}
-                  </TableCell>
+                  <TableCell className="font-mono text-xs">{v.numero_venda}</TableCell>
                   <TableCell>
                     <Badge variant="outline">{v.tipo}</Badge>
                   </TableCell>
                   <TableCell className="font-semibold">
                     {v.cliente_id ? v.clientes?.nome || "Cliente Removido" : "Venda Avulsa"}
                   </TableCell>
-                  <TableCell className="text-xs text-muted-foreground max-w-[120px] truncate" title={v.metodo_pagamento || "Dinheiro / Pix" + (v.condicao_pagamento ? ` - ${v.condicao_pagamento}` : "")}>
-                    <span className="font-semibold text-foreground">{v.metodo_pagamento || "Não info."}</span>
-                    {v.condicao_pagamento && v.condicao_pagamento !== "Dinheiro / Pix" && v.condicao_pagamento !== "Cartão de Crédito" && v.condicao_pagamento !== "Cartão de Débito" && (
-                      <span className="ml-1 text-[10px] text-muted-foreground">- {v.condicao_pagamento}</span>
-                    )}
+                  <TableCell
+                    className="text-xs text-muted-foreground max-w-[120px] truncate"
+                    title={
+                      v.metodo_pagamento ||
+                      "Dinheiro / Pix" + (v.condicao_pagamento ? ` - ${v.condicao_pagamento}` : "")
+                    }
+                  >
+                    <span className="font-semibold text-foreground">
+                      {v.metodo_pagamento || "Não info."}
+                    </span>
+                    {v.condicao_pagamento &&
+                      v.condicao_pagamento !== "Dinheiro / Pix" &&
+                      v.condicao_pagamento !== "Cartão de Crédito" &&
+                      v.condicao_pagamento !== "Cartão de Débito" && (
+                        <span className="ml-1 text-[10px] text-muted-foreground">
+                          - {v.condicao_pagamento}
+                        </span>
+                      )}
                   </TableCell>
                   <TableCell>{new Date(v.created_at).toLocaleDateString()}</TableCell>
                   <TableCell className="text-right font-semibold">
@@ -438,10 +457,20 @@ function Vendas() {
                       onChange={(e) => setNewTotalValue(e.target.value)}
                       className="w-24 border-b border-dashed border-slate-400 outline-none bg-transparent font-semibold"
                     />
-                    <Button size="icon" variant="ghost" className="h-6 w-6 text-success" onClick={handleSaveTotal}>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-6 w-6 text-success"
+                      onClick={handleSaveTotal}
+                    >
                       <Check className="h-4 w-4" />
                     </Button>
-                    <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => setIsEditingTotal(false)}>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-6 w-6 text-destructive"
+                      onClick={() => setIsEditingTotal(false)}
+                    >
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
@@ -453,7 +482,12 @@ function Vendas() {
                         minimumFractionDigits: 2,
                       })}
                     </span>
-                    <Button size="icon" variant="ghost" className="h-6 w-6 opacity-40 hover:opacity-100" onClick={handleEditTotal}>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-6 w-6 opacity-40 hover:opacity-100"
+                      onClick={handleEditTotal}
+                    >
                       <Pencil className="h-3 w-3" />
                     </Button>
                   </div>
@@ -480,7 +514,11 @@ function Vendas() {
                       <div className="flex items-center gap-3">
                         <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-md bg-accent text-lg">
                           {item.produtos?.imagem ? (
-                            <img src={item.produtos.imagem} alt={item.produtos.nome} className="h-full w-full object-cover" />
+                            <img
+                              src={item.produtos.imagem}
+                              alt={item.produtos.nome}
+                              className="h-full w-full object-cover"
+                            />
                           ) : (
                             <span className="opacity-50">📦</span>
                           )}
@@ -536,7 +574,9 @@ function Vendas() {
                 variant="secondary"
                 className="w-full font-bold border border-slate-200"
                 onClick={() => {
-                  const itemsMagic = vendaItens.map(i => `${i.produto_id}:${i.quantidade}`).join(',');
+                  const itemsMagic = vendaItens
+                    .map((i) => `${i.produto_id}:${i.quantidade}`)
+                    .join(",");
                   window.location.href = `/app/pdv?c=${itemsMagic}`;
                 }}
               >

@@ -58,7 +58,9 @@ function LoginParceiro() {
       }
     } catch (err: any) {
       if (err.message === "Email not confirmed") {
-        setError("Por favor, confirme seu e-mail (verifique a caixa de entrada) antes de fazer login.");
+        setError(
+          "Por favor, confirme seu e-mail (verifique a caixa de entrada) antes de fazer login.",
+        );
       } else if (err.message === "Invalid login credentials") {
         setError("E-mail ou senha incorretos.");
       } else {

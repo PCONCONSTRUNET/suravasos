@@ -11,7 +11,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Trash2, X, Building2, Phone, MapPin, CreditCard, ShoppingCart, DollarSign } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  X,
+  Building2,
+  Phone,
+  MapPin,
+  CreditCard,
+  ShoppingCart,
+  DollarSign,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useConfirm } from "@/contexts/ConfirmContext";
@@ -82,7 +92,9 @@ function Fornecedores() {
 
       <div className="flex gap-4 items-start">
         {/* Tabela */}
-        <Card className={`shadow-card overflow-x-auto transition-all duration-300 ${selected ? "flex-1" : "w-full"}`}>
+        <Card
+          className={`shadow-card overflow-x-auto transition-all duration-300 ${selected ? "flex-1" : "w-full"}`}
+        >
           <Table>
             <TableHeader>
               <TableRow>
@@ -121,9 +133,15 @@ function Fornecedores() {
                       {d.ultima_compra ? new Date(d.ultima_compra).toLocaleDateString() : "-"}
                     </TableCell>
                     <TableCell className="text-right font-semibold">
-                      R$ {Number(d.valor_total || 0).toFixed(2).replace(".", ",")}
+                      R${" "}
+                      {Number(d.valor_total || 0)
+                        .toFixed(2)
+                        .replace(".", ",")}
                     </TableCell>
-                    <TableCell className="text-right" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                    <TableCell
+                      className="text-right"
+                      onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                    >
                       <Button
                         size="icon"
                         variant="ghost"
@@ -154,24 +172,40 @@ function Fornecedores() {
                   <p className="text-xs text-muted-foreground">Fornecedor</p>
                 </div>
               </div>
-              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setSelected(null)}>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7"
+                onClick={() => setSelected(null)}
+              >
                 <X className="h-4 w-4" />
               </Button>
             </div>
 
             {/* Informações */}
             <div className="p-5 space-y-4">
-
               {selected.cpf_cnpj && (
-                <InfoRow icon={<CreditCard className="h-4 w-4" />} label="CPF / CNPJ" value={selected.cpf_cnpj} />
+                <InfoRow
+                  icon={<CreditCard className="h-4 w-4" />}
+                  label="CPF / CNPJ"
+                  value={selected.cpf_cnpj}
+                />
               )}
 
               {selected.contato && (
-                <InfoRow icon={<Building2 className="h-4 w-4" />} label="Contato" value={selected.contato} />
+                <InfoRow
+                  icon={<Building2 className="h-4 w-4" />}
+                  label="Contato"
+                  value={selected.contato}
+                />
               )}
 
               {selected.telefone && (
-                <InfoRow icon={<Phone className="h-4 w-4" />} label="Telefone" value={selected.telefone} />
+                <InfoRow
+                  icon={<Phone className="h-4 w-4" />}
+                  label="Telefone"
+                  value={selected.telefone}
+                />
               )}
 
               {(selected.cidade || selected.endereco) && (
@@ -187,7 +221,10 @@ function Fornecedores() {
                   <DollarSign className="h-4 w-4 mx-auto mb-1 text-primary" />
                   <p className="text-xs text-muted-foreground">Total Movimentado</p>
                   <p className="font-bold text-sm">
-                    R$ {Number(selected.valor_total || 0).toFixed(2).replace(".", ",")}
+                    R${" "}
+                    {Number(selected.valor_total || 0)
+                      .toFixed(2)
+                      .replace(".", ",")}
                   </p>
                 </div>
                 <div className="rounded-lg bg-muted/50 p-3 text-center">
@@ -202,7 +239,8 @@ function Fornecedores() {
               </div>
 
               <p className="text-xs text-muted-foreground text-center">
-                Cadastrado em {selected.created_at
+                Cadastrado em{" "}
+                {selected.created_at
                   ? new Date(selected.created_at).toLocaleDateString("pt-BR")
                   : "—"}
               </p>
@@ -214,7 +252,11 @@ function Fornecedores() {
   );
 }
 
-interface InfoRowProps { icon: React.ReactNode; label: string; value: string; }
+interface InfoRowProps {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}
 function InfoRow({ icon, label, value }: InfoRowProps) {
   return (
     <div className="flex items-start gap-3">

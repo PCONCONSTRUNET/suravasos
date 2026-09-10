@@ -93,7 +93,6 @@ function ParceiroLayout() {
 
   return (
     <div className="flex min-h-screen bg-slate-50">
-
       {/* ── SIDEBAR DESKTOP (≥ lg) ── */}
       <aside className="hidden lg:flex flex-col w-60 min-h-screen bg-white border-r shadow-sm sticky top-0 h-screen">
         <div className="flex items-center justify-center h-16 border-b px-4">
@@ -187,7 +186,6 @@ function ParceiroLayout() {
 
       {/* ── MAIN CONTENT ── */}
       <div className="flex flex-col flex-1 min-w-0">
-
         {/* Mobile Header com botão ☰ */}
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-white shadow-sm px-4 lg:hidden">
           <button

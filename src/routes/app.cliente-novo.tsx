@@ -49,12 +49,8 @@ function NovoCliente() {
     if (id) {
       const fetchCliente = async () => {
         try {
-          const { data, error } = await supabase
-            .from("clientes")
-            .select("*")
-            .eq("id", id)
-            .single();
-          
+          const { data, error } = await supabase.from("clientes").select("*").eq("id", id).single();
+
           if (error) throw error;
           if (data) {
             let parsedEndereco = data.logradouro || data.endereco || "";
@@ -82,7 +78,7 @@ function NovoCliente() {
                   newEnderecoParts.push(part);
                 }
               }
-              
+
               if (foundConcat) {
                 parsedEndereco = newEnderecoParts.join(", ");
               }
@@ -92,7 +88,7 @@ function NovoCliente() {
               nome: data.nome || "",
               cpf_cnpj: data.cpf_cnpj || "",
               telefone: data.telefone || "",
-              cep: parsedCep, 
+              cep: parsedCep,
               endereco: parsedEndereco,
               numero: parsedNumero,
               bairro: parsedBairro,
@@ -142,9 +138,7 @@ function NovoCliente() {
         return;
       }
       const data = await res.json();
-      const telefone = data.ddd_telefone_1
-        ? formatTelefone(data.ddd_telefone_1)
-        : cliente.telefone;
+      const telefone = data.ddd_telefone_1 ? formatTelefone(data.ddd_telefone_1) : cliente.telefone;
       const cepLimpo = data.cep ? data.cep.replace(/\D/g, "") : "";
       const tipoLogradouro = data.descricao_tipo_de_logradouro
         ? data.descricao_tipo_de_logradouro + " "
@@ -220,7 +214,11 @@ function NovoCliente() {
     <>
       <PageHeader
         title={isEditing ? "Editar Cliente" : "Novo Cliente"}
-        subtitle={isEditing ? "Altere os dados do cliente selecionado" : "Cadastre um novo cliente no sistema"}
+        subtitle={
+          isEditing
+            ? "Altere os dados do cliente selecionado"
+            : "Cadastre um novo cliente no sistema"
+        }
         actions={
           <>
             <Button variant="outline" asChild>
@@ -233,7 +231,8 @@ function NovoCliente() {
               onClick={handleSalvar}
               disabled={loading}
             >
-              <Save className="mr-2 h-4 w-4" /> {loading ? "Salvando..." : (isEditing ? "Salvar Alterações" : "Salvar Cliente")}
+              <Save className="mr-2 h-4 w-4" />{" "}
+              {loading ? "Salvando..." : isEditing ? "Salvar Alterações" : "Salvar Cliente"}
             </Button>
           </>
         }
@@ -276,9 +275,7 @@ function NovoCliente() {
                   )}
                 </Button>
               </div>
-              {cnpjErro && (
-                <p className="text-xs text-destructive mt-1">{cnpjErro}</p>
-              )}
+              {cnpjErro && <p className="text-xs text-destructive mt-1">{cnpjErro}</p>}
             </div>
           </div>
 

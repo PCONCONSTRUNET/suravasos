@@ -223,9 +223,7 @@ function VendasParceiros() {
                   onClick={() => openSaleDetails(v)}
                 >
                   <TableCell>
-                    <p className="font-mono text-xs font-medium">
-                      #{v.numero_venda}
-                    </p>
+                    <p className="font-mono text-xs font-medium">#{v.numero_venda}</p>
                     <p className="text-xs text-muted-foreground">
                       {new Date(v.created_at).toLocaleDateString()}
                     </p>

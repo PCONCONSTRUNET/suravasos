@@ -48,7 +48,17 @@ function NovoDAV() {
   const [loading, setLoading] = useState(false);
   const [isFetchingInfo, setIsFetchingInfo] = useState(isEditing);
 
-  const [cliente, setCliente] = useState({ nome: "", cnpj: "", cep: "", endereco: "", numero: "", bairro: "", cidade: "", uf: "", telefone: "" });
+  const [cliente, setCliente] = useState({
+    nome: "",
+    cnpj: "",
+    cep: "",
+    endereco: "",
+    numero: "",
+    bairro: "",
+    cidade: "",
+    uf: "",
+    telefone: "",
+  });
   const [emissor, setEmissor] = useState({
     nome: "GARDEN PRIME",
     cnpj: "",
@@ -64,7 +74,16 @@ function NovoDAV() {
   const [observacoes, setObservacoes] = useState("");
 
   const [itens, setItens] = useState<
-    { id: number; produto_id?: string; codigo: string; produto: string; qtd: number; vlrUnit: number; openSearch: boolean; imagem?: string }[]
+    {
+      id: number;
+      produto_id?: string;
+      codigo: string;
+      produto: string;
+      qtd: number;
+      vlrUnit: number;
+      openSearch: boolean;
+      imagem?: string;
+    }[]
   >([]);
   const [descontoValor, setDescontoValor] = useState(0);
   const [freteValor, setFreteValor] = useState(0);
@@ -89,7 +108,18 @@ function NovoDAV() {
   };
 
   const addItem = () =>
-    setItens([...itens, { id: Date.now(), codigo: "", produto: "", qtd: 1, vlrUnit: 0, openSearch: false, imagem: "" }]);
+    setItens([
+      ...itens,
+      {
+        id: Date.now(),
+        codigo: "",
+        produto: "",
+        qtd: 1,
+        vlrUnit: 0,
+        openSearch: false,
+        imagem: "",
+      },
+    ]);
 
   const removeItem = (id: number) => setItens(itens.filter((i) => i.id !== id));
 
@@ -167,18 +197,30 @@ function NovoDAV() {
           if (itensError) throw itensError;
 
           if (davItens && davItens.length > 0) {
-            setItens(davItens.map((i: any, idx: number) => ({
-              id: Date.now() + idx,
-              produto_id: i.produto_id || undefined,
-              codigo: i.codigo || "",
-              produto: i.produto || "",
-              qtd: i.qtd,
-              vlrUnit: Number(i.valor_unitario),
-              openSearch: false,
-              imagem: i.produtos?.imagem || "",
-            })));
+            setItens(
+              davItens.map((i: any, idx: number) => ({
+                id: Date.now() + idx,
+                produto_id: i.produto_id || undefined,
+                codigo: i.codigo || "",
+                produto: i.produto || "",
+                qtd: i.qtd,
+                vlrUnit: Number(i.valor_unitario),
+                openSearch: false,
+                imagem: i.produtos?.imagem || "",
+              })),
+            );
           } else {
-            setItens([{ id: Date.now(), codigo: "", produto: "", qtd: 1, vlrUnit: 0, openSearch: false, imagem: "" }]);
+            setItens([
+              {
+                id: Date.now(),
+                codigo: "",
+                produto: "",
+                qtd: 1,
+                vlrUnit: 0,
+                openSearch: false,
+                imagem: "",
+              },
+            ]);
           }
         } catch (err: any) {
           console.error(err);
@@ -232,12 +274,18 @@ function NovoDAV() {
 
       if (!cartMagic) {
         if (itens.length === 0) {
-          setItens([{ id: Date.now(), codigo: "", produto: "", qtd: 1, vlrUnit: 0, openSearch: false }]);
+          setItens([
+            { id: Date.now(), codigo: "", produto: "", qtd: 1, vlrUnit: 0, openSearch: false },
+          ]);
         }
         return;
       }
 
-      const { data: produtosData } = await supabase.from("produtos").select("*").eq("status", "Ativo").order("nome");
+      const { data: produtosData } = await supabase
+        .from("produtos")
+        .select("*")
+        .eq("status", "Ativo")
+        .order("nome");
       if (produtosData) {
         setProdutos(produtosData);
         const parsedItens: any[] = [];
@@ -247,23 +295,33 @@ function NovoDAV() {
           const qty = parseInt(qStr) || 1;
           const prod = produtosData.find((p) => p.id === id);
           if (prod) {
-              parsedItens.push({
-                id: Date.now() + index,
-                produto_id: prod.id,
-                codigo: prod.codigo || "",
-                produto: prod.nome,
-                qtd: qty,
-                vlrUnit: Number(prod.valor),
-                openSearch: false,
-                imagem: prod.imagem,
-              });
+            parsedItens.push({
+              id: Date.now() + index,
+              produto_id: prod.id,
+              codigo: prod.codigo || "",
+              produto: prod.nome,
+              qtd: qty,
+              vlrUnit: Number(prod.valor),
+              openSearch: false,
+              imagem: prod.imagem,
+            });
           }
         });
         if (parsedItens.length > 0) {
           setItens(parsedItens);
           window.history.replaceState({}, "", "/app/dav-novo");
         } else if (itens.length === 0) {
-          setItens([{ id: Date.now(), codigo: "", produto: "", qtd: 1, vlrUnit: 0, openSearch: false, imagem: "" }]);
+          setItens([
+            {
+              id: Date.now(),
+              codigo: "",
+              produto: "",
+              qtd: 1,
+              vlrUnit: 0,
+              openSearch: false,
+              imagem: "",
+            },
+          ]);
         }
       }
     };
@@ -295,18 +353,22 @@ function NovoDAV() {
         if (existingClient && existingClient.length > 0) {
           cliente_id = existingClient[0].id;
         } else {
-          const { data: newClient } = await supabase.from("clientes").insert({
-            nome: cliente.nome,
-            cpf_cnpj: cliente.cnpj,
-            telefone: cliente.telefone,
-            cep: cliente.cep,
-            endereco: cliente.endereco,
-            numero: cliente.numero,
-            bairro: cliente.bairro,
-            cidade: cliente.cidade,
-            uf: cliente.uf,
-            status: "Ativo"
-          }).select("id").single();
+          const { data: newClient } = await supabase
+            .from("clientes")
+            .insert({
+              nome: cliente.nome,
+              cpf_cnpj: cliente.cnpj,
+              telefone: cliente.telefone,
+              cep: cliente.cep,
+              endereco: cliente.endereco,
+              numero: cliente.numero,
+              bairro: cliente.bairro,
+              cidade: cliente.cidade,
+              uf: cliente.uf,
+              status: "Ativo",
+            })
+            .select("id")
+            .single();
           if (newClient) cliente_id = newClient.id;
         }
       }
@@ -350,7 +412,10 @@ function NovoDAV() {
         // NOVO: insere o DAV
         const { data: dav, error: davError } = await supabase
           .from("davs")
-          .insert({ ...davPayload, validade: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() })
+          .insert({
+            ...davPayload,
+            validade: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          })
           .select("id")
           .single();
         if (davError) throw davError;
@@ -389,14 +454,19 @@ function NovoDAV() {
     <>
       <PageHeader
         title={isEditing ? "Editar Orçamento (DAV)" : "Novo Orçamento (DAV)"}
-        subtitle={isEditing ? "Atualize os dados do orçamento" : "Preencha os dados para gerar um Documento Auxiliar de Venda"}
+        subtitle={
+          isEditing
+            ? "Atualize os dados do orçamento"
+            : "Preencha os dados para gerar um Documento Auxiliar de Venda"
+        }
         actions={
           <Button
             className="bg-gradient-brand text-primary-foreground"
             onClick={handleSalvar}
             disabled={loading}
           >
-            <Save className="mr-2 h-4 w-4" /> {loading ? "Salvando..." : isEditing ? "Salvar Alterações" : "Salvar DAV"}
+            <Save className="mr-2 h-4 w-4" />{" "}
+            {loading ? "Salvando..." : isEditing ? "Salvar Alterações" : "Salvar DAV"}
           </Button>
         }
       />
@@ -406,7 +476,12 @@ function NovoDAV() {
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b pb-2">
               <h3 className="font-semibold">Dados do Cliente (Comprador)</h3>
-              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setIsClientModalOpen(true)}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => setIsClientModalOpen(true)}
+              >
                 <Search className="mr-1 h-3 w-3" /> Buscar
               </Button>
             </div>
@@ -586,7 +661,11 @@ function NovoDAV() {
                   <TableRow key={i.id}>
                     <TableCell className="w-12 pr-0">
                       <div className="h-8 w-8 rounded bg-muted overflow-hidden relative flex items-center justify-center text-xs">
-                        {i.imagem ? <img src={i.imagem} alt="" className="object-cover w-full h-full" /> : "📦"}
+                        {i.imagem ? (
+                          <img src={i.imagem} alt="" className="object-cover w-full h-full" />
+                        ) : (
+                          "📦"
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -601,7 +680,7 @@ function NovoDAV() {
                         open={i.openSearch}
                         onOpenChange={(open) =>
                           setItens((prev) =>
-                            prev.map((it) => (it.id === i.id ? { ...it, openSearch: open } : it))
+                            prev.map((it) => (it.id === i.id ? { ...it, openSearch: open } : it)),
                           )
                         }
                       >
@@ -611,7 +690,7 @@ function NovoDAV() {
                             role="combobox"
                             className={cn(
                               "h-8 w-full justify-between font-normal px-2 text-sm",
-                              !i.produto && "text-muted-foreground"
+                              !i.produto && "text-muted-foreground",
                             )}
                           >
                             <span className="truncate">{i.produto || "Buscar produto..."}</span>
@@ -641,22 +720,30 @@ function NovoDAV() {
                                                 openSearch: false,
                                                 imagem: p.imagem,
                                               }
-                                            : it
-                                        )
+                                            : it,
+                                        ),
                                       );
                                     }}
                                   >
                                     <Check
                                       className={cn(
                                         "mr-2 h-4 w-4",
-                                        i.produto === p.nome ? "opacity-100" : "opacity-0"
+                                        i.produto === p.nome ? "opacity-100" : "opacity-0",
                                       )}
                                     />
                                     <div className="flex flex-col">
                                       <span className="font-medium">{p.nome}</span>
                                       <span className="text-xs text-muted-foreground flex items-center gap-2 mt-0.5">
-                                        {p.imagem && <img src={p.imagem} className="h-5 w-5 rounded object-cover" />}
-                                        <span>{p.codigo ? `Cód: ${p.codigo} · ` : ""}R$ {Number(p.valor).toFixed(2)}</span>
+                                        {p.imagem && (
+                                          <img
+                                            src={p.imagem}
+                                            className="h-5 w-5 rounded object-cover"
+                                          />
+                                        )}
+                                        <span>
+                                          {p.codigo ? `Cód: ${p.codigo} · ` : ""}R${" "}
+                                          {Number(p.valor).toFixed(2)}
+                                        </span>
                                       </span>
                                     </div>
                                   </CommandItem>
@@ -758,17 +845,17 @@ function NovoDAV() {
             <DialogDescription>Selecione um cliente já cadastrado no sistema.</DialogDescription>
           </DialogHeader>
           <div className="mt-4">
-            <Input 
-              placeholder="Buscar por nome..." 
+            <Input
+              placeholder="Buscar por nome..."
               value={clientSearch}
               onChange={(e) => handleSearchClients(e.target.value)}
               className="mb-4"
             />
             <div className="max-h-60 overflow-y-auto space-y-2">
-              {clientesBuscaLista.map(c => (
-                <Button 
-                  key={c.id} 
-                  variant="outline" 
+              {clientesBuscaLista.map((c) => (
+                <Button
+                  key={c.id}
+                  variant="outline"
                   className="w-full justify-start h-auto py-3"
                   onClick={() => {
                     setCliente({
@@ -780,7 +867,7 @@ function NovoDAV() {
                       bairro: c.bairro || "",
                       cidade: c.cidade || "",
                       uf: c.uf || "",
-                      telefone: c.telefone || ""
+                      telefone: c.telefone || "",
                     });
                     setIsClientModalOpen(false);
                     setClientSearch("");
@@ -789,12 +876,16 @@ function NovoDAV() {
                 >
                   <div className="flex flex-col items-start">
                     <span className="font-semibold">{c.nome}</span>
-                    {c.cpf_cnpj && <span className="text-xs text-muted-foreground">{c.cpf_cnpj}</span>}
+                    {c.cpf_cnpj && (
+                      <span className="text-xs text-muted-foreground">{c.cpf_cnpj}</span>
+                    )}
                   </div>
                 </Button>
               ))}
               {clientSearch && clientesBuscaLista.length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-4">Nenhum cliente encontrado.</p>
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  Nenhum cliente encontrado.
+                </p>
               )}
             </div>
           </div>

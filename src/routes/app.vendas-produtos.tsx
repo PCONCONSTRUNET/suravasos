@@ -89,7 +89,7 @@ function VendasProdutos() {
 
   const handleSave = async (id: string) => {
     try {
-      const p = products.find(prod => prod.id === id);
+      const p = products.find((prod) => prod.id === id);
       if (!p) return;
 
       const vs = p.vendas_sistema || 0;
@@ -99,13 +99,12 @@ function VendasProdutos() {
         .from("produtos")
         .update({ quantidade_vendas: novo_ajuste })
         .eq("id", id);
-      
+
       if (error) throw error;
-      
+
       toast.success("Quantidade atualizada com sucesso!");
       setEditingId(null);
       fetchProductsAndSales();
-
     } catch (err: any) {
       toast.error("Erro ao salvar: " + err.message);
     }
@@ -122,8 +121,8 @@ function VendasProdutos() {
   const totalVendasGlobais = products.reduce((acc, p) => acc + (p.total_calculado || 0), 0);
 
   const toggleSelection = (id: string) => {
-    setSelectedProducts((prev) => 
-      prev.includes(id) ? prev.filter((pId) => pId !== id) : [...prev, id]
+    setSelectedProducts((prev) =>
+      prev.includes(id) ? prev.filter((pId) => pId !== id) : [...prev, id],
     );
   };
 
@@ -131,7 +130,7 @@ function VendasProdutos() {
     if (selectedProducts.length === filteredProducts.length && filteredProducts.length > 0) {
       setSelectedProducts([]);
     } else {
-      setSelectedProducts(filteredProducts.map(p => p.id));
+      setSelectedProducts(filteredProducts.map((p) => p.id));
     }
   };
 
@@ -147,7 +146,7 @@ function VendasProdutos() {
           </Button>
         }
       />
-      
+
       <div className="grid gap-4 sm:grid-cols-3 mb-6 print:hidden">
         <Card className="shadow-card">
           <CardContent className="p-5">
@@ -158,7 +157,9 @@ function VendasProdutos() {
         <Card className="shadow-card">
           <CardContent className="p-5">
             <p className="text-sm text-muted-foreground">Vendas Globais</p>
-            <p className="mt-1 font-display text-2xl font-bold text-success">{totalVendasGlobais}</p>
+            <p className="mt-1 font-display text-2xl font-bold text-success">
+              {totalVendasGlobais}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -195,10 +196,13 @@ function VendasProdutos() {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-12 print:hidden">
-                  <input 
+                  <input
                     type="checkbox"
                     className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
-                    checked={filteredProducts.length > 0 && selectedProducts.length === filteredProducts.length}
+                    checked={
+                      filteredProducts.length > 0 &&
+                      selectedProducts.length === filteredProducts.length
+                    }
                     onChange={toggleSelectAll}
                     title="Selecionar todos"
                   />
@@ -228,12 +232,16 @@ function VendasProdutos() {
                 </TableRow>
               ) : (
                 filteredProducts.map((p) => (
-                  <TableRow 
+                  <TableRow
                     key={p.id}
-                    className={selectedProducts.length > 0 && !selectedProducts.includes(p.id) ? "print:hidden" : ""}
+                    className={
+                      selectedProducts.length > 0 && !selectedProducts.includes(p.id)
+                        ? "print:hidden"
+                        : ""
+                    }
                   >
                     <TableCell className="print:hidden">
-                      <input 
+                      <input
                         type="checkbox"
                         className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                         checked={selectedProducts.includes(p.id)}
@@ -270,14 +278,23 @@ function VendasProdutos() {
                       <span className="text-muted-foreground">{p.vendas_sistema || 0}</span>
                     </TableCell>
                     <TableCell className="text-right print:hidden">
-                      <Badge variant={p.quantidade_vendas > 0 ? "default" : p.quantidade_vendas < 0 ? "destructive" : "secondary"}>
-                        {p.quantidade_vendas > 0 ? "+" : ""}{p.quantidade_vendas || 0}
+                      <Badge
+                        variant={
+                          p.quantidade_vendas > 0
+                            ? "default"
+                            : p.quantidade_vendas < 0
+                              ? "destructive"
+                              : "secondary"
+                        }
+                      >
+                        {p.quantidade_vendas > 0 ? "+" : ""}
+                        {p.quantidade_vendas || 0}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       {editingId === p.id ? (
                         <div className="flex justify-end">
-                          <Input 
+                          <Input
                             type="number"
                             className="w-24 text-right h-8"
                             value={editValue}
@@ -287,7 +304,9 @@ function VendasProdutos() {
                           />
                         </div>
                       ) : (
-                        <span className="font-semibold text-lg text-primary">{p.total_calculado || 0}</span>
+                        <span className="font-semibold text-lg text-primary">
+                          {p.total_calculado || 0}
+                        </span>
                       )}
                     </TableCell>
                     <TableCell className="text-right print:hidden">

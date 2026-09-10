@@ -287,8 +287,7 @@ function NovaVenda() {
               onClick={handleSalvar}
               disabled={loading || itens.length === 0}
             >
-              <Save className="mr-2 h-4 w-4" />{" "}
-              {loading ? "Processando..." : "Finalizar Venda"}
+              <Save className="mr-2 h-4 w-4" /> {loading ? "Processando..." : "Finalizar Venda"}
             </Button>
           </>
         }
@@ -303,19 +302,19 @@ function NovaVenda() {
             </h3>
 
             <div className="space-y-2">
-                <Label>Status</Label>
-                <select
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                >
-                  <>
-                    <option value="Pago">Pago / Finalizado</option>
-                    <option value="Aguardando Pagamento">Aguardando Pagamento</option>
-                    <option value="Em Separação">Em Separação</option>
-                  </>
-                </select>
-              </div>
+              <Label>Status</Label>
+              <select
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+              >
+                <>
+                  <option value="Pago">Pago / Finalizado</option>
+                  <option value="Aguardando Pagamento">Aguardando Pagamento</option>
+                  <option value="Em Separação">Em Separação</option>
+                </>
+              </select>
+            </div>
 
             <div className="space-y-2">
               <Label>Cliente</Label>
@@ -381,9 +380,14 @@ function NovaVenda() {
                                 )}
                               />
                               <div className="flex flex-col">
-                                <span className="font-medium">{p.nome} - R$ {Number(p.valor).toFixed(2)} (Estoque: {p.estoque})</span>
+                                <span className="font-medium">
+                                  {p.nome} - R$ {Number(p.valor).toFixed(2)} (Estoque: {p.estoque})
+                                </span>
                                 {p.imagem && (
-                                  <img src={p.imagem} className="h-5 w-5 rounded object-cover mt-1" />
+                                  <img
+                                    src={p.imagem}
+                                    className="h-5 w-5 rounded object-cover mt-1"
+                                  />
                                 )}
                               </div>
                             </CommandItem>
@@ -433,7 +437,11 @@ function NovaVenda() {
                         <TableCell>
                           <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-md bg-accent text-lg">
                             {item.imagem ? (
-                              <img src={item.imagem} alt={item.nome} className="h-full w-full object-cover" />
+                              <img
+                                src={item.imagem}
+                                alt={item.nome}
+                                className="h-full w-full object-cover"
+                              />
                             ) : (
                               <span className="opacity-50">📦</span>
                             )}
@@ -443,13 +451,15 @@ function NovaVenda() {
                         <TableCell className="text-right">{item.quantidade}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
-                            R$ 
+                            R$
                             <input
                               type="number"
                               min="0"
                               step="0.01"
                               value={item.valor_unitario}
-                              onChange={(e) => handleUpdateValorUnitario(index, parseFloat(e.target.value) || 0)}
+                              onChange={(e) =>
+                                handleUpdateValorUnitario(index, parseFloat(e.target.value) || 0)
+                              }
                               className="w-20 text-right bg-transparent border-b border-dashed border-slate-300 outline-none focus:border-brand p-0 m-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             />
                           </div>
